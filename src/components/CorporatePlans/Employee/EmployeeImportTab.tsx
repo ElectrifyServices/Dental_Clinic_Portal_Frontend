@@ -19,6 +19,8 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
   const [importErrors, setImportErrors] = useState<string[]>([]);
   const [importing, setImporting] = useState(false);
   const [successCount, setSuccessCount] = useState<number | null>(null);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const pendingSavedRef = useRef<CorporateEmployee[] | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
@@ -34,11 +36,19 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
 
   const hasWarnings = importErrors.length > 0 || importRows.some(r => !r.name || !r.phone || !r.corporatePlanId);
 
+  const handleImportClick = () => {
+    if (hasWarnings) return;
+    const valid = importRows.filter(r => r.name && r.phone && r.corporatePlanId);
+    if (!valid.length || valid.length !== importRows.length) return;
+    setShowConfirm(true);
+  };
+
   const handleImportConfirm = async () => {
     if (hasWarnings) return;
     const valid = importRows.filter(r => r.name && r.phone && r.corporatePlanId);
     if (!valid.length || valid.length !== importRows.length) return;
 
+    setShowConfirm(false);
     setImporting(true);
     try {
       const payload = {
@@ -93,7 +103,19 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-bold text-foreground">Bulk Import Employees</h2>
-        <Button onClick={() => setTab('list')} variant="outline" className="gap-2"><X className="w-4 h-4" /> Cancel</Button>
+        <Button
+          onClick={() => {
+            if (importRows.length > 0) {
+              setShowCancelConfirm(true);
+            } else {
+              setTab('list');
+            }
+          }}
+          variant="outline"
+          className="gap-2"
+        >
+          <X className="w-4 h-4" /> Cancel
+        </Button>
       </div>
 
       <div className="card p-5 space-y-4">
@@ -143,7 +165,7 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold text-foreground">Preview — {importRows.length} row{importRows.length > 1 ? 's' : ''}</p>
             <Button
-              onClick={handleImportConfirm}
+              onClick={handleImportClick}
               variant="default"
               className="gap-2"
               disabled={importing || hasWarnings}
@@ -183,6 +205,110 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
           />
         </div>
       )}
+
+      <Dialog open={showCancelConfirm} onOpenChange={(open) => { if (!open) setShowCancelConfirm(false); }}>
+        <DialogContent className="max-w-md text-center">
+          <div className="flex flex-col items-center gap-4 py-2">
+            <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center">
+              <AlertTriangle className="w-9 h-9 text-amber-600" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg font-bold text-foreground">Discard Import?</h3>
+              <p className="text-sm text-muted-foreground">
+                You have an unsaved preview of {importRows.length} employee{importRows.length > 1 ? 's' : ''}. Leaving now will discard this data and nothing will be imported.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 w-full">
+              <Button onClick={() => setShowCancelConfirm(false)} variant="outline" className="flex-1">
+                Keep Editing
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowCancelConfirm(false);
+                  setImportRows([]);
+                  setImportErrors([]);
+                  setTab('list');
+                }}
+                variant="destructive"
+                className="flex-1"
+              >
+                Discard
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showConfirm} onOpenChange={(open) => { if (!open) setShowConfirm(false); }}>
+        <DialogContent className="max-w-lg">
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <h3 className="text-lg font-bold text-foreground">Confirm Import</h3>
+              <p className="text-sm text-muted-foreground">
+                You are about to import {importRows.length} employee{importRows.length > 1 ? 's' : ''}. Please review the details below before proceeding.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="card p-3">
+                <p className="text-xs text-muted-foreground">Total Employees</p>
+                <p className="text-xl font-bold text-foreground">{importRows.length}</p>
+              </div>
+              <div className="card p-3">
+                <p className="text-xs text-muted-foreground">Plans Involved</p>
+                <p className="text-xl font-bold text-foreground">
+                  {new Set(importRows.map(r => r.corporatePlanId)).size}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-xs font-semibold text-foreground">Plan-wise breakdown</p>
+              <div className="space-y-1 max-h-32 overflow-y-auto">
+                {Array.from(new Set(importRows.map(r => r.corporatePlanId))).map(planId => {
+                  const p = plans.find(pl => pl.id === planId);
+                  const count = importRows.filter(r => r.corporatePlanId === planId).length;
+                  return (
+                    <div key={String(planId)} className="flex items-center justify-between text-sm">
+                      {p ? <PlanBadge name={p.name} code={p.code} color={p.color} /> : <Badge variant="amber">Unknown plan</Badge>}
+                      <span className="text-muted-foreground">{count} employee{count > 1 ? 's' : ''}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-xs font-semibold text-foreground">Employees</p>
+              <div className="max-h-40 overflow-y-auto border border-border rounded-lg divide-y divide-border">
+                {importRows.map((r, i) => (
+                  <div key={i} className="flex items-center justify-between px-3 py-1.5 text-sm">
+                    <span className="font-medium text-foreground">{r.name}</span>
+                    <span className="text-muted-foreground">{(r as Partial<CorporateEmployee> & { country_code?: string }).country_code || '+91'} {r.phone}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <Button onClick={() => setShowConfirm(false)} variant="outline" disabled={importing}>
+                Cancel
+              </Button>
+              <Button onClick={handleImportConfirm} variant="default" className="gap-2" disabled={importing}>
+                {importing ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> Importing…
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-4 h-4" /> Confirm & Import {importRows.length} Employees
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={successCount !== null} onOpenChange={(open) => {
         if (!open) {

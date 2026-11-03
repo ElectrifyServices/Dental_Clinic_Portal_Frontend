@@ -26,11 +26,16 @@ export function usePatientData(params?: { enabled?: boolean }) {
 
   const apiFilters = useMemo(() => {
     const filters: Record<string, string[]> = {};
+    // Backend's getPatientList only reads filters.is_active ("true"/"false")
+    // and filters.patient_category — it ignores filters.status/filters.category
+    // entirely, so sending those keys silently returned the unfiltered list
+    // (the status/category dropdowns then appeared to only filter within
+    // whatever page happened to be fetched, instead of across all patients).
     if (patientStatus !== 'all') {
-      filters.status = [patientStatus.toUpperCase()];
+      filters.is_active = [patientStatus === 'active' ? 'true' : 'false'];
     }
     if (patientCategory !== 'all') {
-      filters.category = [patientCategory.toUpperCase()];
+      filters.patient_category = [patientCategory.toUpperCase()];
     }
     return Object.keys(filters).length > 0 ? filters : undefined;
   }, [patientStatus, patientCategory]);
