@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../../types/api";
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,13 +21,21 @@ const REVERSE_BLOOD_GROUP_MAP: Record<string, string> = {
   "O_NEGATIVE": "O-",
 };
 
-export const usePatientForm = (patient: ApiAny) => {
+export const usePatientForm = (patient: any, type?: "normal" | "person") => {
+  // True both for the "Person" (new family member) flow and when editing an
+  // existing patient who is already a family member under a primary patient
+  // (identified by a primary_patient_id set on them) — Relation applies to
+  // both cases, not just brand-new family member registration.
+  const isFamilyMember =
+    type === "person" ||
+    !!(patient?.primary_patient_id || patient?.primaryPatientId || patient?.parentId);
+
   const [loading, setLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<{
     [key: string]: string;
   }>({});
 
-  const [matchedCorporateEmp, setMatchedCorporateEmp] = useState<ApiAny>(null);
+  const [matchedCorporateEmp, setMatchedCorporateEmp] = useState<any>(null);
 
   // Extra non-schema fields needed by the form
   const [extraData, setExtraData] = useState({
@@ -63,7 +70,7 @@ export const usePatientForm = (patient: ApiAny) => {
   });
 
   const form = useForm<PatientFormData>({
-    resolver: zodResolver(patientSchema) as ApiAny,
+    resolver: zodResolver(patientSchema) as any,
     defaultValues: {
       name: "",
       email: "",
@@ -105,8 +112,8 @@ export const usePatientForm = (patient: ApiAny) => {
   });
 
   // Provide a formData-compatible object for all sub-components
-  const formData = { ...form.watch(), ...extraData } as ApiAny;
-  const setFormData = (updater: ApiAny) => {
+  const formData = { ...form.watch(), ...extraData } as any;
+  const setFormData = (updater: any) => {
     const current = form.getValues();
     const updated =
       typeof updater === "function"
@@ -117,12 +124,12 @@ export const usePatientForm = (patient: ApiAny) => {
     const schemaUpdates: Partial<PatientFormData> = {};
     const extraUpdates: Partial<typeof extraData> = {};
     for (const [k, v] of Object.entries(updated)) {
-      if (schemaKeys.includes(k)) (schemaUpdates as ApiAny)[k] = v;
-      else (extraUpdates as ApiAny)[k] = v;
+      if (schemaKeys.includes(k)) (schemaUpdates as any)[k] = v;
+      else (extraUpdates as any)[k] = v;
     }
     if (Object.keys(schemaUpdates).length) {
       Object.entries(schemaUpdates).forEach(([k, v]) =>
-        form.setValue(k as keyof PatientFormData, v as ApiAny),
+        form.setValue(k as keyof PatientFormData, v as any),
       );
     }
     if (Object.keys(extraUpdates).length) {
@@ -136,11 +143,11 @@ export const usePatientForm = (patient: ApiAny) => {
       const schemaUpdates: Partial<PatientFormData> = {};
       const extraUpdates: Partial<typeof extraData> = {};
 
-      const getHistoryString = (historyField: ApiAny) => {
+      const getHistoryString = (historyField: any) => {
         if (!historyField) return "";
         if (typeof historyField === "string") return historyField;
         if (Array.isArray(historyField)) {
-          return historyField.map((m: ApiAny) => {
+          return historyField.map((m: any) => {
             if (typeof m === "object" && m !== null) {
               return m.history_id || m.medical_history_id || m.id || m.name || "";
             }
@@ -150,11 +157,11 @@ export const usePatientForm = (patient: ApiAny) => {
         return "";
       };
 
-      const getAllergiesString = (allergiesField: ApiAny) => {
+      const getAllergiesString = (allergiesField: any) => {
         if (!allergiesField) return "";
         if (typeof allergiesField === "string") return allergiesField;
         if (Array.isArray(allergiesField)) {
-          return allergiesField.map((a: ApiAny) => {
+          return allergiesField.map((a: any) => {
             if (typeof a === "object" && a !== null) {
               return a.allergy_id || a.id || a.allergy_name || a.name || "";
             }
@@ -178,7 +185,7 @@ export const usePatientForm = (patient: ApiAny) => {
         patientId: patient.patient_id || patient.patientId || generatePatientId(),
         medicalHistory: getHistoryString(patient.medicalHistories || patient.medical_histories || patient.medicalHistory),
         allergies: getAllergiesString(patient.allergies),
-        dentalFiles: (patient.dentalFiles || patient.dental_files || []).map((file: ApiAny) => {
+        dentalFiles: (patient.dentalFiles || patient.dental_files || []).map((file: any) => {
           if (typeof file === "string") return { url: file, name: file.split('/').pop() || "" };
           return {
             id: file.id || file.file_id || undefined,
@@ -188,7 +195,7 @@ export const usePatientForm = (patient: ApiAny) => {
           };
         }),
         pastDentalHistory: patient.past_dental_history || patient.pastDentalHistory || "",
-        previousTreatments: (patient.previous_treatments || patient.previousTreatments || []).map((t: ApiAny) => typeof t === 'object' ? (t.treatment_name || t.name || t.id || '') : t),
+        previousTreatments: (patient.previous_treatments || patient.previousTreatments || []).map((t: any) => typeof t === 'object' ? (t.treatment_name || t.name || t.id || '') : t),
         previousDoctorName: patient.previous_doctor_name || patient.previousDoctorName || "",
         previousClinicName: patient.clinic_name || patient.previousClinicName || "",
         previousDoctorPhone: patient.doctor_phone || patient.previousDoctorPhone || "",
@@ -204,26 +211,27 @@ export const usePatientForm = (patient: ApiAny) => {
         defaultDiscount: patient.discount_percentage !== undefined ? patient.discount_percentage : (patient.defaultDiscount !== undefined ? patient.defaultDiscount : 0),
         isFOC: patient.is_foc || patient.isFOC || false,
         habit: patient.habits || patient.habit || "",
+        relation: patient.relation_type || patient.relationType || patient.relation || "",
       };
 
       for (const [k, v] of Object.entries(merged)) {
-        if (schemaKeys.includes(k)) (schemaUpdates as ApiAny)[k] = v;
-        else (extraUpdates as ApiAny)[k] = v;
+        if (schemaKeys.includes(k)) (schemaUpdates as any)[k] = v;
+        else (extraUpdates as any)[k] = v;
       }
       Object.entries(schemaUpdates).forEach(([k, v]) =>
-        form.setValue(k as keyof PatientFormData, v as ApiAny),
+        form.setValue(k as keyof PatientFormData, v as any),
       );
       if (Object.keys(extraUpdates).length)
         setExtraData((prev) => ({ ...prev, ...extraUpdates }));
     }
-  }, [patient, form]);
+  }, [patient]);
 
-  const watchedPatientId = form.watch("patientId");
   useEffect(() => {
-    if (!form.getValues("barcode") && watchedPatientId) {
-      form.setValue("barcode", generateBarcode(watchedPatientId));
+    const patientId = form.watch("patientId");
+    if (!form.getValues("barcode") && patientId) {
+      form.setValue("barcode", generateBarcode(patientId));
     }
-  }, [watchedPatientId, form]);
+  }, [form.watch("patientId")]);
 
   const rawSearchPhone = form.watch("phone")?.trim() || "";
   const searchCountryCode = form.watch("country_code")?.trim() || "+91";
@@ -294,7 +302,7 @@ export const usePatientForm = (patient: ApiAny) => {
       type === "checkbox" ? (e.target as HTMLInputElement).checked : value;
     const schemaKeys = Object.keys(patientSchema.shape);
     if (schemaKeys.includes(name)) {
-      form.setValue(name as keyof PatientFormData, val as ApiAny, {
+      form.setValue(name as keyof PatientFormData, val as any, {
         shouldValidate: true,
       });
     } else {
@@ -320,6 +328,10 @@ export const usePatientForm = (patient: ApiAny) => {
       const email = form.getValues("email");
       if (email && !/\S+@\S+\.\S+/.test(email))
         errors.email = "Please enter a valid email address";
+      if (isFamilyMember) {
+        const relation = form.getValues("relation")?.trim();
+        if (!relation) errors.relation = "Relation is required";
+      }
     }
     if (stepNumber === 2) {
       // Previous Dentist Details validation removed as per request
@@ -460,6 +472,7 @@ export const usePatientForm = (patient: ApiAny) => {
     loading,
     setLoading,
     validationErrors,
+    isFamilyMember,
     matchedCorporateEmp,
     acceptCorporateEmployee,
     handleChange,

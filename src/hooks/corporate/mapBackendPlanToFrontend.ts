@@ -61,14 +61,23 @@ export function mapBackendPlanToFrontend(plan: ApiAny): CorporatePlan {
         'full-mouth-rehab', 'veneers-cosmetic', 'child-dentistry', 'crown',
         'denture', 'toothache', 'swelling-infection', 'broken-tooth', 'trauma-injury'
       ];
-      const treatmentTypes = (b.clinical_procedures || []).map((proc: string) => {
-        const key = mapProcedureLabelToKey(proc);
-        if (!standardKeys.includes(key)) {
-          customTreatmentText = proc;
-          return 'other';
-        }
-        return key;
-      });
+      const treatmentTypes = (b.clinical_procedures || [])
+        .filter((proc: string) => {
+          const lower = proc?.toLowerCase();
+          if (lower === "teeth whitening") return false;
+          // Teeth cleaning is always hardcoded in for this benefit type on
+          // the backend, so don't show it as a separately-selected chip.
+          if (b.type === "COMPLIMENTARY_SESSION" && lower === "teeth cleaning") return false;
+          return true;
+        })
+        .map((proc: string) => {
+          const key = mapProcedureLabelToKey(proc);
+          if (!standardKeys.includes(key)) {
+            customTreatmentText = proc;
+            return 'other';
+          }
+          return key;
+        });
 
       return {
         id: b.id,

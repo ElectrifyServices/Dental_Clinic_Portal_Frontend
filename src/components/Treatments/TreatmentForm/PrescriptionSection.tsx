@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../../types/api";
 import React, { useState } from "react";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
@@ -54,35 +53,35 @@ export function PrescriptionSection({
 
   const medicinesList = React.useMemo(() => {
     if (!rawMedicines) return [];
-    let list: ApiAny[] = [];
+    let list: any[] = [];
     if (Array.isArray(rawMedicines)) {
       list = rawMedicines;
-    } else if (rawMedicines && Array.isArray((rawMedicines as ApiAny).responseObject?.data?.data)) {
-      list = (rawMedicines as ApiAny).responseObject.data.data;
-    } else if (rawMedicines && Array.isArray((rawMedicines as ApiAny).responseObject?.data)) {
-      list = (rawMedicines as ApiAny).responseObject.data;
-    } else if (rawMedicines && Array.isArray((rawMedicines as ApiAny).responseObject)) {
-      list = (rawMedicines as ApiAny).responseObject;
-    } else if (rawMedicines && Array.isArray((rawMedicines as ApiAny).data?.data)) {
-      list = (rawMedicines as ApiAny).data.data;
-    } else if (rawMedicines && Array.isArray((rawMedicines as ApiAny).data)) {
-      list = (rawMedicines as ApiAny).data;
-    } else if (rawMedicines && Array.isArray((rawMedicines as ApiAny).list)) {
-      list = (rawMedicines as ApiAny).list;
-    } else if (rawMedicines && Array.isArray((rawMedicines as ApiAny).medicines)) {
-      list = (rawMedicines as ApiAny).medicines;
-    } else if (rawMedicines && Array.isArray((rawMedicines as ApiAny).items)) {
-      list = (rawMedicines as ApiAny).items;
-    } else if (rawMedicines && Array.isArray((rawMedicines as ApiAny).records)) {
-      list = (rawMedicines as ApiAny).records;
-    } else if (rawMedicines && Array.isArray((rawMedicines as ApiAny).results)) {
-      list = (rawMedicines as ApiAny).results;
+    } else if (rawMedicines && Array.isArray((rawMedicines as any).responseObject?.data?.data)) {
+      list = (rawMedicines as any).responseObject.data.data;
+    } else if (rawMedicines && Array.isArray((rawMedicines as any).responseObject?.data)) {
+      list = (rawMedicines as any).responseObject.data;
+    } else if (rawMedicines && Array.isArray((rawMedicines as any).responseObject)) {
+      list = (rawMedicines as any).responseObject;
+    } else if (rawMedicines && Array.isArray((rawMedicines as any).data?.data)) {
+      list = (rawMedicines as any).data.data;
+    } else if (rawMedicines && Array.isArray((rawMedicines as any).data)) {
+      list = (rawMedicines as any).data;
+    } else if (rawMedicines && Array.isArray((rawMedicines as any).list)) {
+      list = (rawMedicines as any).list;
+    } else if (rawMedicines && Array.isArray((rawMedicines as any).medicines)) {
+      list = (rawMedicines as any).medicines;
+    } else if (rawMedicines && Array.isArray((rawMedicines as any).items)) {
+      list = (rawMedicines as any).items;
+    } else if (rawMedicines && Array.isArray((rawMedicines as any).records)) {
+      list = (rawMedicines as any).records;
+    } else if (rawMedicines && Array.isArray((rawMedicines as any).results)) {
+      list = (rawMedicines as any).results;
     }
     return list;
   }, [rawMedicines]);
 
   const selectOptions = React.useMemo(() => {
-    const opts = medicinesList.map((m: ApiAny) => ({
+    const opts = medicinesList.map((m: any) => ({
       label: m.name || m.label || m.medicine_name || (typeof m === "string" ? m : ""),
       // Always prefer the UUID field; never fall back to name string
       value: m.id || m._id || m.uuid || m.medicine_id || m.value || (typeof m === "string" ? m : ""),
@@ -125,7 +124,7 @@ export function PrescriptionSection({
   const handleDeleteMedicine = async () => {
     if (!confirmDeleteName) return;
     const name = confirmDeleteName;
-    const found = medicinesList.find((m: ApiAny) => m.name === name);
+    const found = medicinesList.find((m: any) => m.name === name);
     const id = found?.id || found?._id || name;
     setDeletingId(name);
     try {
@@ -140,7 +139,7 @@ export function PrescriptionSection({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-bold text-foreground flex items-center">
           <Pill className="w-5 h-5 mr-2 text-emerald-600" />
           Prescriptions
@@ -155,11 +154,11 @@ export function PrescriptionSection({
         </Button>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {prescriptions.map((prescription) => (
           <div
             key={prescription.id}
-            className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end p-3 bg-emerald-50 rounded-xl border border-emerald-200 shadow-sm animate-in fade-in zoom-in duration-200"
+            className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end p-4 bg-emerald-50 rounded-xl border border-emerald-200 shadow-sm animate-in fade-in zoom-in duration-200"
           >
             <div className="col-span-1 sm:col-span-2">
               <Label className="block text-xs font-bold text-emerald-700 mb-1.5 uppercase tracking-wider">

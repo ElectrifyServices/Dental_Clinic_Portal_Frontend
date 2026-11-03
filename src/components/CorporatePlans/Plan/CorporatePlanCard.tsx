@@ -1,5 +1,10 @@
 import React from 'react';
-import { Calendar, ChevronDown, ChevronUp, ToggleLeft, ToggleRight, Edit2, Trash2, MoreHorizontal, Building2, User, Shield, Star, Award, Sparkles, CheckCircle2 } from 'lucide-react';
+import {
+  Users, Calendar, ChevronDown, ChevronUp,
+  ToggleLeft, ToggleRight, Edit2, Trash2,
+  MoreHorizontal, Building2, User, Shield,
+  Star, Award, Sparkles, CheckCircle2, Clock,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CorporatePlan } from '../../../types';
 import { getPlanStatus, TREATMENT_LABELS } from '../../../utils/corporatePlan';
@@ -63,6 +68,7 @@ export function CorporatePlanCard({
     (new Date(plan.validTo).getTime() - Date.now()) / 86400000
   );
   const isExpiringSoon = daysLeft > 0 && daysLeft < 30;
+  const planCode = plan.code || (plan as any).plan_code || (plan as any).planCode;
 
   return (
     <TooltipProvider>
@@ -74,14 +80,22 @@ export function CorporatePlanCard({
         className={`group relative border border-slate-200 flex flex-col transition-all duration-300 border-t-4 ${theme.border} ${expanded ? 'z-20 shadow-lg rounded-t-3xl rounded-b-none' : 'z-10 rounded-3xl'
           }`}
       >
-        <div className="p-4 flex-1 flex flex-col">
+        <div className="p-5 flex-1 flex flex-col">
           {/* Top row: type icon + status + menu */}
-          <div className="flex items-center justify-between mb-3">
-            <div className={`w-9 h-9 rounded-xl ${theme.bg} flex items-center justify-center border border-current/10`}>
-              {isIndividual
-                ? <User className="w-4.5 h-4.5" />
-                : <Building2 className="w-4.5 h-4.5" />
-              }
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className={`w-9 h-9 rounded-xl ${theme.bg} flex items-center justify-center border border-current/10`}>
+                {isIndividual
+                  ? <User className="w-4.5 h-4.5" />
+                  : <Building2 className="w-4.5 h-4.5" />
+                }
+              </div>
+              {planCode && (
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-slate-50 text-slate-600 rounded-lg border border-slate-200 flex items-center gap-1 shadow-2xs" title="Plan Code">
+                  <span className="text-[8px] text-slate-400 font-sans font-extrabold uppercase tracking-wider">CODE:</span>
+                  <span>{planCode}</span>
+                </span>
+              )}
             </div>
 
             <div className="flex items-center gap-1.5">
@@ -122,7 +136,16 @@ export function CorporatePlanCard({
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => onDelete(plan.id)}
-                    className="cursor-pointer text-destructive focus:text-destructive font-bold text-xs p-2.5 rounded-xl"
+                    title={
+                      plan.currentMembers > 0
+                        ? `Cannot delete — ${plan.currentMembers} member${plan.currentMembers === 1 ? "" : "s"} enrolled`
+                        : undefined
+                    }
+                    className={
+                      plan.currentMembers > 0
+                        ? "cursor-pointer text-muted-foreground font-bold text-xs p-2.5 rounded-xl"
+                        : "cursor-pointer text-destructive focus:text-destructive font-bold text-xs p-2.5 rounded-xl"
+                    }
                   >
                     <Trash2 className="w-3.5 h-3.5 mr-2" /> Delete
                   </DropdownMenuItem>
@@ -146,7 +169,7 @@ export function CorporatePlanCard({
             <Tooltip>
               <TooltipTrigger asChild>
                 <p className="text-slate-400 text-[11px] mt-0.5 font-bold flex items-center gap-1 truncate cursor-help">
-                  {!isIndividual && <Building2 className="w-3.5 h-3.5 opacity-60 shrink-0" />}
+                  {!isIndividual && <Building2 className="w-3.5 h-3.5 opacity-60 flex-shrink-0" />}
                   <span className="truncate">{isIndividual ? 'Personal Membership' : plan.companyName}</span>
                 </p>
               </TooltipTrigger>
@@ -180,7 +203,7 @@ export function CorporatePlanCard({
 
 
           {/* Stats Section */}
-          <div className="grid grid-cols-3 py-2.5 px-1 mt-auto gap-2 bg-slate-50/50 rounded-2xl border border-slate-200/60 text-center">
+          <div className="grid grid-cols-3 py-3 px-1 mt-auto gap-2 bg-slate-50/50 rounded-2xl border border-slate-200/60 text-center">
             <div>
               <span className="block text-xs font-black text-slate-700 leading-none">
                 {plan.currentMembers}{plan.maxMembers ? `/${plan.maxMembers}` : ''}
@@ -215,7 +238,7 @@ export function CorporatePlanCard({
         <Button
           variant="ghost"
           onClick={onToggleExpand}
-          className={`w-full flex items-center justify-center gap-1 py-2 text-[9px] font-extrabold uppercase tracking-widest border-t border-slate-200 h-auto transition-colors active:scale-100 ${expanded
+          className={`w-full flex items-center justify-center gap-1 py-2.5 text-[9px] font-extrabold uppercase tracking-widest border-t border-slate-200 h-auto transition-colors active:scale-100 ${expanded
               ? 'text-primary bg-primary/5 hover:bg-primary/10 rounded-none'
               : 'text-slate-400 hover:text-primary hover:bg-slate-50/80 rounded-b-[22px]'
             }`}
@@ -235,13 +258,13 @@ export function CorporatePlanCard({
               transition={{ duration: 0.2, ease: 'easeInOut' }}
               className="overflow-hidden"
             >
-              <div className="px-4 pb-4 pt-2 bg-white border-t border-slate-200 rounded-b-[22px] space-y-2">
+              <div className="px-4 pb-20 pt-2 bg-white border-t border-slate-200 rounded-b-[22px] space-y-2">
                 {plan.benefits.map(b => (
                   <div
                     key={b.id}
                     className="flex items-start gap-2.5 bg-white rounded-xl p-3 border border-slate-200 shadow-xs hover:border-slate-200 transition-colors"
                   >
-                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${theme.bg} border border-current/10 text-xs`}>
+                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${theme.bg} border border-current/10 text-xs`}>
                       {BENEFIT_ICONS[b.type]}
                     </div>
                     <div className="min-w-0 flex-1">

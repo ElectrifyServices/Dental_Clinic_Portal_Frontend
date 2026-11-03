@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 /**
  * Generic UI primitives — reusable across the entire application.
  * Import from '@/components/ui' in any component.
@@ -50,19 +49,15 @@ interface PageHeaderProps {
 }
 export function PageHeader({ title, subtitle, action, children }: PageHeaderProps) {
   return (
-    <div className="flex flex-row flex-wrap items-center justify-between gap-y-3 gap-x-2 mb-0">
+    <div className="flex flex-row items-center justify-between gap-0 mb-0">
       <div className="flex-1 min-w-[120px]">
         <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground tracking-tight leading-tight line-clamp-1">{title}</h1>
         {subtitle && <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-1">{subtitle}</p>}
       </div>
+      {children}
       {action && (
-        <div className="flex flex-row items-center justify-end gap-2 shrink-0 order-2 md:order-3">
+        <div className="flex flex-row items-center justify-end gap-2 shrink-0">
           {action}
-        </div>
-      )}
-      {children && (
-        <div className="order-3 md:order-2 w-full md:w-auto">
-          {children}
         </div>
       )}
     </div>
@@ -92,7 +87,7 @@ export function KpiCard({ label, value, colorClass = "text-foreground", icon, su
           </p>
         )}
       </div>
-      {icon && <div className="text-muted-foreground/30 shrink-0 ml-4 transition-transform duration-300 group-hover:scale-110 group-hover:text-primary/50">{icon}</div>}
+      {icon && <div className="text-muted-foreground/30 flex-shrink-0 ml-4 transition-transform duration-300 group-hover:scale-110 group-hover:text-primary/50">{icon}</div>}
     </div>
   );
 }
@@ -130,7 +125,6 @@ interface ModalProps {
   bodyClassName?: string;
   headerRight?: React.ReactNode;
   hideCloseButton?: boolean;
-  compact?: boolean;
 }
 const MODAL_SIZES: Record<string, string> = {
   sm:  "max-w-sm",
@@ -145,19 +139,7 @@ const MODAL_SIZES: Record<string, string> = {
   "7xl": "max-w-7xl",
 };
 
-export function Modal({
-  title,
-  subtitle,
-  onClose,
-  children,
-  footer,
-  size = "lg",
-  icon,
-  bodyClassName,
-  headerRight,
-  hideCloseButton,
-  compact = false,
-}: ModalProps) {
+export function Modal({ title, subtitle, onClose, children, footer, size = "lg", icon, bodyClassName, headerRight, hideCloseButton }: ModalProps) {
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent
@@ -166,24 +148,15 @@ export function Modal({
           MODAL_SIZES[size],
         )}
       >
-        <DialogHeader className={cn(
-          "sticky top-0 z-20 bg-card border-b border-border flex-row items-center justify-between space-y-0",
-          compact ? "px-4 sm:px-5 py-2.5 sm:py-3" : "px-6 py-4"
-        )}>
+        <DialogHeader className="sticky top-0 z-20 bg-card border-b border-border px-6 py-4 flex-row items-center justify-between space-y-0">
           <div className="flex items-center gap-3">
             {icon && (
-              <div className={cn(
-                "bg-primary/10 rounded-md flex items-center justify-center text-primary shrink-0",
-                compact ? "w-7 h-7 sm:w-8 sm:h-8" : "w-9 h-9"
-              )}>
+              <div className="w-9 h-9 bg-primary/10 rounded-md flex items-center justify-center text-primary flex-shrink-0">
                 {icon}
               </div>
             )}
             <div>
-              <DialogTitle className={cn(
-                "font-semibold text-foreground leading-snug",
-                compact ? "text-base sm:text-lg" : "text-lg"
-              )}>
+              <DialogTitle className="text-lg font-semibold text-foreground leading-snug">
                 {title}
               </DialogTitle>
               {subtitle ? (
@@ -200,23 +173,16 @@ export function Modal({
             {!hideCloseButton && (
               <button
                 onClick={onClose}
-                className="p-1.5 sm:p-2 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                className="p-2 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
               >
                 <X className="w-4 h-4" />
               </button>
             )}
           </div>
         </DialogHeader>
-        <div className={cn(
-          "overflow-y-auto flex-1 custom-scrollbar",
-          compact ? "p-3 sm:p-4 md:p-5" : "p-6",
-          bodyClassName
-        )}>{children}</div>
+        <div className={cn("p-6 overflow-y-auto flex-1 custom-scrollbar", bodyClassName)}>{children}</div>
         {footer && (
-          <DialogFooter className={cn(
-            "border-t border-border bg-muted/40 sticky bottom-0 z-20",
-            compact ? "px-4 sm:px-5 py-2.5 sm:py-3" : "px-6 py-4"
-          )}>
+          <DialogFooter className="px-6 py-4 border-t border-border bg-muted/40 sticky bottom-0 z-20">
             {footer}
           </DialogFooter>
         )}
@@ -225,26 +191,17 @@ export function Modal({
   );
 }
 
+// ─── ConfirmModal ─────────────────────────────────────────────────────────────
 interface ConfirmModalProps {
   title: string;
   message: string;
   confirmLabel?: string;
-  cancelLabel?: string;
   variant?: "danger" | "primary";
   isLoading?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }
-export function ConfirmModal({
-  title,
-  message,
-  confirmLabel = "Confirm",
-  cancelLabel = "Cancel",
-  variant = "danger",
-  isLoading = false,
-  onConfirm,
-  onCancel,
-}: ConfirmModalProps) {
+export function ConfirmModal({ title, message, confirmLabel = "Confirm", variant = "danger", isLoading = false, onConfirm, onCancel }: ConfirmModalProps) {
   return (
     <Modal
       title={title}
@@ -253,14 +210,8 @@ export function ConfirmModal({
       icon={<AlertTriangle className={cn("w-4 h-4 animate-pulse", variant === "danger" ? "text-destructive" : "text-primary")} />}
       footer={
         <>
-          <Button variant="outline" onClick={onCancel} disabled={isLoading}>
-            {cancelLabel}
-          </Button>
-          <Button
-            variant={variant === "danger" ? "destructive" : "default"}
-            onClick={onConfirm}
-            disabled={isLoading}
-          >
+          <Button variant="outline" onClick={onCancel} disabled={isLoading}>Cancel</Button>
+          <Button variant={variant === "danger" ? "destructive" : "default"} onClick={onConfirm} disabled={isLoading}>
             {isLoading ? (
               <span className="flex items-center gap-2">
                 <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
@@ -294,7 +245,7 @@ export function ContentCard({ title, subtitle, children, footer, icon, action, c
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-border mb-0">
           <div className="flex items-center gap-3">
             {icon && (
-              <div className="w-9 h-9 bg-primary/10 rounded-md flex items-center justify-center text-primary shrink-0">
+              <div className="w-9 h-9 bg-primary/10 rounded-md flex items-center justify-center text-primary flex-shrink-0">
                 {icon}
               </div>
             )}
@@ -335,9 +286,8 @@ interface MetricCardProps {
   trend?: string | { value: string; isUp: boolean };
   className?: string;
   interactive?: boolean;
-  compact?: boolean;
 }
-export function MetricCard({ label, value, icon, variant = "gray", trend, className, interactive = true, compact = false }: MetricCardProps) {
+export function MetricCard({ label, value, icon, variant = "gray", trend, className, interactive = true }: MetricCardProps) {
   const variants = {
     primary: "bg-primary/10 text-primary",
     emerald: "bg-emerald-50 text-emerald-600",
@@ -357,25 +307,20 @@ export function MetricCard({ label, value, icon, variant = "gray", trend, classN
 
   return (
     <Card className={cn(
-      compact ? "p-2.5 sm:p-3" : "p-4 sm:p-5 md:p-6",
-      "transition-all duration-300 ease-out group",
+      "p-4 sm:p-5 md:p-6 transition-all duration-300 ease-out group",
       interactive ? "hover:shadow-card-hover hover:-translate-y-1 hover:border-border/80 cursor-pointer" : "cursor-default",
       className
     )}>
-      <div className={cn("flex items-start justify-between", compact ? "gap-2" : "gap-4")}>
+      <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <p className={cn(
-            compact ? "text-[10px] sm:text-xs mb-1" : "text-xs mb-3",
-            "font-semibold text-muted-foreground uppercase tracking-wide transition-colors duration-200",
+            "text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 transition-colors duration-200",
             interactive ? "group-hover:text-primary/80" : "",
           )}>
             {label}
           </p>
           <div className="flex items-baseline gap-2">
-            <span className={cn(
-              compact ? "text-xl sm:text-2xl" : "text-[28px] sm:text-[32px]",
-              "font-bold text-foreground leading-none"
-            )}>{value}</span>
+            <span className="text-[28px] sm:text-[32px] font-bold text-foreground leading-none">{value}</span>
             {trend && (
               <span className={cn("text-xs font-semibold",
                 typeof trend === "object"
@@ -392,8 +337,7 @@ export function MetricCard({ label, value, icon, variant = "gray", trend, classN
           </div>
         </div>
         <div className={cn(
-          compact ? "w-8 h-8 sm:w-9 sm:h-9 rounded-lg" : "w-10 h-10 sm:w-11 sm:h-11 rounded-md",
-          "flex items-center justify-center shrink-0 transition-colors duration-300",
+          "w-10 h-10 sm:w-11 sm:h-11 rounded-md flex items-center justify-center flex-shrink-0 transition-colors duration-300",
           variants[variant],
           interactive ? hoverVariants[variant] : "",
         )}>
@@ -427,12 +371,11 @@ interface DataTableProps<T> {
   className?: string;
   scrollClassName?: string;
   disableRowAnimation?: boolean;
-  compact?: boolean;
 }
-export function DataTable<T>({ columns, data, emptyIcon, emptyTitle, emptySubtitle, rowKey, footer, renderExpandedRow, expandedRowIds, onRowClick, rowClassName, className, scrollClassName, disableRowAnimation = false, compact = false }: DataTableProps<T>) {
+export function DataTable<T>({ columns, data, emptyIcon, emptyTitle, emptySubtitle, rowKey, footer, renderExpandedRow, expandedRowIds, onRowClick, rowClassName, className, scrollClassName, disableRowAnimation = false }: DataTableProps<T>) {
   return (
     <div className={cn("card overflow-hidden flex flex-col min-h-0", className)}>
-      <div className={cn("overflow-x-auto flex-1 min-h-0", compact && "[&_.data-table_th]:py-2 [&_.data-table_th]:px-3 [&_.data-table_td]:py-2 [&_.data-table_td]:px-3", scrollClassName)}>
+      <div className={cn("overflow-x-auto flex-1 min-h-0", scrollClassName)}>
         <table className="data-table">
           <thead>
             <tr>
@@ -447,15 +390,9 @@ export function DataTable<T>({ columns, data, emptyIcon, emptyTitle, emptySubtit
             {data.length === 0 ? (
               <tr>
                 <td colSpan={columns.length}>
-                  <div className={cn(
-                    "flex flex-col items-center justify-center gap-2 text-center",
-                    compact ? "py-8 sm:py-10" : "py-12 sm:py-16"
-                  )}>
+                  <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
                     {emptyIcon && (
-                      <div className={cn(
-                        "rounded-md bg-muted flex items-center justify-center text-muted-foreground/50",
-                        compact ? "w-9 h-9" : "w-12 h-12"
-                      )}>
+                      <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center text-muted-foreground/50">
                         {emptyIcon}
                       </div>
                     )}
@@ -466,7 +403,7 @@ export function DataTable<T>({ columns, data, emptyIcon, emptyTitle, emptySubtit
               </tr>
             ) : (
               data.map((row, idx) => {
-                const key = (rowKey ? rowKey(row, idx) : undefined) || (row as ApiAny)?.id || `row-${idx}`;
+                const key = rowKey(row, idx) || `row-${idx}`;
                 const rowClasses = cn(
                   onRowClick ? "cursor-pointer hover:bg-muted/30 transition-colors" : "",
                   rowClassName?.(row, idx)
@@ -530,24 +467,24 @@ interface PaginationProps {
   perPage: number;
   onPageChange: (p: number) => void;
   onPerPageChange?: (size: number) => void;
-  className?: string;
 }
-export function Pagination({ page, totalPages, totalItems, perPage, onPageChange, onPerPageChange, className }: PaginationProps) {
+export function Pagination({ page, totalPages, totalItems, perPage, onPageChange, onPerPageChange }: PaginationProps) {
   if (totalItems === 0) return null;
+  if (totalPages <= 1 && !onPerPageChange) return null;
   const start = (page - 1) * perPage + 1;
   const end = Math.min(page * perPage, totalItems);
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1).filter(
     (p) => p === 1 || p === totalPages || Math.abs(p - page) <= 2,
   );
   return (
-    <div className={cn("flex items-center justify-between px-4 py-3", className)}>
-      <div className="flex items-center gap-4">
-        <p className="text-xs text-muted-foreground">
+    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+        <p className="text-xs text-muted-foreground whitespace-nowrap">
           Showing <span className="font-semibold text-foreground">{start > totalItems ? totalItems : start}–{end}</span> of <span className="font-semibold text-foreground">{totalItems}</span>
         </p>
         {onPerPageChange && (
           <div className="flex items-center gap-1.5">
-            <span className="text-xs font-semibold text-muted-foreground">Rows:</span>
+            <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">Rows:</span>
             <Select value={String(perPage)} onValueChange={(val) => onPerPageChange(Number(val))}>
               <SelectTrigger className="h-7 text-xs px-2 w-[65px]">
                 <SelectValue placeholder={String(perPage)} />
@@ -563,11 +500,11 @@ export function Pagination({ page, totalPages, totalItems, perPage, onPageChange
           </div>
         )}
       </div>
-      <div className="flex items-center gap-1">
+      <div className="flex flex-wrap items-center gap-1">
         <button
           onClick={() => onPageChange(page - 1)}
           disabled={page === 1}
-          className="w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-30 transition-colors"
+          className="w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-30 transition-colors shrink-0"
         >
           <ChevronLeft className="w-3.5 h-3.5" />
         </button>
@@ -581,7 +518,7 @@ export function Pagination({ page, totalPages, totalItems, perPage, onPageChange
               <button
                 onClick={() => onPageChange(p)}
                 className={cn(
-                  "w-8 h-8 text-xs rounded-md font-medium transition-colors",
+                  "w-8 h-8 text-xs rounded-md font-medium transition-colors shrink-0",
                   p === page
                     ? "bg-primary text-primary-foreground shadow-sm"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -595,7 +532,7 @@ export function Pagination({ page, totalPages, totalItems, perPage, onPageChange
         <button
           onClick={() => onPageChange(page + 1)}
           disabled={page === totalPages}
-          className="w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-30 transition-colors"
+          className="w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-30 transition-colors shrink-0"
         >
           <ChevronRight className="w-3.5 h-3.5" />
         </button>
@@ -655,7 +592,7 @@ export function FilterTabs({ tabs, active, onChange }: FilterTabsProps) {
 
 // ─── LabeledField ─────────────────────────────────────────────────────────────
 interface LabeledFieldProps {
-  label: React.ReactNode;
+  label: string;
   required?: boolean;
   error?: string;
   children: React.ReactNode;
@@ -755,8 +692,6 @@ export * from "./DropdownMenu";
 export * from "./HourMinPicker";
 export * from "./Popover";
 export * from "./SearchableSelect";
-export * from "./Calendar";
-export * from "./DatePicker";
 export { FormRenderer, SectionRenderer } from "./FormRenderer";
 export type { FormRendererProps, SectionRendererProps } from "./FormRenderer";
 export {

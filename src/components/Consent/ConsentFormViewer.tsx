@@ -1,12 +1,26 @@
-import type { ApiAny } from "../../types/api";
 import logo from "../../logo.png";
 import { useTheme } from "../../contexts/ThemeContext";
-import { Printer, Shield, BookOpen, User, Stethoscope, Calendar, ClipboardCheck, Quote, PenLine, HeartHandshake, ShieldCheck } from "lucide-react";
+import {
+  Shield,
+  CheckCircle2,
+  MapPin,
+  Phone,
+  Upload,
+  BookOpen,
+  User,
+  Stethoscope,
+  FileText,
+  Calendar,
+  ClipboardCheck,
+  Quote,
+  PenLine,
+  HeartHandshake,
+  ShieldCheck
+} from "lucide-react";
 import { Modal, Button } from "@/components/ui";
-import { printConsentForm } from "@/utils/consentPrintUtils";
 
 interface ConsentFormViewerProps {
-  form: ApiAny;
+  form: any;
   onClose: () => void;
   isLoading?: boolean;
 }
@@ -14,12 +28,6 @@ interface ConsentFormViewerProps {
 export function ConsentFormViewer({ form, onClose, isLoading }: ConsentFormViewerProps) {
   const { themeData } = useTheme();
   const isOfflineUpload = Boolean(form?.consentFormUrl && form.consentFormUrl !== "null" && form.consentFormUrl !== "");
-
-  const handlePrint = () => {
-    if (form) {
-      printConsentForm(form, themeData?.theme?.logo_url || null);
-    }
-  };
 
   return (
     <Modal
@@ -30,11 +38,8 @@ export function ConsentFormViewer({ form, onClose, isLoading }: ConsentFormViewe
       icon={<Shield className="w-4 h-4" />}
       footer={
         <div className="flex justify-end gap-3 w-full print:hidden">
-          {!isOfflineUpload && (
-            <Button variant="outline" onClick={handlePrint} className="gap-2" disabled={isLoading}>
-              <Printer className="w-4 h-4" /> Print / PDF
-            </Button>
-          )}
+          {/* Print / PDF button hidden on request — printConsentForm output
+              needs a layout fix before showing it to users again. */}
           <Button variant="ghost" onClick={onClose}>
             Close
           </Button>

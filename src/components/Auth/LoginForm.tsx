@@ -5,16 +5,22 @@ import { LoginView } from "./Views/LoginView";
 import { ForgotView } from "./Views/ForgotView";
 import { ForgotSentView } from "./Views/ForgotSentView";
 import { ResetPasswordView } from "./Views/ResetPasswordView";
+import { ActivateAccountView } from "./Views/ActivateAccountView";
 const logoImg = "/Portal_logo.png";
 
 export function LoginForm() {
   const location = useLocation();
   const isResetPath = location.pathname.toLowerCase().includes('reset-password');
-  const [view, setView] = useState<'login' | 'forgot' | 'forgot-sent' | 'reset'>(isResetPath ? 'reset' : 'login');
+  const isActivatePath = location.pathname.toLowerCase().includes('activate-account');
+  const [view, setView] = useState<'login' | 'forgot' | 'forgot-sent' | 'reset' | 'activate'>(
+    isActivatePath ? 'activate' : isResetPath ? 'reset' : 'login'
+  );
   const [resetEmail, setResetEmail] = useState('');
 
   useEffect(() => {
-    if (location.pathname.toLowerCase().includes('reset-password')) {
+    if (location.pathname.toLowerCase().includes('activate-account')) {
+      setView('activate');
+    } else if (location.pathname.toLowerCase().includes('reset-password')) {
       setView('reset');
     } else if (location.pathname.toLowerCase() === '/login' || location.pathname === '/') {
       setView('login');
@@ -110,6 +116,7 @@ export function LoginForm() {
           {view === 'forgot' && <ForgotView setView={setView} resetEmail={resetEmail} setResetEmail={setResetEmail} />}
           {view === 'forgot-sent' && <ForgotSentView setView={setView} resetEmail={resetEmail} setResetEmail={setResetEmail} />}
           {view === 'reset' && <ResetPasswordView />}
+          {view === 'activate' && <ActivateAccountView />}
         </div>
       </div>
     </div>

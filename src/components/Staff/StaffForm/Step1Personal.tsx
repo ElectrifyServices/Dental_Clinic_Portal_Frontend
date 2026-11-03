@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../../types/api";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import React, { useState } from 'react';
@@ -6,15 +5,15 @@ import { User, Mail, Phone, Upload, Eye, EyeOff, Check, AlertTriangle } from 'lu
 import { LabeledField } from '@/components/ui';
 import { CountryCodeSelect } from "@/components/ui/CountryCodeSelect";
 import { usePhoneValidation } from "@/hooks/usePhoneValidation";
-import { getPhonePlaceholder, isoFromDialingCode, getPhoneMaxLength } from "@/utils/phoneUtils";
+import { getPhonePlaceholder } from "@/utils/phoneUtils";
 
 interface Step1Props {
-  formData: ApiAny;
-  onChange: (e: ApiAny) => void;
+  formData: any;
+  onChange: (e: any) => void;
   fileInputRef: React.RefObject<HTMLInputElement>;
-  onImageUpload: (e: ApiAny) => void;
+  onImageUpload: (e: any) => void;
   isEdit?: boolean;
-  errors?: ApiAny;
+  errors?: any;
 }
 
 export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload, isEdit, errors = {} }: Step1Props) {
@@ -110,10 +109,6 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
         </div>
       </div>
 
-      {/* Hidden dummy fields to prevent aggressive browser password autofill */}
-      <input type="text" name="fake_username_remembered" style={{ display: 'none' }} tabIndex={-1} aria-hidden="true" autoComplete="username" />
-      <input type="password" name="fake_password_remembered" style={{ display: 'none' }} tabIndex={-1} aria-hidden="true" autoComplete="current-password" />
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <LabeledField label="Full Name" required error={errors.name?.message}>
           <div className="relative">
@@ -123,7 +118,6 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
                 e.target.value = e.target.value.replace(/\d/g, "");
                 onChange(e);
               }}
-              autoComplete="off"
               required
                className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${errors.name ? 'border-destructive ring-destructive/20' : ''}`}
               placeholder="e.g. Dr. Sameer Khan" />
@@ -134,8 +128,8 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
           <div className="relative">
             <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input type="email" name="email" value={formData.email} onChange={onChange}
-              autoComplete="off"
               required
+              autoComplete="off"
                className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${errors.email ? 'border-destructive ring-destructive/20' : ''}`}
               placeholder="sameer@clinic.com" />
           </div>
@@ -148,11 +142,6 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
                 value={formData.country_code || "+91"}
                 onChange={(val) => {
                   onChange({ target: { name: "country_code", value: val } });
-                  const newIso = isoFromDialingCode(val);
-                  const newMax = getPhoneMaxLength(newIso);
-                  if (formData.phone && formData.phone.length > newMax) {
-                    onChange({ target: { name: "phone", value: formData.phone.slice(0, newMax) } });
-                  }
                   clearPhoneError();
                 }}
                 className="h-11 rounded-xl"
@@ -162,7 +151,6 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
                 <Input type="tel" name="phone" value={formData.phone}
                   onChange={handlePhoneChange}
                   maxLength={maxLength}
-                  autoComplete="off"
                   required
                   className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${(errors.phone || phoneError) ? 'border-destructive ring-destructive/20' : ''}`}
                   placeholder={phonePlaceholder} />
@@ -186,8 +174,8 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
                 name="password"
                 value={formData.password}
                 onChange={onChange}
-                autoComplete="new-password"
                 required
+                autoComplete="new-password"
                 className={`w-full px-4 pr-24 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${errors.password ? 'border-destructive ring-destructive/20' : ''}`}
                 placeholder="••••••••"
               />
@@ -218,7 +206,7 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div className={`flex items-center gap-1.5 font-medium transition-colors ${criteria.length ? "text-emerald-600 font-semibold" : "text-rose-500 font-semibold"}`}>
                     {criteria.length ? (
-                      <Check className="w-3.5 h-3.5 stroke-3 text-emerald-600" />
+                      <Check className="w-3.5 h-3.5 stroke-[3] text-emerald-600" />
                     ) : (
                       <div className="w-3.5 h-3.5 rounded-full border-2 border-rose-500" />
                     )}
@@ -226,7 +214,7 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
                   </div>
                   <div className={`flex items-center gap-1.5 font-medium transition-colors ${criteria.uppercase ? "text-emerald-600 font-semibold" : "text-rose-500 font-semibold"}`}>
                     {criteria.uppercase ? (
-                      <Check className="w-3.5 h-3.5 stroke-3 text-emerald-600" />
+                      <Check className="w-3.5 h-3.5 stroke-[3] text-emerald-600" />
                     ) : (
                       <div className="w-3.5 h-3.5 rounded-full border-2 border-rose-500" />
                     )}
@@ -234,7 +222,7 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
                   </div>
                   <div className={`flex items-center gap-1.5 font-medium transition-colors ${criteria.lowercase ? "text-emerald-600 font-semibold" : "text-rose-500 font-semibold"}`}>
                     {criteria.lowercase ? (
-                      <Check className="w-3.5 h-3.5 stroke-3 text-emerald-600" />
+                      <Check className="w-3.5 h-3.5 stroke-[3] text-emerald-600" />
                     ) : (
                       <div className="w-3.5 h-3.5 rounded-full border-2 border-rose-500" />
                     )}
@@ -242,7 +230,7 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
                   </div>
                   <div className={`flex items-center gap-1.5 font-medium transition-colors ${criteria.number ? "text-emerald-600 font-semibold" : "text-rose-500 font-semibold"}`}>
                     {criteria.number ? (
-                      <Check className="w-3.5 h-3.5 stroke-3 text-emerald-600" />
+                      <Check className="w-3.5 h-3.5 stroke-[3] text-emerald-600" />
                     ) : (
                       <div className="w-3.5 h-3.5 rounded-full border-2 border-rose-500" />
                     )}
@@ -260,8 +248,8 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={onChange}
-                autoComplete="new-password"
                 required
+                autoComplete="new-password"
                 className={`w-full px-4 pr-10 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${errors.confirmPassword ? 'border-destructive ring-destructive/20' : ''}`}
                 placeholder="••••••••"
               />
@@ -283,7 +271,7 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
             )}
             {formData.confirmPassword && passwordsMatch && (
               <p className="text-xs text-emerald-600 font-medium mt-1 animate-in fade-in slide-in-from-top-1 flex items-center gap-1">
-                <Check className="w-3 h-3 stroke-3 text-emerald-600" /> Passwords match
+                <Check className="w-3 h-3 stroke-[3] text-emerald-600" /> Passwords match
               </p>
             )}
           </LabeledField>

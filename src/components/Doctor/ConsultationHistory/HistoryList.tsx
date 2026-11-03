@@ -14,6 +14,7 @@ import {
   Pill,
   FileText,
   Send,
+  Camera,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/Card";
 import { getConsultationReportAvailability } from "../../../utils/consultationReportUtils";
@@ -304,6 +305,18 @@ export function HistoryList({
                         >
                           <Pill className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Prescription Only
                         </Button>
+                        <Button
+                          variant="ghost"
+                          onClick={(e) => {
+                            if (!reportAvailability.xray) return;
+                            e.stopPropagation();
+                            onDownloadPDF(item, 'XRAY');
+                            setActiveDownloadMenuId(null);
+                          }}
+                          className={`w-full px-4 py-2 text-left text-xs font-semibold flex items-center justify-start gap-2 h-auto ${reportAvailability.xray ? "text-muted-foreground hover:bg-cyan-50 hover:text-cyan-700 cursor-pointer" : "opacity-50 cursor-not-allowed text-muted-foreground/60 hover:bg-transparent"}`}
+                        >
+                          <Camera className="w-3.5 h-3.5 text-cyan-600 shrink-0" /> X-Ray &amp; Radiology
+                        </Button>
                         <div className="h-px bg-muted my-1" />
                         <Button
                           variant="ghost"
@@ -369,6 +382,18 @@ export function HistoryList({
                           className={`w-full px-4 py-2 text-left text-xs font-semibold flex items-center justify-start gap-2 h-auto ${reportAvailability.prescription ? "text-muted-foreground hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer" : "opacity-50 cursor-not-allowed text-muted-foreground/60 hover:bg-transparent"}`}
                         >
                           <Pill className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Prescription Only
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          onClick={(e) => {
+                            if (!reportAvailability.xray) return;
+                            e.stopPropagation();
+                            onSendPDF(item, 'XRAY');
+                            setActiveSendMenuId(null);
+                          }}
+                          className={`w-full px-4 py-2 text-left text-xs font-semibold flex items-center justify-start gap-2 h-auto ${reportAvailability.xray ? "text-muted-foreground hover:bg-cyan-50 hover:text-cyan-700 cursor-pointer" : "opacity-50 cursor-not-allowed text-muted-foreground/60 hover:bg-transparent"}`}
+                        >
+                          <Camera className="w-3.5 h-3.5 text-cyan-600 shrink-0" /> X-Ray &amp; Radiology
                         </Button>
                         <div className="h-px bg-muted my-1" />
                         <Button

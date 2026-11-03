@@ -1,13 +1,27 @@
-import type { ApiAny } from "../../../types/api";
 import React, { useState } from "react";
-import { FileText, Pill, Stethoscope, ChevronDown, Clock, ShieldAlert, AlertCircle, X, Filter, Activity } from "lucide-react";
-import { SearchInput, Button, Loading, Card, Badge, DataTable, ErrorState, DatePicker } from "@/components/ui";
+import {
+  Calendar,
+  User,
+  FileText,
+  Pill,
+  Stethoscope,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  ShieldAlert,
+  AlertCircle,
+  X,
+  Filter,
+  Download,
+  Activity
+} from "lucide-react";
+import { SearchInput, Button, Loading, Card, Badge, DataTable, ErrorState, Input } from "@/components/ui";
 import { downloadConsultationPDF } from "../../../utils/pdfGenerator";
 import { getConsultationReportAvailability } from "../../../utils/consultationReportUtils";
 
 interface PreviousConsultationsViewProps {
-  consultations: ApiAny;
-  patient?: ApiAny;
+  consultations: any;
+  patient?: any;
   isLoading: boolean;
   isError: boolean;
   searchVal: string;
@@ -35,7 +49,7 @@ export function PreviousConsultationsView({
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [activeDownloadMenuId, setActiveDownloadMenuId] = useState<string | null>(null);
 
-  const handleDownloadPDF = (record: ApiAny, type: ApiAny) => {
+  const handleDownloadPDF = (record: any, type: any) => {
     if (!patient) {
       console.error("Patient details missing for PDF download");
       return;
@@ -63,13 +77,24 @@ export function PreviousConsultationsView({
     });
   };
 
+  const parseDateBadge = (dateStr?: string) => {
+    if (!dateStr) return { day: "--", month: "", year: "" };
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return { day: "--", month: "", year: "" };
+    return {
+      day: date.toLocaleDateString("en-IN", { day: "numeric" }),
+      month: date.toLocaleDateString("en-IN", { month: "short" }).toUpperCase(),
+      year: date.getFullYear().toString(),
+    };
+  };
+
   // Parse response structure dynamically to handle arrays, nested data, or wrapper objects
   const consultationsList = React.useMemo(() => {
     if (!consultations) return [];
     if (Array.isArray(consultations)) {
       return consultations;
     }
-    const anyData = consultations as ApiAny;
+    const anyData = consultations as any;
     // Handle standard { data: [...] }
     if (Array.isArray(anyData.data)) {
       return anyData.data;
@@ -112,20 +137,22 @@ export function PreviousConsultationsView({
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-bold text-muted-foreground">From</span>
-              <DatePicker
+              <Input
+                type="date"
                 value={dateFrom}
                 max={dateTo || undefined}
-                onChange={(val) => onDateFromChange(val)}
+                onChange={(e) => onDateFromChange(e.target.value)}
                 className="w-auto h-auto px-3 py-1.5"
               />
             </div>
             <span className="text-muted-foreground text-xs font-bold">—</span>
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-bold text-muted-foreground">To</span>
-              <DatePicker
+              <Input
+                type="date"
                 value={dateTo}
                 min={dateFrom || undefined}
-                onChange={(val) => onDateToChange(val)}
+                onChange={(e) => onDateToChange(e.target.value)}
                 className="w-auto h-auto px-3 py-1.5"
               />
             </div>
@@ -168,7 +195,7 @@ export function PreviousConsultationsView({
 
       {!isLoading && !isError && consultationsList.length > 0 && (
         <div className="space-y-4">
-          {consultationsList.map((c, _idx) => {
+          {consultationsList.map((c, idx) => {
             const isExpanded = expandedId === c.id;
             const reportAvailability = getConsultationReportAvailability(c);
             return (
@@ -190,14 +217,30 @@ export function PreviousConsultationsView({
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 flex-1 min-w-0 pr-4">
                     <div className="flex items-center gap-3 shrink-0">
-                      <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-primary/10 to-primary/5 border border-primary/10 flex flex-col items-center justify-center text-primary shadow-sm relative overflow-hidden">
-                        <div className="absolute top-0 w-full h-3 bg-primary/10" />
-                        <span className="block text-lg font-black leading-none mt-1">{formatDate(c.created_at).split(',')[0].split(' ')[0]}</span>
-                        <span className="block text-[9px] font-bold uppercase tracking-widest mt-0.5">{formatDate(c.created_at).split(',')[0].split(' ').slice(1).join(' ')}</span>
-                      </div>
+                      {(() => {
+                        const rawDate = c.created_at || c.createdAt || c.date || c.consultation_date;
+                        const dateParts = parseDateBadge(rawDate);
+                        return (
+                          <div
+                            title={formatDate(rawDate)}
+                            className="w-14 min-w-[56px] h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/15 flex flex-col items-center justify-center text-primary shadow-sm relative overflow-hidden shrink-0 pb-1 select-none"
+                          >
+                            <div className="absolute top-0 w-full h-1.5 bg-primary/20" />
+                            <span className="block text-base font-black leading-none text-foreground mt-1.5">
+                              {dateParts.day}
+                            </span>
+                            <span className="block text-[9px] font-extrabold uppercase tracking-wider text-primary leading-tight mt-0.5">
+                              {dateParts.month}
+                            </span>
+                            <span className="block text-[8.5px] font-bold text-muted-foreground leading-tight">
+                              {dateParts.year}
+                            </span>
+                          </div>
+                        );
+                      })()}
                     </div>
 
-                    <div className="hidden sm:block h-10 w-px bg-border shrink-0" />
+                    <div className="hidden sm:block h-10 w-[1px] bg-border shrink-0" />
 
                     <div className="flex flex-col gap-1.5 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -273,7 +316,7 @@ export function PreviousConsultationsView({
 
                 {/* Expanded Content */}
                 {isExpanded && (
-                  <div className="p-7 pl-9 border-t border-border/40 bg-linear-to-b from-muted/10 to-transparent space-y-8 animate-in slide-in-from-top-2 duration-300">
+                  <div className="p-7 pl-9 border-t border-border/40 bg-gradient-to-b from-muted/10 to-transparent space-y-8 animate-in slide-in-from-top-2 duration-300">
                     
                     {/* Clinical Details Grid */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -302,7 +345,7 @@ export function PreviousConsultationsView({
                              <div className="pl-1.5">
                                 {c.tooth_findings && c.tooth_findings.length > 0 ? (
                                   <div className="flex flex-wrap gap-2">
-                                    {c.tooth_findings.map((f: ApiAny, i: number) => (
+                                    {c.tooth_findings.map((f: any, i: number) => (
                                       <div key={i} className="flex items-center gap-2 bg-amber-50/80 border border-amber-200/60 rounded-lg pr-3 py-1 text-sm font-semibold shadow-sm">
                                         <span className="bg-amber-100 text-amber-800 px-2 h-6 rounded-md flex items-center justify-center text-[11px] font-black shrink-0 ml-1">
                                           {f.tooth_number === "FM" ? "FM" : f.tooth_number}
@@ -383,7 +426,7 @@ export function PreviousConsultationsView({
                               {
                                 key: "tooth_number",
                                 header: "Tooth",
-                                render: (t: ApiAny) => {
+                                render: (t: any) => {
                                   const tooth = t.tooth_number !== undefined ? t.tooth_number : t.tooth;
                                   return (
                                     <span className="font-black text-xs bg-muted px-2 py-1.5 rounded-md border border-border/50 shadow-sm">
@@ -395,18 +438,18 @@ export function PreviousConsultationsView({
                               {
                                 key: "procedure",
                                 header: "Procedure",
-                                render: (t: ApiAny) => <span className="font-bold text-foreground text-[13px]">{t.procedure || t.treatment_name}</span>,
+                                render: (t: any) => <span className="font-bold text-foreground text-[13px]">{t.procedure || t.treatment_name}</span>,
                               },
                               {
                                 key: "sessions",
                                 header: "Sessions",
-                                render: (t: ApiAny) => <span className="font-semibold text-muted-foreground">{Array.isArray(t.sessions) ? t.sessions.length : (t.sessions || 1)}</span>,
+                                render: (t: any) => <span className="font-semibold text-muted-foreground">{Array.isArray(t.sessions) ? t.sessions.length : (t.sessions || 1)}</span>,
                               },
                               {
                                 key: "est_cost",
                                 header: "Cost (₹)",
                                 align: "right",
-                                render: (t: ApiAny) => (
+                                render: (t: any) => (
                                   <span className="font-black text-foreground">
                                     ₹{(t.est_cost || t.cost || 0).toLocaleString()}
                                   </span>
@@ -416,7 +459,7 @@ export function PreviousConsultationsView({
                                 key: "is_active",
                                 header: "Status",
                                 align: "center",
-                                render: (t: ApiAny) => (
+                                render: (t: any) => (
                                   <Badge variant={t.is_active !== false && t.status !== "completed" ? "emerald" : "gray"} className="text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-widest shadow-sm">
                                     {t.is_active !== false && t.status !== "completed" ? "Active" : (t.status || "Inactive")}
                                   </Badge>
@@ -424,7 +467,7 @@ export function PreviousConsultationsView({
                               },
                             ]}
                             data={c.treatments || c.treatment_plans}
-                            rowKey={(t: ApiAny) => t.id || `${t.tooth_number || t.tooth}-${t.procedure || t.treatment_name}`}
+                            rowKey={(t: any) => t.id || `${t.tooth_number || t.tooth}-${t.procedure || t.treatment_name}`}
                           />
                          </div>
                       ) : (
@@ -447,7 +490,7 @@ export function PreviousConsultationsView({
                               {
                                 key: "medicine",
                                 header: "Medicine",
-                                render: (pr: ApiAny) => {
+                                render: (pr: any) => {
                                   let medName = "";
                                   const m = pr.medicine_name || pr.medicine;
                                   if (typeof m === 'object' && m !== null) {
@@ -465,7 +508,7 @@ export function PreviousConsultationsView({
                               {
                                 key: "dosage",
                                 header: "Dosage",
-                                render: (pr: ApiAny) => (
+                                render: (pr: any) => (
                                   <span className="font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200/50 text-[11px] uppercase tracking-wider shadow-sm">
                                     {pr.dosage || "—"}
                                   </span>
@@ -474,27 +517,27 @@ export function PreviousConsultationsView({
                               {
                                 key: "timing",
                                 header: "Timing",
-                                render: (pr: ApiAny) => <span className="font-semibold text-muted-foreground text-[13px]">{pr.timing || "—"}</span>,
+                                render: (pr: any) => <span className="font-semibold text-muted-foreground text-[13px]">{pr.timing || "—"}</span>,
                               },
                               {
                                 key: "frequency",
                                 header: "Freq",
-                                render: (pr: ApiAny) => <span className="font-semibold text-muted-foreground text-[13px]">{pr.frequency || "—"}</span>,
+                                render: (pr: any) => <span className="font-semibold text-muted-foreground text-[13px]">{pr.frequency || "—"}</span>,
                               },
                               {
                                 key: "duration",
                                 header: "Duration",
-                                render: (pr: ApiAny) => <span className="font-bold text-[13px] text-foreground/80">{pr.duration ? `${pr.duration} ${pr.duration_type || pr.durationUnit || 'Days'}` : "—"}</span>,
+                                render: (pr: any) => <span className="font-bold text-[13px] text-foreground/80">{pr.duration ? `${pr.duration} ${pr.duration_type || pr.durationUnit || 'Days'}` : "—"}</span>,
                               },
                               {
                                 key: "qty",
                                 header: "Qty",
                                 align: "right",
-                                render: (pr: ApiAny) => <span className="font-black text-lg text-foreground/80">{pr.qty || "—"}</span>,
+                                render: (pr: any) => <span className="font-black text-lg text-foreground/80">{pr.qty || "—"}</span>,
                               },
                             ]}
                             data={c.prescriptions}
-                            rowKey={(pr: ApiAny) => pr.id || pr.medicine_name || Math.random().toString()}
+                            rowKey={(pr: any) => pr.id || pr.medicine_name || Math.random().toString()}
                           />
                         </div>
                       ) : (

@@ -13,7 +13,8 @@ export interface PlanDependent {
   email?: string;
   isActive?: boolean;
   patientId?: string;         // set when this dependent registers as a patient
-  corporatePlanId?: string;   // copied from primary member at time of creation
+  corporatePlanId?: string;   // this dependent's own active plan — can differ from the head's plan when linked via Link as Family
+  corporatePlanName?: string;
   primaryMemberName?: string; // copied from primary member at time of creation
 }
 

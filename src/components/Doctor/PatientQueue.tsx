@@ -236,11 +236,14 @@ export function PatientQueue({
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredPatients.map((patient) => {
-              const fullPatient = patients.find(
-                (p) =>
-                  p.phone === patient.patientPhone ||
-                  p.name === patient.patientName,
-              );
+              const fullPatient =
+                (patient.patientId &&
+                  patients.find((p) => p.id === patient.patientId)) ||
+                patients.find(
+                  (p) =>
+                    p.phone === patient.patientPhone ||
+                    p.name === patient.patientName,
+                );
               return (
                 <QueueCard
                   key={patient.id}

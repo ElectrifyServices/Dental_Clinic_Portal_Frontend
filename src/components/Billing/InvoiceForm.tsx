@@ -1,14 +1,39 @@
-import type { ApiAny } from "../../types/api";
 import { Input } from "@/components/ui/Input";
-import { DatePicker } from "@/components/ui/DatePicker";
 import { useMemo, useState, useEffect } from "react";
 import { getDependentByPatientId } from "../../hooks/corporate/dependentStorage";
-import { Save, Plus, User, DollarSign, Stethoscope, ClipboardList, IndianRupee, ShieldCheck } from "lucide-react";
+import {
+  Save,
+  Plus,
+  User,
+  DollarSign,
+  Stethoscope,
+  ClipboardList,
+  Eye,
+  IndianRupee,
+  ShieldCheck,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Invoice, InvoiceItem } from "../../types";
 import { computePlanDiscount } from "../../utils/corporatePlan";
-import { Modal, Button, Card, CardContent, LabeledField, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Loading, Switch } from "@/components/ui";
+import {
+  Modal,
+  Button,
+  Card,
+  CardContent,
+  LabeledField,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+  Loading,
+  Badge,
+  Switch,
+  toast,
+} from "@/components/ui";
 import { sanitizeNumericString } from "@/utils/inputUtils";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { PendingItems } from "./InvoiceForm/PendingItems";
@@ -34,41 +59,41 @@ interface InvoiceFormProps {
   onClose: () => void;
   onSave: (invoice: Partial<Invoice>) => void;
   invoice?: Invoice;
-  patients: ApiAny[];
-  treatments: ApiAny[];
-  consultations: ApiAny[];
-  corporatePlans: ApiAny[];
+  patients: any[];
+  treatments: any[];
+  consultations: any[];
+  corporatePlans: any[];
 }
 
 export function InvoiceForm({
   onClose,
   onSave,
   invoice,
-  patients: _patients,
-  treatments: _treatments = [],
-  consultations: _consultations = [],
+  patients,
+  treatments = [],
+  consultations = [],
   corporatePlans = [],
 }: InvoiceFormProps) {
   const form = useForm<InvoiceFormData>({
-    resolver: zodResolver(invoiceSchema) as ApiAny,
+    resolver: zodResolver(invoiceSchema) as any,
     defaultValues: {
       patientName: invoice?.patientName ?? "",
-      patientPhone: (invoice as ApiAny)?.patientPhone ?? "",
-      patientId: (invoice as ApiAny)?.patientId ?? "",
-      doctor: (invoice as ApiAny)?.doctor ?? "",
+      patientPhone: (invoice as any)?.patientPhone ?? "",
+      patientId: (invoice as any)?.patientId ?? "",
+      doctor: (invoice as any)?.doctor ?? "",
       date: invoice?.date ?? new Date().toISOString().split("T")[0],
       dueDate: invoice?.dueDate ?? "",
       discount: invoice?.discount ?? 0,
       tax: invoice?.tax ?? 0,
-      isComplimentary: (invoice as ApiAny)?.isComplimentary ?? false,
-      complimentaryNote: (invoice as ApiAny)?.complimentaryNote ?? "",
-      linkedItemIds: (invoice as ApiAny)?.linkedItemIds ?? [],
+      isComplimentary: (invoice as any)?.isComplimentary ?? false,
+      complimentaryNote: (invoice as any)?.complimentaryNote ?? "",
+      linkedItemIds: (invoice as any)?.linkedItemIds ?? [],
       items: invoice?.items?.map((i) => ({
         ...i,
         quantity: i.quantity ?? 1,
         rate: i.rate ?? 0,
         amount: i.amount ?? 0,
-        item_discount: (i as ApiAny).item_discount ?? 0,
+        item_discount: (i as any).item_discount ?? 0,
       })) ?? [{ id: "1", description: "", quantity: 1, rate: 0, amount: 0, item_discount: 0 }],
     },
   });
@@ -78,6 +103,11 @@ export function InvoiceForm({
   const [patientSearchInput, setPatientSearchInput] = useState("");
   const [patientSearchQuery, setPatientSearchQuery] = useState("");
   const [isCorporateBilling, setIsCorporateBilling] = useState(false);
+  // Display-only: when a corporate bill has multiple employee lines, they're
+  // collapsed behind a summary by default instead of all showing open at
+  // once. This never touches the items array or its calculations — it only
+  // decides whether the existing rows are rendered or hidden.
+  const [showCorporateItems, setShowCorporateItems] = useState(false);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -89,7 +119,7 @@ export function InvoiceForm({
   const { data: rawPatientsData } = usePatientQuery(
     {
       search: patientSearchQuery || undefined,
-      filters: { isDropdown: [true] as ApiAny },
+      filters: { isDropdown: [true] as any },
     },
     { enabled: !isCorporateBilling, staleTime: 0, refetchOnMount: "always" }
   );
@@ -99,33 +129,26 @@ export function InvoiceForm({
     search: patientSearchQuery || undefined,
     planType: "COMPANY",
     staleTime: 0,
-    refetchOnMount: "always",
   });
 
   const apiCorporatePlans = useMemo(() => {
     if (!rawCorporatePlansList) return [];
-    const target = (rawCorporatePlansList as ApiAny)?.data ?? rawCorporatePlansList;
-    let list: ApiAny[] = [];
+    const target = (rawCorporatePlansList as any)?.data ?? rawCorporatePlansList;
+    let list: any[] = [];
     if (Array.isArray(target)) {
       list = target;
     } else if (target && typeof target === "object") {
       list = target.data?.data?.data || target.data?.data || target.data || target.plans || target.data?.plans || [];
     }
-    return list.filter((p: ApiAny) => {
-      const isActive = p.status === "ACTIVE" || p.isActive !== false;
-      const type = (p.plan_type || p.planType || "").toUpperCase();
-      const category = (p.planCategory || "").toLowerCase();
-      const isCorporate = type === "COMPANY" || category === "corporate" || (!type && category !== "individual");
-      return isActive && isCorporate;
-    });
+    return list.filter((p: any) => p.status === "ACTIVE" || p.isActive !== false);
   }, [rawCorporatePlansList]);
   const apiPatients = useMemo(() => {
     if (!rawPatientsData) return [];
-    let rawList: ApiAny[] = [];
+    let rawList: any[] = [];
     if (Array.isArray(rawPatientsData)) {
       rawList = rawPatientsData;
     } else {
-      const target = (rawPatientsData as ApiAny).responseObject !== undefined ? (rawPatientsData as ApiAny).responseObject : rawPatientsData;
+      const target = (rawPatientsData as any).responseObject !== undefined ? (rawPatientsData as any).responseObject : rawPatientsData;
       if (Array.isArray(target)) {
         rawList = target;
       } else if (target && typeof target === "object") {
@@ -136,7 +159,7 @@ export function InvoiceForm({
         else if (Array.isArray(target.data?.patients)) rawList = target.data.patients;
       }
     }
-    return rawList.map((p: ApiAny) => ({
+    return rawList.map((p: any) => ({
       ...p,
       id: p.id || p.patient_id,
       name: p.name || p.full_name || p.patient_name || "",
@@ -156,14 +179,11 @@ export function InvoiceForm({
         patientPhone: missingPatientData.phone || missingPatientData.mobile || missingPatientData.patient_phone || "",
       });
     }
-  // setFormData is defined further down in this component and is rebuilt on every render,
-  // so listing it here would read it before it exists / re-run this effect in a loop
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [missingPatientData, formData.patientName]);
 
   const selectedPatient = useMemo(() => {
     return apiPatients.find(
-      (p: ApiAny) =>
+      (p: any) =>
         p.id === formData.patientId || p.name === formData.patientName,
     );
   }, [apiPatients, formData.patientId, formData.patientName]);
@@ -205,7 +225,7 @@ export function InvoiceForm({
     );
   }, [isCorporateBilling, selectedPatient, isCorporate]);
 
-  const [_selectedPrevInvoiceId, setSelectedPrevInvoiceId] =
+  const [selectedPrevInvoiceId, setSelectedPrevInvoiceId] =
     useState<string>("");
   const [viewingInvoiceId, setViewingInvoiceId] = useState<string | null>(null);
   const [showAllInvoicesModal, setShowAllInvoicesModal] =
@@ -226,7 +246,7 @@ export function InvoiceForm({
     if (target && typeof target === "object" && !Array.isArray(target)) {
       if (target.has_membership && Array.isArray(target.memberships) && target.memberships.length > 0) {
         const active = target.memberships.find(
-          (m: ApiAny) => m.status?.toUpperCase() === "ACTIVE" || m.is_currently_valid === true
+          (m: any) => m.status?.toUpperCase() === "ACTIVE" || m.is_currently_valid === true
         );
         return active ? active.plan : null;
       }
@@ -240,6 +260,31 @@ export function InvoiceForm({
     return null;
   }, [membershipCheckData]);
 
+  // Any corporate (COMPANY) enrollment on this patient's member record,
+  // regardless of status (active or cancelled) — used to block the
+  // individual "Membership Plan Suggestions" flow for someone who already
+  // has a corporate Member row, since re-enrolling them in a new individual
+  // plan would collide with that existing row's unique name+phone constraint.
+  const existingCorporateMembership = useMemo(() => {
+    if (!membershipCheckData) return null;
+    const target = (membershipCheckData as any).responseObject?.data ?? (membershipCheckData as any).data ?? membershipCheckData;
+    const memberships = target?.memberships;
+    if (!Array.isArray(memberships)) return null;
+    const corporateEntry = memberships.find(
+      (m: any) => (m.plan?.plan_type || m.plan?.planType) === "COMPANY",
+    );
+    return corporateEntry?.plan ?? null;
+  }, [membershipCheckData]);
+
+  useEffect(() => {
+    if (existingCorporateMembership && !isCorporateBilling) {
+      toast(
+        `This patient already has a membership plan: ${existingCorporateMembership.plan_name || existingCorporateMembership.planName || "Corporate Plan"}`,
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [existingCorporateMembership?.id]);
+
   // GET list of all individual plans
   const { data: rawPlansList } = useCorporatePlansQuery({
     enabled: !!formData.patientId && !activeMembership && !isMembershipCheckLoading,
@@ -249,8 +294,8 @@ export function InvoiceForm({
 
   const availableMembershipPlans = useMemo(() => {
     if (!rawPlansList) return [];
-    const target = (rawPlansList as ApiAny)?.data ?? rawPlansList;
-    let list: ApiAny[] = [];
+    const target = (rawPlansList as any)?.data ?? rawPlansList;
+    let list: any[] = [];
     if (Array.isArray(target)) {
       list = target;
     } else if (target && typeof target === "object") {
@@ -260,13 +305,13 @@ export function InvoiceForm({
       else if (Array.isArray(target.plans)) list = target.plans;
       else if (Array.isArray(target.data?.plans)) list = target.data.plans;
     }
-    return list.filter((p: ApiAny) => p.status === "ACTIVE" || p.isActive !== false);
+    return list.filter((p: any) => p.status === "ACTIVE" || p.isActive !== false);
   }, [rawPlansList]);
 
-  const handleSelectMembershipPlan = (plan: ApiAny) => {
+  const handleSelectMembershipPlan = (plan: any) => {
     const currentItems = (form.getValues("items") ?? []) as InvoiceItem[];
     const filtered = currentItems.filter(
-      (i: ApiAny) => !(i as ApiAny).isNewPlanPurchase && i.linkedType !== "MEMBERSHIP"
+      (i: any) => !(i as any).isNewPlanPurchase && i.linkedType !== "MEMBERSHIP"
     );
 
     const newItem = {
@@ -279,7 +324,7 @@ export function InvoiceForm({
       linkedType: "MEMBERSHIP",
       isNewPlanPurchase: true,
       item_discount: 0,
-    } as ApiAny;
+    } as any;
 
     setItems(
       filtered.length === 1 && !filtered[0].description && filtered[0].rate === 0
@@ -305,28 +350,28 @@ export function InvoiceForm({
 
   const patientInvoices = useMemo(() => {
     if (!patientInvoicesData) return [];
-    let rawList: ApiAny[] = [];
+    let rawList: any[] = [];
     const apiInvoices = patientInvoicesData;
     if (Array.isArray(apiInvoices)) {
       rawList = apiInvoices;
-    } else if (apiInvoices && Array.isArray((apiInvoices as ApiAny).invoices)) {
-      rawList = (apiInvoices as ApiAny).invoices;
+    } else if (apiInvoices && Array.isArray((apiInvoices as any).invoices)) {
+      rawList = (apiInvoices as any).invoices;
     } else if (
       apiInvoices &&
-      Array.isArray((apiInvoices as ApiAny).data?.invoices)
+      Array.isArray((apiInvoices as any).data?.invoices)
     ) {
-      rawList = (apiInvoices as ApiAny).data.invoices;
-    } else if (apiInvoices && Array.isArray((apiInvoices as ApiAny).data?.data)) {
-      rawList = (apiInvoices as ApiAny).data.data;
-    } else if (apiInvoices && Array.isArray((apiInvoices as ApiAny).data)) {
-      rawList = (apiInvoices as ApiAny).data;
+      rawList = (apiInvoices as any).data.invoices;
+    } else if (apiInvoices && Array.isArray((apiInvoices as any).data?.data)) {
+      rawList = (apiInvoices as any).data.data;
+    } else if (apiInvoices && Array.isArray((apiInvoices as any).data)) {
+      rawList = (apiInvoices as any).data;
     } else if (
       apiInvoices &&
-      Array.isArray((apiInvoices as ApiAny).responseObject?.data)
+      Array.isArray((apiInvoices as any).responseObject?.data)
     ) {
-      rawList = (apiInvoices as ApiAny).responseObject.data;
+      rawList = (apiInvoices as any).responseObject.data;
     }
-    return rawList.map((inv: ApiAny) => normalizeInvoice(inv)).filter(Boolean);
+    return rawList.map((inv: any) => normalizeInvoice(inv)).filter(Boolean);
   }, [patientInvoicesData]);
 
 
@@ -354,15 +399,15 @@ export function InvoiceForm({
     if (!rawUnbilledData) return 0;
     const itemsList = Array.isArray(rawUnbilledData)
       ? rawUnbilledData
-      : (rawUnbilledData as ApiAny)?.data?.items ||
-      (rawUnbilledData as ApiAny)?.items ||
-      (rawUnbilledData as ApiAny)?.data ||
+      : (rawUnbilledData as any)?.data?.items ||
+      (rawUnbilledData as any)?.items ||
+      (rawUnbilledData as any)?.data ||
       [];
 
     if (!Array.isArray(itemsList)) return 0;
 
     return itemsList.reduce(
-      (sum: number, item: ApiAny) =>
+      (sum: number, item: any) =>
         sum + Number(item.total || item.amount || item.cost || item.rate || 0),
       0,
     );
@@ -375,13 +420,13 @@ export function InvoiceForm({
     const current = form.getValues();
     const updated = typeof updater === "function" ? updater(current) : updater;
     Object.entries(updated).forEach(([k, v]) =>
-      form.setValue(k as keyof InvoiceFormData, v as ApiAny),
+      form.setValue(k as keyof InvoiceFormData, v as any),
     );
   };
 
-  const items = useMemo(() => (formData.items ?? []) as InvoiceItem[], [formData.items]);
+  const items = (formData.items ?? []) as InvoiceItem[];
   const setItems = (newItems: InvoiceItem[]) =>
-    form.setValue("items", newItems as ApiAny);
+    form.setValue("items", newItems as any);
 
   const { activeCorporatePlan, dependentOf } = useMemo(() => {
     const p = apiPatients.find(
@@ -416,7 +461,7 @@ export function InvoiceForm({
 
   const pendingItems = useMemo(() => {
     if (!formData.patientId) return [];
-    const list: ApiAny[] = [];
+    const list: any[] = [];
 
     const unbilledObj =
       rawUnbilledData?.data?.unbilled_items || rawUnbilledData?.unbilled_items;
@@ -426,7 +471,7 @@ export function InvoiceForm({
       const apiTreatments = unbilledObj.treatments || [];
       const apiMemberships = unbilledObj.membership || [];
 
-      apiConsultations.forEach((c: ApiAny) => {
+      apiConsultations.forEach((c: any) => {
         const rate = c.final_amount ?? c.amount ?? c.original_amount ?? 0;
         if (Number(rate) > 0) {
           list.push({
@@ -444,7 +489,7 @@ export function InvoiceForm({
         }
       });
 
-      apiTreatments.forEach((t: ApiAny) => {
+      apiTreatments.forEach((t: any) => {
         // 1. If the plan has NOT been invoiced yet, we show the overall treatment plan card.
         if (!t.invoice_generated) {
           const rate = t.final_amount ?? t.amount ?? t.cost ?? t.original_amount ?? 0;
@@ -464,7 +509,7 @@ export function InvoiceForm({
 
         // 2. Process unbilled sessions if they exist
         if (t.unbilled_sessions && Array.isArray(t.unbilled_sessions) && t.unbilled_sessions.length > 0) {
-          t.unbilled_sessions.forEach((session: ApiAny) => {
+          t.unbilled_sessions.forEach((session: any) => {
             const sessionAmount = Number(session.paid_amount ?? session.session_fee ?? session.amount ?? 0);
             if (sessionAmount > 0) {
               list.push({
@@ -511,7 +556,7 @@ export function InvoiceForm({
         }
       });
 
-      apiMemberships.forEach((m: ApiAny) => {
+      apiMemberships.forEach((m: any) => {
         const rate = m.final_amount ?? m.amount ?? m.cost ?? m.original_amount ?? 0;
         if (Number(rate) > 0) {
           list.push({
@@ -531,16 +576,16 @@ export function InvoiceForm({
     return list;
   }, [formData.patientId, rawUnbilledData]);
 
-  const _invoiceCfg = useFormConfig("invoice");
+  const invoiceCfg = useFormConfig("invoice");
 
-  const updateItem = (id: string, field: keyof InvoiceItem, value: ApiAny) => {
+  const updateItem = (id: string, field: keyof InvoiceItem, value: any) => {
     const currentItems = (form.getValues("items") ?? []) as InvoiceItem[];
     const updatedItems = currentItems.map((item) => {
       if (item.id !== id) return item;
       const updated = { ...item, [field]: value };
       if (field === "quantity" || field === "rate" || field === "item_discount") {
         const sub = (updated.quantity || 1) * (updated.rate || 0);
-        const discPct = Number((updated as ApiAny).item_discount) || 0;
+        const discPct = Number((updated as any).item_discount) || 0;
         updated.amount = Math.round(Math.max(0, sub - (sub * discPct) / 100));
       }
       return updated;
@@ -548,7 +593,7 @@ export function InvoiceForm({
     setItems(updatedItems);
   };
 
-  const addPendingItem = (pItem: ApiAny) => {
+  const addPendingItem = (pItem: any) => {
     if (formData.linkedItemIds.includes(pItem.id)) return;
     const currentItems = (form.getValues("items") ?? []) as InvoiceItem[];
     const newItem = {
@@ -560,7 +605,8 @@ export function InvoiceForm({
       linkedId: pItem.id,
       linkedType: pItem.type,
       item_discount: 0,
-    } as ApiAny;
+      rawItem: pItem.rawItem,
+    } as any;
     setItems(
       currentItems.length === 1 &&
         !currentItems[0].description &&
@@ -583,7 +629,7 @@ export function InvoiceForm({
     const currentItems = (form.getValues("items") ?? []) as InvoiceItem[];
     setItems(
       currentItems.filter(
-        (i: ApiAny) =>
+        (i: any) =>
           String(i.linkedId) !== targetLid &&
           String(i.id) !== targetLid &&
           !String(i.id).endsWith(`-${targetLid}`)
@@ -591,7 +637,7 @@ export function InvoiceForm({
     );
   };
 
-  const addPendingItemsMultiple = (pItems: ApiAny[]) => {
+  const addPendingItemsMultiple = (pItems: any[]) => {
     const currentLinked = formData.linkedItemIds.map(id => String(id));
     const itemsToAdd = pItems.filter(pItem => !currentLinked.includes(String(pItem.id)));
     if (itemsToAdd.length === 0) return;
@@ -607,7 +653,7 @@ export function InvoiceForm({
       linkedType: pItem.type,
       item_discount: 0,
       rawItem: pItem.rawItem,
-    } as ApiAny));
+    } as any));
 
     const finalItems = currentItems.length === 1 && !currentItems[0].description && currentItems[0].rate === 0
       ? newItems
@@ -628,12 +674,22 @@ export function InvoiceForm({
       linkedItemIds: prev.linkedItemIds.filter((id) => !strIds.has(String(id))),
     }));
     const currentItems = (form.getValues("items") ?? []) as InvoiceItem[];
-    setItems(currentItems.filter((i) => (i as ApiAny).linkedId !== linkedId));
+    setItems(
+      currentItems.filter((i: any) => {
+        const iLid = String(i.linkedId || "");
+        const iId = String(i.id || "");
+        return (
+          !strIds.has(iLid) &&
+          !strIds.has(iId) &&
+          !Array.from(strIds).some((lid) => iId.endsWith(`-${lid}`))
+        );
+      })
+    );
   };
 
   const itemSubtotal = items.reduce((sum, item) => sum + (item.quantity || 1) * (item.rate || 0), 0);
   const totalItemDiscount = items.reduce(
-    (sum, item) => sum + ((item.quantity || 1) * (item.rate || 0) * (Number((item as ApiAny).item_discount) || 0)) / 100,
+    (sum, item) => sum + ((item.quantity || 1) * (item.rate || 0) * (Number((item as any).item_discount) || 0)) / 100,
     0
   );
   const subtotal = Math.round(Math.max(0, itemSubtotal - totalItemDiscount));
@@ -662,7 +718,7 @@ export function InvoiceForm({
   ]);
 
   const discountAmount = Math.round(manualDiscount + planDiscountResult.totalDiscount);
-  const _taxAmount = 0;
+  const taxAmount = 0;
   const total = formData.isComplimentary
     ? 0
     : Math.round(Math.max(0, subtotal - discountAmount));
@@ -695,10 +751,10 @@ export function InvoiceForm({
       corporatePlanId: isCorporateBilling ? data.patientId : activeCorporatePlan?.id,
       corporatePlanName: isCorporateBilling ? data.patientName : activeCorporatePlan?.name,
       planDiscountApplied: planDiscountResult.totalDiscount,
-      planBenefitsUsed: planDiscountResult.applied.map((a: ApiAny) => a.label),
+      planBenefitsUsed: planDiscountResult.applied.map((a: any) => a.label),
       memberId: memberId,
       payment_method: formData.paymentMethod,
-    } as ApiAny);
+    } as any);
   };
 
   return (
@@ -747,9 +803,9 @@ export function InvoiceForm({
               value={formData.patientId || "none"}
               onChange={(val) => {
                 if (val === "none") return;
-                let mappedP: ApiAny;
+                let mappedP;
                 if (isCorporateBilling) {
-                  const cpRaw = apiCorporatePlans.find((cp: ApiAny) => cp.id === val);
+                  const cpRaw = apiCorporatePlans.find((cp: any) => cp.id === val);
                   if (cpRaw) {
                     const rawCc = cpRaw.contact_country_code || cpRaw.country_code || "+91";
                     const formattedCc = rawCc.startsWith("+") ? rawCc : `+${rawCc}`;
@@ -764,7 +820,7 @@ export function InvoiceForm({
                     };
                   }
                 } else {
-                  mappedP = apiPatients.find((p: ApiAny) => p.id === val);
+                  mappedP = apiPatients.find((p: any) => p.id === val);
                 }
                 const p = mappedP;
                 const cp =
@@ -790,7 +846,7 @@ export function InvoiceForm({
                 if (isCorporateBilling) {
                   return [
                     { label: "Select Company", value: "none" },
-                    ...apiCorporatePlans.map((cp: ApiAny) => {
+                    ...apiCorporatePlans.map((cp: any) => {
                       const formattedPhone = cp.contact_phone ? (cp.contact_country_code ? `${cp.contact_country_code} ${cp.contact_phone}` : cp.contact_phone) : "";
                       return {
                         label: `${cp.company_name || cp.plan_name} ${formattedPhone ? `(${formattedPhone})` : ""}`,
@@ -809,7 +865,7 @@ export function InvoiceForm({
                 }
 
                 const list = apiPatients;
-                const hasSelected = list.some((p: ApiAny) => p.id === formData.patientId);
+                const hasSelected = list.some((p: any) => p.id === formData.patientId);
                 const resultList = [...list];
                 if (!hasSelected && formData.patientId && formData.patientName) {
                   resultList.push({
@@ -821,7 +877,7 @@ export function InvoiceForm({
                 }
                 return [
                   { label: "Select Patient", value: "none" },
-                  ...resultList.map((p: ApiAny) => {
+                  ...resultList.map((p: any) => {
                     const formattedPhone = p.phone ? (p.country_code ? `${p.country_code} ${p.phone}` : p.phone) : "";
                     return {
                       label: `${p.name} ${formattedPhone ? `(${formattedPhone})` : ""}`,
@@ -832,7 +888,7 @@ export function InvoiceForm({
                   }),
                 ];
               })()}
-              renderOption={(option: ApiAny) => {
+              renderOption={(option: any) => {
                 if (option.value === "none")
                   return <span className="truncate pr-2">{option.label}</span>;
                 const p = option.patient;
@@ -848,14 +904,14 @@ export function InvoiceForm({
                 return (
                   <div className="flex items-center gap-3 py-1">
                     {profilePic ? (
-                      <div className="relative w-8 h-8 rounded-full overflow-hidden border border-border shrink-0 bg-muted">
+                      <div className="relative w-8 h-8 rounded-full overflow-hidden border border-border flex-shrink-0 bg-muted">
                         <img
                           src={profilePic}
                           alt={p.name}
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            (e.target as ApiAny).style.display = "none";
-                            const parent = (e.target as ApiAny).parentElement;
+                            (e.target as any).style.display = "none";
+                            const parent = (e.target as any).parentElement;
                             if (parent) {
                               const fallback =
                                 parent.querySelector(".avatar-fallback");
@@ -868,7 +924,7 @@ export function InvoiceForm({
                         </div>
                       </div>
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-black text-xs flex items-center justify-center border border-primary/20 shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-black text-xs flex items-center justify-center border border-primary/20 flex-shrink-0">
                         {initial}
                       </div>
                     )}
@@ -885,7 +941,7 @@ export function InvoiceForm({
                   </div>
                 );
               }}
-              renderValue={(option: ApiAny) => {
+              renderValue={(option: any) => {
                 if (option.value === "none") return option.label;
                 const p = option.patient;
                 if (!p) return option.label;
@@ -899,14 +955,14 @@ export function InvoiceForm({
                 return (
                   <div className="flex items-center gap-2">
                     {profilePic ? (
-                      <div className="relative w-6 h-6 rounded-full overflow-hidden border border-border shrink-0 bg-muted">
+                      <div className="relative w-6 h-6 rounded-full overflow-hidden border border-border flex-shrink-0 bg-muted">
                         <img
                           src={profilePic}
                           alt={p.name}
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            (e.target as ApiAny).style.display = "none";
-                            const parent = (e.target as ApiAny).parentElement;
+                            (e.target as any).style.display = "none";
+                            const parent = (e.target as any).parentElement;
                             if (parent) {
                               const fallback = parent.querySelector(
                                 ".avatar-fallback-val",
@@ -920,7 +976,7 @@ export function InvoiceForm({
                         </div>
                       </div>
                     ) : (
-                      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary font-bold text-[10px] flex items-center justify-center border border-primary/20 shrink-0">
+                      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary font-bold text-[10px] flex items-center justify-center border border-primary/20 flex-shrink-0">
                         {initial}
                       </div>
                     )}
@@ -930,8 +986,8 @@ export function InvoiceForm({
                   </div>
                 );
               }}
-              placeholder={isCorporateBilling ? "Select Company" : "Select Patient"}
-              searchPlaceholder={isCorporateBilling ? "Search Company..." : "Search Patient..."}
+              placeholder="Select Patient"
+              searchPlaceholder="Search Patient..."
               className="w-full bg-white"
             />
           </LabeledField>
@@ -941,9 +997,9 @@ export function InvoiceForm({
               value={formData.patientId || "none"}
               onChange={(val) => {
                 if (val === "none") return;
-                let mappedP: ApiAny;
+                let mappedP;
                 if (isCorporateBilling) {
-                  const cpRaw = apiCorporatePlans.find((cp: ApiAny) => cp.id === val);
+                  const cpRaw = apiCorporatePlans.find((cp: any) => cp.id === val);
                   if (cpRaw) {
                     const rawCc = cpRaw.contact_country_code || cpRaw.country_code || "+91";
                     const formattedCc = rawCc.startsWith("+") ? rawCc : `+${rawCc}`;
@@ -958,7 +1014,7 @@ export function InvoiceForm({
                     };
                   }
                 } else {
-                  mappedP = apiPatients.find((p: ApiAny) => p.id === val);
+                  mappedP = apiPatients.find((p: any) => p.id === val);
                 }
                 const p = mappedP;
                 const cp =
@@ -985,8 +1041,8 @@ export function InvoiceForm({
                   return [
                     { label: "Select Phone", value: "none" },
                     ...apiCorporatePlans
-                      .filter((cp: ApiAny) => cp.contact_phone)
-                      .map((cp: ApiAny) => {
+                      .filter((cp: any) => cp.contact_phone)
+                      .map((cp: any) => {
                         const formattedPhone = cp.contact_country_code ? `${cp.contact_country_code} ${cp.contact_phone}` : cp.contact_phone;
                         return {
                           label: `${formattedPhone} - ${cp.company_name || cp.plan_name}`,
@@ -1005,7 +1061,7 @@ export function InvoiceForm({
                 }
 
                 const list = apiPatients;
-                const hasSelected = list.some((p: ApiAny) => p.id === formData.patientId);
+                const hasSelected = list.some((p: any) => p.id === formData.patientId);
                 const resultList = [...list];
                 if (!hasSelected && formData.patientId && formData.patientPhone) {
                   resultList.push({
@@ -1018,8 +1074,8 @@ export function InvoiceForm({
                 return [
                   { label: "Select Phone", value: "none" },
                   ...resultList
-                    .filter((p: ApiAny) => p.phone)
-                    .map((p: ApiAny) => {
+                    .filter((p: any) => p.phone)
+                    .map((p: any) => {
                       const formattedPhone = p.country_code ? `${p.country_code} ${p.phone}` : p.phone;
                       return {
                         label: `${formattedPhone} (${p.name})`,
@@ -1030,7 +1086,7 @@ export function InvoiceForm({
                     }),
                 ];
               })()}
-              renderOption={(option: ApiAny) => {
+              renderOption={(option: any) => {
                 if (option.value === "none")
                   return <span className="truncate pr-2">{option.label}</span>;
                 const p = option.patient;
@@ -1046,14 +1102,14 @@ export function InvoiceForm({
                 return (
                   <div className="flex items-center gap-3 py-1">
                     {profilePic ? (
-                      <div className="relative w-8 h-8 rounded-full overflow-hidden border border-border shrink-0 bg-muted">
+                      <div className="relative w-8 h-8 rounded-full overflow-hidden border border-border flex-shrink-0 bg-muted">
                         <img
                           src={profilePic}
                           alt={p.name}
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            (e.target as ApiAny).style.display = "none";
-                            const parent = (e.target as ApiAny).parentElement;
+                            (e.target as any).style.display = "none";
+                            const parent = (e.target as any).parentElement;
                             if (parent) {
                               const fallback =
                                 parent.querySelector(".avatar-fallback");
@@ -1066,7 +1122,7 @@ export function InvoiceForm({
                         </div>
                       </div>
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-black text-xs flex items-center justify-center border border-primary/20 shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-black text-xs flex items-center justify-center border border-primary/20 flex-shrink-0">
                         {initial}
                       </div>
                     )}
@@ -1081,7 +1137,7 @@ export function InvoiceForm({
                   </div>
                 );
               }}
-              renderValue={(option: ApiAny) => {
+              renderValue={(option: any) => {
                 if (option.value === "none") return option.label;
                 const p = option.patient;
                 if (!p) return option.label;
@@ -1095,14 +1151,14 @@ export function InvoiceForm({
                 return (
                   <div className="flex items-center gap-2">
                     {profilePic ? (
-                      <div className="relative w-6 h-6 rounded-full overflow-hidden border border-border shrink-0 bg-muted">
+                      <div className="relative w-6 h-6 rounded-full overflow-hidden border border-border flex-shrink-0 bg-muted">
                         <img
                           src={profilePic}
                           alt={p.name}
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            (e.target as ApiAny).style.display = "none";
-                            const parent = (e.target as ApiAny).parentElement;
+                            (e.target as any).style.display = "none";
+                            const parent = (e.target as any).parentElement;
                             if (parent) {
                               const fallback = parent.querySelector(
                                 ".avatar-fallback-val",
@@ -1116,7 +1172,7 @@ export function InvoiceForm({
                         </div>
                       </div>
                     ) : (
-                      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary font-bold text-[10px] flex items-center justify-center border border-primary/20 shrink-0">
+                      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary font-bold text-[10px] flex items-center justify-center border border-primary/20 flex-shrink-0">
                         {initial}
                       </div>
                     )}
@@ -1133,10 +1189,14 @@ export function InvoiceForm({
           </LabeledField>
 
           <LabeledField label="Invoice Date" required>
-            <DatePicker
+            <Input
+              type="date"
               value={formData.date}
-              onChange={(val) => setFormData({ ...formData, date: val })}
-              className="rounded-xl"
+              onChange={(e) =>
+                setFormData({ ...formData, date: e.target.value })
+              }
+              required
+              className="block w-full px-4 py-2 border rounded-xl text-sm"
             />
           </LabeledField>
 
@@ -1199,14 +1259,14 @@ export function InvoiceForm({
           <Card className="border-rose-100 bg-rose-50/50 shadow-none rounded-2xl overflow-hidden">
             <CardContent className="p-4 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-rose-100 rounded-xl flex items-center justify-center text-rose-600 shadow-sm shrink-0">
+                <div className="w-10 h-10 bg-rose-100 rounded-xl flex items-center justify-center text-rose-600 shadow-sm flex-shrink-0">
                   <DollarSign className="w-5 h-5" />
                 </div>
                 <div className="min-w-0">
                   <p className="text-[10px] font-bold text-rose-600 uppercase tracking-widest truncate">
                     Outstanding Payment Detected
                   </p>
-                  <p className="text-xs font-bold text-rose-900 mt-0.5 wrap-break-word">
+                  <p className="text-xs font-bold text-rose-900 mt-0.5 break-words">
                     This patient has a pending balance of ₹
                     {outstandingBalance.toLocaleString()} from previous
                     invoices.
@@ -1220,7 +1280,7 @@ export function InvoiceForm({
         {formData.patientName &&
           (() => {
             const p = apiPatients.find(
-              (p: ApiAny) => p.name === formData.patientName,
+              (p: any) => p.name === formData.patientName,
             );
             if (["family", "staff", "complimentary"].includes(p?.category))
               return (
@@ -1270,7 +1330,7 @@ export function InvoiceForm({
 
         {isCorporateBilling ? (
           <CorporatePendingEmployees
-            employees={Array.isArray(rawCorporateEmployeesData) ? rawCorporateEmployeesData : (rawCorporateEmployeesData as ApiAny)?.data || []}
+            employees={Array.isArray(rawCorporateEmployeesData) ? rawCorporateEmployeesData : (rawCorporateEmployeesData as any)?.data || []}
             linkedItemIds={formData.linkedItemIds}
             onAdd={addPendingItem}
             onRemove={removePendingItem}
@@ -1296,7 +1356,7 @@ export function InvoiceForm({
           </div>
         ) : activeMembership ? (
           <div className="bg-purple-50 border border-purple-200 rounded-2xl p-4 flex items-center gap-3 animate-in fade-in">
-            <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 shrink-0">
+            <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 flex-shrink-0">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
@@ -1310,7 +1370,7 @@ export function InvoiceForm({
           </div>
         ) : (
           <>
-            {formData.patientId && !isMembershipCheckLoading && !activeMembership && !isCorporateBilling && (
+            {formData.patientId && !isMembershipCheckLoading && !activeMembership && !isCorporateBilling && !existingCorporateMembership && (
               <div className="flex items-center gap-2 px-1 py-1.5 bg-purple-50/30 border border-purple-100/50 rounded-xl">
                 <input
                   type="checkbox"
@@ -1325,8 +1385,8 @@ export function InvoiceForm({
               </div>
             )}
 
-            {showMembershipSuggestions && formData.patientId && !activeMembership && !isCorporateBilling && (
-              <Card className="bg-linear-to-br from-purple-50 to-indigo-50/50 border border-purple-100 rounded-2xl shadow-sm overflow-hidden animate-in fade-in slide-in-from-top-2">
+            {showMembershipSuggestions && formData.patientId && !activeMembership && !isCorporateBilling && !existingCorporateMembership && (
+              <Card className="bg-gradient-to-br from-purple-50 to-indigo-50/50 border border-purple-100 rounded-2xl shadow-sm overflow-hidden animate-in fade-in slide-in-from-top-2">
                 <CardContent className="p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <ShieldCheck className="w-5 h-5 text-purple-600" />
@@ -1344,7 +1404,7 @@ export function InvoiceForm({
                     </p>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {availableMembershipPlans.map((plan: ApiAny) => {
+                      {availableMembershipPlans.map((plan: any) => {
                         const planId = plan.id;
                         const isSelected = selectedNewPlanId === planId;
                         const fee = Number(plan.annual_fee || plan.annualFee || plan.fee || 0);
@@ -1361,7 +1421,7 @@ export function InvoiceForm({
                             onClick={() => {
                               if (isSelected) {
                                 const currentItems = (form.getValues("items") ?? []) as InvoiceItem[];
-                                setItems(currentItems.filter((i: ApiAny) => i.id !== `new-membership-${planId}`));
+                                setItems(currentItems.filter((i: any) => i.id !== `new-membership-${planId}`));
                                 setSelectedNewPlanId(null);
                               } else {
                                 handleSelectMembershipPlan(plan);
@@ -1440,33 +1500,67 @@ export function InvoiceForm({
               <Plus className="w-3.5 h-3.5" /> Add Item
             </Button>
           </div>
-          <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
-            {items.map((item) => (
-              <InvoiceItemRow
-                key={item.id}
-                item={item}
-                onUpdate={updateItem}
-                onRemove={(id) => {
-                  const currentItems = (form.getValues("items") ??
-                    []) as InvoiceItem[];
-                  const itemToRemove = currentItems.find((i) => i.id === id);
-                  const lid = (itemToRemove as ApiAny)?.linkedId;
-                  if (lid) {
-                    setFormData((prev) => ({
-                      ...prev,
-                      linkedItemIds: prev.linkedItemIds.filter(
-                        (i) => i !== lid,
-                      ),
-                    }));
-                  }
-                  if ((itemToRemove as ApiAny)?.isNewPlanPurchase) {
-                    setSelectedNewPlanId(null);
-                  }
-                  setItems(currentItems.filter((i) => i.id !== id));
-                }}
-              />
-            ))}
-          </div>
+
+          {/* Corporate-only: with "Select Multiple" employees, this list can
+              get long (one row per employee). Collapsed behind a summary by
+              default; once expanded it scrolls inside a fixed-height box
+              instead of growing the form — even with 100+ employees the
+              page height stays the same. Individual billing is untouched:
+              it always renders the full, already-scrollable list, same as
+              before. */}
+          {isCorporateBilling && items.length > 1 ? (
+            <button
+              type="button"
+              onClick={() => setShowCorporateItems((v) => !v)}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/30 transition-colors"
+            >
+              <span className="text-xs font-bold text-foreground">
+                {items.length} employees added ·{" "}
+                <span className="text-muted-foreground font-semibold">
+                  ₹
+                  {items
+                    .reduce((sum, i) => sum + (Number(i.amount) || 0), 0)
+                    .toLocaleString()}{" "}
+                  total
+                </span>
+              </span>
+              {showCorporateItems ? (
+                <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
+              )}
+            </button>
+          ) : null}
+
+          {(!isCorporateBilling || items.length <= 1 || showCorporateItems) && (
+            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+              {items.map((item) => (
+                <InvoiceItemRow
+                  key={item.id}
+                  item={item}
+                  onUpdate={updateItem}
+                  onRemove={(id) => {
+                    const currentItems = (form.getValues("items") ??
+                      []) as InvoiceItem[];
+                    const itemToRemove = currentItems.find((i) => i.id === id);
+                    const lid = (itemToRemove as any)?.linkedId;
+                    if (lid) {
+                      setFormData((prev) => ({
+                        ...prev,
+                        linkedItemIds: prev.linkedItemIds.filter(
+                          (i) => i !== lid,
+                        ),
+                      }));
+                    }
+                    if ((itemToRemove as any)?.isNewPlanPurchase) {
+                      setSelectedNewPlanId(null);
+                    }
+                    setItems(currentItems.filter((i) => i.id !== id));
+                  }}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-border/50">

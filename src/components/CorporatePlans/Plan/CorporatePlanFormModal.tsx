@@ -1,12 +1,10 @@
-import type { ApiAny } from "../../../types/api";
 import { Input } from "@/components/ui/Input";
-import { DatePicker } from "@/components/ui/DatePicker";
-import { CountryCodeSelect } from "@/components/ui/CountryCodeSelect";
 import React, { useState, useEffect } from 'react';
-import { Building2, Plus, Trash2, CheckCircle, Users, Banknote, Award, User } from 'lucide-react';
+import { Building2, Plus, Trash2, CheckCircle, Users, Banknote, Award, User, Settings2 } from 'lucide-react';
 import { CorporatePlan, PlanBenefit, CorporatePlanTier } from '../../../types';
 import { TREATMENT_LABELS, PLAN_COLORS } from '../../../utils/corporatePlan';
-import { Modal, Button, ConfirmModal, LabeledField, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Label, Loading, Textarea } from '../../ui';
+import { Modal, Button, LabeledField, SectionRenderer, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Label, Loading, Textarea } from '../../ui';
+import { CountryCodeSelect } from "@/components/ui/CountryCodeSelect";
 import { mkForm, mkBenefit, autoDesc } from './constants';
 import { useFormConfig } from '../../../hooks/useFormConfig';
 import { useCreateCorporatePlanMutation } from '../../../hooks/corporate/useCreateCorporatePlanMutation';
@@ -46,7 +44,7 @@ function getCoveragePreset(maxDependents: number): CoveragePreset {
   return 'custom';
 }
 
-function parseBackendError(err: ApiAny, fallback = "An error occurred"): string {
+function parseBackendError(err: any, fallback = "An error occurred"): string {
   const data = err?.response?.data;
   if (!data) return err?.message || fallback;
   const desc = data.responseStatusList?.statusList?.[0]?.statusDesc || data.statusDesc;
@@ -68,55 +66,6 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
   const [form, setForm] = useState(mkForm());
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [coveragePreset, setCoveragePreset] = useState<CoveragePreset>('self');
-  const [showExitConfirm, setShowExitConfirm] = useState(false);
-
-  const checkHasUnsavedChanges = (): boolean => {
-    if (!editing) {
-      const hasEntered = Boolean(
-        form.name?.trim() ||
-        form.code?.trim() ||
-        form.companyName?.trim() ||
-        form.description?.trim() ||
-        form.planCategory ||
-        form.maxMembers !== undefined ||
-        form.annualFee !== undefined ||
-        form.contactName?.trim() ||
-        form.contactPhone?.trim() ||
-        form.contactEmail?.trim() ||
-        form.maxDependents > 0 ||
-        form.benefits.length > 1 ||
-        form.benefits[0]?.type !== 'flat_discount' ||
-        form.benefits[0]?.value !== 20
-      );
-      if (hasEntered) return true;
-    } else {
-      if (
-        form.name !== editing.name ||
-        form.code !== editing.code ||
-        form.companyName !== editing.companyName ||
-        form.description !== (editing.description || '') ||
-        form.planCategory !== (editing.planCategory || 'corporate') ||
-        form.annualFee !== editing.annualFee ||
-        form.maxMembers !== editing.maxMembers ||
-        form.maxDependents !== (editing.maxDependents ?? 0) ||
-        (form.contactName || '') !== ((editing as ApiAny).contactName || '') ||
-        (form.contactPhone || '') !== ((editing as ApiAny).contactPhone || '') ||
-        (form.contactEmail || '') !== ((editing as ApiAny).contactEmail || '')
-      ) {
-        return true;
-      }
-    }
-    return false;
-  };
-
-  const handleRequestClose = () => {
-    if (showExitConfirm) return;
-    if (checkHasUnsavedChanges()) {
-      setShowExitConfirm(true);
-    } else {
-      setShowForm(false);
-    }
-  };
 
   const { phoneError, handlePhoneChange: handleCorporatePhoneChange, validateOnSubmit: validatePhone, maxLength, countryIso, clearPhoneError } = usePhoneValidation({
     dialingCode: form.contactCountryCode || "+91",
@@ -131,7 +80,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
   const localToday = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
   const cfg = useFormConfig('corporate');
-  const cfgAny = cfg as ApiAny;
+  const cfgAny = cfg as any;
   const { showToast } = useModal();
 
   const createPlanMutation = useCreateCorporatePlanMutation();
@@ -152,11 +101,13 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
   };
 
   const BENEFIT_LABELS: Record<string, string> = Object.fromEntries(
-    (cfgAny.benefitTypes ?? []).map((b: ApiAny) => [b.value, b.label])
+    (cfgAny.benefitTypes ?? []).map((b: any) => [b.value, b.label])
   );
   const planColorDots: Record<string, string> = Object.fromEntries(
-    (cfgAny.planColors ?? []).map((c: ApiAny) => [c.value, c.dot])
+    (cfgAny.planColors ?? []).map((c: any) => [c.value, c.dot])
   );
+
+  const coreIdentitySection = cfg.sections?.find(s => s.id === 'coreIdentity');
 
   useEffect(() => {
     if (!showForm) return;
@@ -183,7 +134,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
           CUSTOM: "custom",
         }[t] || "custom");
 
-        const benefits = (planData.benefits || []).map((b: ApiAny) => {
+        const benefits = (planData.benefits || []).map((b: any) => {
           let customTreatmentText = "";
           const standardKeys = [
             'consultation', 'follow-up', 'xray-review', 'cleaning', 'emergency',
@@ -191,7 +142,14 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
             'full-mouth-rehab', 'veneers-cosmetic', 'child-dentistry', 'crown',
             'denture', 'toothache', 'swelling-infection', 'broken-tooth', 'trauma-injury'
           ];
-          const treatmentTypes = (b.clinical_procedures || []).map((proc: string) => {
+          const treatmentTypes = (b.clinical_procedures || []).filter((proc: string) => {
+            const lower = proc?.toLowerCase();
+            if (lower === "teeth whitening") return false;
+            // Teeth cleaning is always hardcoded in for this benefit type on
+            // the backend, so don't show it as a separately-selected chip.
+            if (b.type === "COMPLIMENTARY_SESSION" && lower === "teeth cleaning") return false;
+            return true;
+          }).map((proc: string) => {
             const key = mapProcedureLabelToKey(proc);
             if (!standardKeys.includes(key)) {
               customTreatmentText = proc;
@@ -212,7 +170,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
           };
         });
 
-        const resolvedCategory = (planData.plan_type?.toLowerCase() === 'company' ? 'corporate' : planData.plan_type?.toLowerCase() === 'individual' ? 'individual' : planData.plan_category?.toLowerCase() || editing.planCategory || 'corporate') as ApiAny;
+        const resolvedCategory = (planData.plan_type?.toLowerCase() === 'company' ? 'corporate' : planData.plan_type?.toLowerCase() === 'individual' ? 'individual' : planData.plan_category?.toLowerCase() || editing.planCategory || 'corporate') as any;
         const resolvedMaxDep = planData.family_coverage_limit ?? planData.max_dependents ?? editing.maxDependents ?? 0;
         setCoveragePreset(getCoveragePreset(resolvedMaxDep));
 
@@ -220,17 +178,17 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
           name: planData.plan_name || editing.name,
           companyName: planData.company_name || editing.companyName,
           code: planData.plan_code || editing.code,
-          contactName: planData.contact_name || (editing as ApiAny).contactName || '',
-          contactPhone: planData.contact_phone || (editing as ApiAny).contactPhone || '',
-          contactEmail: planData.contact_email || (editing as ApiAny).contactEmail || '',
-          contactCountryCode: planData.contact_country_code || (editing as ApiAny).contactCountryCode || '+91',
+          contactName: planData.contact_name || (editing as any).contactName || '',
+          contactPhone: planData.contact_phone || (editing as any).contactPhone || '',
+          contactEmail: planData.contact_email || (editing as any).contactEmail || '',
+          contactCountryCode: planData.contact_country_code || (editing as any).contactCountryCode || '+91',
           description: planData.description || editing.description,
           benefits: benefits.length > 0 ? benefits : editing.benefits,
           validFrom: planData.valid_from ? planData.valid_from.split('T')[0] : editing.validFrom,
           validTo: planData.valid_till ? planData.valid_till.split('T')[0] : editing.validTo,
           maxMembers: planData.max_member || planData.enrollment_cap || editing.maxMembers,
           isActive: planData.status === "ACTIVE",
-          color: planData.theme_color ? mapHexToColor(planData.theme_color) as ApiAny : editing.color,
+          color: planData.theme_color ? mapHexToColor(planData.theme_color) as any : editing.color,
           planCategory: resolvedCategory,
           planTier: (planData.plan_tier?.toLowerCase() || editing.planTier) as CorporatePlanTier | undefined,
           annualFee: planData.annual_fee ?? editing.annualFee,
@@ -243,10 +201,10 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
           name: editing.name,
           companyName: editing.companyName,
           code: editing.code,
-          contactName: (editing as ApiAny).contactName || '',
-          contactPhone: (editing as ApiAny).contactPhone || '',
-          contactEmail: (editing as ApiAny).contactEmail || '',
-          contactCountryCode: (editing as ApiAny).contactCountryCode || '+91',
+          contactName: (editing as any).contactName || '',
+          contactPhone: (editing as any).contactPhone || '',
+          contactEmail: (editing as any).contactEmail || '',
+          contactCountryCode: (editing as any).contactCountryCode || '+91',
           description: editing.description,
           benefits: editing.benefits,
           validFrom: editing.validFrom,
@@ -267,7 +225,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
     setErrors({});
   }, [showForm, editing, planDetails]);
 
-  const handleFormChange = (name: string, value: ApiAny) => {
+  const handleFormChange = (name: string, value: any) => {
     setForm(prev => {
       if (name === 'code') return { ...prev, code: String(value).toUpperCase() };
       if (name === 'maxMembers') return { ...prev, maxMembers: value ? parseInt(value) : undefined };
@@ -283,10 +241,18 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
     }
   };
 
-  const updateBenefit = (idx: number, field: keyof PlanBenefit, val: ApiAny) => {
+  const updateBenefit = (idx: number, field: keyof PlanBenefit, val: any) => {
     const updated = form.benefits.map((b, i) => {
       if (i !== idx) return b;
       const nb = { ...b, [field]: val } as PlanBenefit;
+      if (field === 'type') {
+        const isFlagOnly = ['priority_scheduling', 'unlimited_consultations', 'fluoride_application'].includes(val);
+        if (isFlagOnly) {
+          nb.value = 0;
+        } else if (val === 'complimentary_session') {
+          nb.value = 1;
+        }
+      }
       if (field !== 'description') nb.description = autoDesc(nb);
       return nb;
     });
@@ -348,6 +314,15 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
       let clinical_procedures: string[] = [];
       if (b.type === "free_consultations" || b.type === "unlimited_consultations") clinical_procedures = ["Consultation"];
       else if (b.type === "fluoride_application") clinical_procedures = ["Fluoride Application"];
+      else if (b.type === "complimentary_session") {
+        const selected = Array.isArray(b.treatmentTypes)
+          ? b.treatmentTypes.map(t => {
+              if (t === 'other' && b.customTreatmentText) return b.customTreatmentText;
+              return TREATMENT_LABELS[t] || t;
+            })
+          : [];
+        clinical_procedures = Array.from(new Set(["Teeth Cleaning", "Teeth Whitening", ...selected]));
+      }
       else if (Array.isArray(b.treatmentTypes)) {
         clinical_procedures = b.treatmentTypes.map(t => {
           if (t === 'other' && b.customTreatmentText) return b.customTreatmentText;
@@ -406,7 +381,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
         onSave(plan);
         showToast('Membership plan created');
         setShowForm(false);
-      } catch (err: ApiAny) {
+      } catch (err: any) {
         const msg = parseBackendError(err, "Failed to create plan").replace(/enrollment_cap/gi, "Max Members");
         setErrors(prev => ({ ...prev, submit: msg }));
       }
@@ -419,7 +394,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
         onSave({ ...editing, ...form });
         showToast('Plan updated');
         setShowForm(false);
-      } catch (err: ApiAny) {
+      } catch (err: any) {
         const msg = parseBackendError(err, "Failed to update plan").replace(/enrollment_cap/gi, "Max Members");
         setErrors(prev => ({ ...prev, submit: msg }));
       }
@@ -431,24 +406,22 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
   const isSaving = createPlanMutation.isPending || updatePlanMutation.isPending;
 
   return (
-    <>
-      <Modal
-        title={editing ? 'Edit Membership Plan' : 'Create Membership Plan'}
-        subtitle={editing ? `Editing "${form.name}"` : 'Set up a new membership plan for your clinic'}
-        onClose={handleRequestClose}
-        size="5xl"
-        bodyClassName="p-3 sm:p-4"
-        icon={<Award className="w-4 h-4" />}
-        footer={
-          <div className="flex flex-col gap-3 w-full">
-            {errors.submit && (
-              <p className="text-destructive text-xs font-semibold px-4 py-2.5 bg-destructive/5 rounded-xl border border-destructive/20">
-                {errors.submit}
-              </p>
-            )}
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={handleRequestClose}>Cancel</Button>
-              <Button onClick={handleSave} className="gap-2" disabled={isSaving}>
+    <Modal
+      title={editing ? 'Edit Membership Plan' : 'Create Membership Plan'}
+      subtitle={editing ? `Editing "${form.name}"` : 'Set up a new membership plan for your clinic'}
+      onClose={() => setShowForm(false)}
+      size="5xl"
+      icon={<Award className="w-4 h-4" />}
+      footer={
+        <div className="flex flex-col gap-3 w-full">
+          {errors.submit && (
+            <p className="text-destructive text-xs font-semibold px-4 py-2.5 bg-destructive/5 rounded-xl border border-destructive/20">
+              {errors.submit}
+            </p>
+          )}
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
+            <Button onClick={handleSave} className="gap-2" disabled={isSaving}>
               {isSaving
                 ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 : <><CheckCircle className="w-4 h-4" /> {editing ? 'Save Changes' : 'Create Plan'}</>
@@ -458,176 +431,171 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
         </div>
       }
     >
-      <div className="space-y-4 py-0.5 relative min-h-50">
+      <div className="space-y-8 py-1 relative min-h-[200px]">
         {isFetching && (
           <Loading type="spinner" text="Loading plan details..." className="absolute inset-0 bg-background/70 backdrop-blur-[2px] z-50 rounded-2xl" />
         )}
 
         {/* ── SECTION A: Basic Information ─────────────────────────────────── */}
-        <section className="space-y-3">
-          <div className="flex items-center gap-2 pb-0.5">
-            <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">A</span>
-            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Basic Information</h3>
+        <section className="space-y-5">
+          <div className="flex items-center gap-2">
+            <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-[10px] font-black flex items-center justify-center">A</span>
+            <h3 className="text-sm font-black text-foreground uppercase tracking-wider">Basic Information</h3>
           </div>
 
           {/* Plan Name + Code */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="md:col-span-2">
-              <LabeledField label="Plan Name" required error={errors.name}>
-                <Input
-                  value={form.name}
-                  onChange={e => handleFormChange('name', e.target.value)}
-                  placeholder="e.g. Gold Family Plan"
-                  className="rounded-xl h-9"
-                />
-              </LabeledField>
-            </div>
-            <div>
-              <LabeledField label="Plan Code" required error={errors.code}>
-                <Input
-                  value={form.code}
-                  onChange={e => handleFormChange('code', e.target.value)}
-                  placeholder="e.g. GOLD-2024"
-                  className="rounded-xl font-mono uppercase h-9"
-                />
-              </LabeledField>
-            </div>
+          <div className="grid grid-cols-2 gap-4">
+            <LabeledField label={<span>Plan Name <span className="text-destructive font-bold">*</span></span>} error={errors.name}>
+              <Input
+                value={form.name}
+                onChange={e => handleFormChange('name', e.target.value)}
+                placeholder="e.g. Gold Family Plan"
+                className="rounded-xl"
+              />
+            </LabeledField>
+            <LabeledField label={<span>Plan Code <span className="text-destructive font-bold">*</span></span>} error={errors.code}>
+              <Input
+                value={form.code}
+                onChange={e => handleFormChange('code', e.target.value)}
+                placeholder="e.g. GOLD-2024"
+                className="rounded-xl font-mono"
+              />
+            </LabeledField>
           </div>
 
-          {/* Plan Category & Tier */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
-            <LabeledField label="Plan Type" required error={errors.planCategory}>
-              <div className="flex gap-2 pt-0.5">
-                {(['corporate', 'individual'] as const).map(cat => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setForm(prev => ({
-                      ...prev,
-                      planCategory: cat,
-                      planTier: undefined,
-                      companyName: cat === 'individual' ? 'Individual' : (prev.companyName === 'Individual' ? '' : prev.companyName),
-                      maxDependents: cat === 'individual' ? 0 : prev.maxDependents,
-                    }))}
-                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl border text-xs font-bold transition-all ${
-                      form.planCategory === cat
-                        ? cat === 'corporate'
-                          ? 'border-blue-500 bg-blue-50/80 text-blue-700 shadow-xs'
-                          : 'border-teal-500 bg-teal-50/80 text-teal-700 shadow-xs'
-                        : 'border-border text-muted-foreground hover:border-primary/40'
+          {/* Plan Category */}
+          <LabeledField label={<span>Plan Type <span className="text-destructive font-bold">*</span></span>} error={errors.planCategory}>
+            <div className="flex gap-3 pt-1">
+              {(['corporate', 'individual'] as const).map(cat => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setForm(prev => ({
+                    ...prev,
+                    planCategory: cat,
+                    planTier: undefined,
+                    companyName: cat === 'individual' ? 'Individual' : (prev.companyName === 'Individual' ? '' : prev.companyName),
+                    maxDependents: cat === 'individual' ? 0 : prev.maxDependents,
+                  }))}
+                  className={`flex items-center gap-2.5 px-5 py-3 rounded-2xl border-2 text-sm font-bold transition-all ${form.planCategory === cat
+                      ? cat === 'corporate'
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-teal-500 bg-teal-50 text-teal-700'
+                      : 'border-border text-muted-foreground hover:border-primary/40'
                     }`}
+                >
+                  {cat === 'corporate' ? <Building2 className="w-4 h-4" /> : <User className="w-4 h-4" />}
+                  {cat === 'corporate' ? 'Company Membership' : 'Personal Membership'}
+                </button>
+              ))}
+            </div>
+          </LabeledField>
+
+          {/* Plan Tier */}
+          {form.planCategory && (
+            <LabeledField label={<span className="flex items-center gap-1.5"><Award className="w-3.5 h-3.5" /> Tier {form.planCategory === 'individual' ? '(sets family member limit)' : '(optional)'}</span>}>
+              <div className="flex gap-2 flex-wrap pt-1">
+                {(form.planCategory === 'individual' ? INDIVIDUAL_TIERS : CORPORATE_TIERS).map(tier => (
+                  <button
+                    key={tier.value}
+                    type="button"
+                    onClick={() => {
+                      const updates: any = { planTier: tier.value };
+                      if (form.planCategory === 'individual') {
+                        updates.maxDependents = (tier as any).pax;
+                        setCoveragePreset(getCoveragePreset((tier as any).pax));
+                      }
+                      setForm(prev => ({ ...prev, ...updates }));
+                    }}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 text-sm font-bold transition-all ${form.planTier === tier.value ? tier.activeClass : 'border-border text-muted-foreground hover:border-primary/40'
+                      }`}
                   >
-                    {cat === 'corporate' ? <Building2 className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
-                    {cat === 'corporate' ? 'Company Membership' : 'Personal Membership'}
+                    {tier.label}
+                    {form.planCategory === 'individual' && (
+                      <span className="text-[10px] opacity-60">
+                        {(tier as any).pax === 0 ? 'Self only' : `+${(tier as any).pax} pax`}
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
             </LabeledField>
-
-            {form.planCategory ? (
-              <LabeledField label={<span className="flex items-center gap-1.5"><Award className="w-3.5 h-3.5" /> Tier {form.planCategory === 'individual' ? '(sets family member limit)' : '(optional)'}</span>}>
-                <div className="flex gap-1.5 flex-wrap pt-0.5">
-                  {(form.planCategory === 'individual' ? INDIVIDUAL_TIERS : CORPORATE_TIERS).map(tier => (
-                    <button
-                      key={tier.value}
-                      type="button"
-                      onClick={() => {
-                        const updates: ApiAny = { planTier: tier.value };
-                        if (form.planCategory === 'individual') {
-                          updates.maxDependents = (tier as ApiAny).pax;
-                          setCoveragePreset(getCoveragePreset((tier as ApiAny).pax));
-                        }
-                        setForm(prev => ({ ...prev, ...updates }));
-                      }}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all ${
-                        form.planTier === tier.value ? tier.activeClass : 'border-border text-muted-foreground hover:border-primary/40'
-                      }`}
-                    >
-                      {tier.label}
-                      {form.planCategory === 'individual' && (
-                        <span className="text-[10px] opacity-60">
-                          {(tier as ApiAny).pax === 0 ? 'Self only' : `+${(tier as ApiAny).pax} pax`}
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </LabeledField>
-            ) : <div />}
-          </div>
+          )}
 
           {/* Corporate specific fields */}
           {form.planCategory === 'corporate' && (
-            <div className="space-y-2.5 bg-muted/20 p-3 rounded-xl border border-border">
-              <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Corporate Details</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                <LabeledField label="Company Name" required error={errors.companyName}>
-                  <Input
-                    value={form.companyName}
-                    onChange={e => handleFormChange('companyName', e.target.value)}
-                    placeholder="e.g. Tech Corp Pvt Ltd"
-                    className="rounded-xl bg-background h-9"
-                  />
-                </LabeledField>
-                <LabeledField label="Contact Name" required error={errors.contactName}>
+            <div className="space-y-4 bg-muted/20 p-4 rounded-2xl border border-border">
+              <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Corporate Details</h4>
+              <LabeledField label={<span>Company Name <span className="text-destructive font-bold">*</span></span>} error={errors.companyName}>
+                <Input
+                  value={form.companyName}
+                  onChange={e => handleFormChange('companyName', e.target.value)}
+                  placeholder="e.g. Tech Corp Pvt Ltd"
+                  className="rounded-xl bg-background"
+                />
+              </LabeledField>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <LabeledField label={<span>Contact Name <span className="text-destructive font-bold">*</span></span>} error={errors.contactName}>
                   <Input
                     value={form.contactName}
                     onChange={e => handleFormChange('contactName', e.target.value)}
                     placeholder="e.g. John Doe"
-                    className="rounded-xl bg-background h-9"
+                    className="rounded-xl bg-background"
                   />
                 </LabeledField>
-                <LabeledField label="Email" required error={errors.contactEmail}>
+                <LabeledField label={<span>Email <span className="text-destructive font-bold">*</span></span>} error={errors.contactEmail}>
                   <Input
                     value={form.contactEmail}
                     onChange={e => handleFormChange('contactEmail', e.target.value)}
                     placeholder="e.g. contact@techcorp.com"
-                    className="rounded-xl bg-background h-9"
+                    className="rounded-xl bg-background"
                   />
                 </LabeledField>
-                <LabeledField label="Phone" required error={errors.contactPhone || phoneError}>
-                  <div className="flex gap-2 items-center">
-                    <CountryCodeSelect
-                      value={form.contactCountryCode || "+91"}
-                      onChange={(val) => {
-                        handleFormChange('contactCountryCode', val);
-                        clearPhoneError();
-                      }}
-                      className="w-30 rounded-xl bg-background border h-9"
-                    />
-                    <Input
-                      type="tel"
-                      value={form.contactPhone}
-                      onChange={handleCorporatePhoneChange}
-                      maxLength={maxLength}
-                      placeholder={phonePlaceholder || "e.g. 9876543210"}
-                      className="rounded-xl bg-background flex-1 h-9"
-                    />
-                  </div>
-                </LabeledField>
               </div>
+              <LabeledField label={<span>Phone <span className="text-destructive font-bold">*</span></span>} error={errors.contactPhone || phoneError}>
+                <div className="flex gap-2 items-center">
+                  <CountryCodeSelect
+                    value={form.contactCountryCode || "+91"}
+                    onChange={(val) => {
+                      handleFormChange('contactCountryCode', val);
+                      clearPhoneError();
+                    }}
+                    className="w-[120px] rounded-xl bg-background border"
+                  />
+                  <Input
+                    type="tel"
+                    value={form.contactPhone}
+                    onChange={handleCorporatePhoneChange}
+                    maxLength={maxLength}
+                    placeholder={phonePlaceholder || "e.g. 9876543210"}
+                    className="rounded-xl bg-background flex-1"
+                  />
+                </div>
+              </LabeledField>
             </div>
           )}
 
-          {/* Dates + Max Members + Annual Fee */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
-            <LabeledField label="Start Date" required error={errors.validFrom}>
-              <DatePicker
+          {/* Dates + Max Members */}
+          <div className="grid grid-cols-3 gap-4">
+            <LabeledField label={<span>Start Date <span className="text-destructive font-bold">*</span></span>} error={errors.validFrom}>
+              <Input 
+                type="date" 
                 min={!editing ? localToday : undefined}
-                value={form.validFrom}
-                onChange={(val) => handleFormChange('validFrom', val)}
-                className="rounded-xl h-9"
+                value={form.validFrom} 
+                onChange={e => handleFormChange('validFrom', e.target.value)} 
+                className="rounded-xl relative [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer" 
               />
             </LabeledField>
-            <LabeledField label="End Date" required error={errors.validTo}>
-              <DatePicker
+            <LabeledField label={<span>End Date <span className="text-destructive font-bold">*</span></span>} error={errors.validTo}>
+              <Input 
+                type="date" 
                 min={!editing ? localToday : undefined}
-                value={form.validTo}
-                onChange={(val) => handleFormChange('validTo', val)}
-                className="rounded-xl h-9"
+                value={form.validTo} 
+                onChange={e => handleFormChange('validTo', e.target.value)} 
+                className="rounded-xl relative [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer" 
               />
             </LabeledField>
-            <LabeledField label="Max Members" required error={errors.maxMembers}>
+            <LabeledField label={<span>Max Members <span className="text-destructive font-bold">*</span></span>} error={errors.maxMembers}>
               <Input
                 type="number" min="1"
                 value={form.maxMembers ?? ''}
@@ -638,118 +606,108 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                   handleFormChange('maxMembers', valStr);
                 }}
                 placeholder="e.g. 100"
-                className="rounded-xl h-9"
+                className="rounded-xl"
               />
             </LabeledField>
-            <LabeledField label="Annual Fee (₹)">
-              <div className="relative">
-                <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                <Input
-                  type="number" min="0"
-                  value={form.annualFee ?? ''}
-                  onFocus={e => e.target.select()}
-                  onChange={e => {
-                    const valStr = sanitizeNumericString(e.target.value);
-                    e.target.value = valStr;
-                    setForm(prev => ({ ...prev, annualFee: parseFloat(valStr) || 0 }));
-                  }}
-                  placeholder="e.g. 2000"
-                  className="pl-8.5 rounded-xl h-9"
-                />
-              </div>
-            </LabeledField>
           </div>
 
-          {/* Description & Color Theme */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 items-start">
-            <div className="md:col-span-2">
-              <LabeledField label="Description">
-                <Textarea
-                  value={form.description}
-                  onChange={e => handleFormChange('description', e.target.value)}
-                  placeholder="What does this membership plan include?"
-                  rows={2}
-                  className="w-full rounded-xl resize-none text-xs"
+          {/* Annual Fee */}
+          <LabeledField label="Annual Fee (₹)">
+            <div className="relative">
+              <Banknote className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="number" min="0"
+                value={form.annualFee ?? ''}
+                onFocus={e => e.target.select()}
+                onChange={e => {
+                  const valStr = sanitizeNumericString(e.target.value);
+                  e.target.value = valStr;
+                  setForm(prev => ({ ...prev, annualFee: parseFloat(valStr) || 0 }));
+                }}
+                placeholder="e.g. 2000"
+                className="pl-10 rounded-xl"
+              />
+            </div>
+          </LabeledField>
+
+          {/* Description */}
+          <LabeledField label="Description">
+            <Textarea
+              value={form.description}
+              onChange={e => handleFormChange('description', e.target.value)}
+              placeholder="What does this membership plan include?"
+              rows={2}
+              className="w-full rounded-xl resize-none"
+            />
+          </LabeledField>
+
+          {/* Color Theme */}
+          <LabeledField label="Color Theme">
+            <div className="flex gap-2 flex-wrap pt-1">
+              {PLAN_COLORS.map(c => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setForm({ ...form, color: c as any })}
+                  className={`w-8 h-8 rounded-xl transition-all shadow-sm ${planColorDots[c] ?? 'bg-gray-400'} ${form.color === c ? 'ring-2 ring-offset-3 ring-primary scale-110' : 'opacity-40 hover:opacity-80'
+                    }`}
                 />
-              </LabeledField>
+              ))}
             </div>
-            <div>
-              <LabeledField label="Color Theme">
-                <div className="flex gap-1.5 flex-wrap pt-0.5">
-                  {PLAN_COLORS.map(c => (
-                    <button
-                      key={c}
-                      type="button"
-                      onClick={() => setForm({ ...form, color: c as ApiAny })}
-                      className={`w-7 h-7 rounded-lg transition-all shadow-xs ${planColorDots[c] ?? 'bg-gray-400'} ${
-                        form.color === c ? 'ring-2 ring-offset-2 ring-primary scale-105' : 'opacity-40 hover:opacity-80'
-                      }`}
-                    />
-                  ))}
-                </div>
-              </LabeledField>
-            </div>
-          </div>
+          </LabeledField>
         </section>
 
-        <div className="h-px bg-border/40" />
+        <div className="h-px bg-border/60" />
 
         {/* ── SECTION B: Family Coverage ────────────────────────────────────── */}
-        <section className="space-y-2.5">
-          <div className="flex items-center gap-2 pb-0.5">
-            <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">B</span>
-            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Family Coverage</h3>
+        <section className="space-y-4">
+          <div className="flex items-center gap-2">
+            <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-[10px] font-black flex items-center justify-center">B</span>
+            <h3 className="text-sm font-black text-foreground uppercase tracking-wider">Family Coverage</h3>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {COVERAGE_PRESETS.map(preset => (
               <button
                 key={preset.key}
                 type="button"
                 onClick={() => setCoverage(preset.key)}
-                className={`flex items-center gap-2.5 p-2 rounded-xl border text-left transition-all ${
-                  coveragePreset === preset.key
-                    ? 'border-primary bg-primary/5 text-primary shadow-xs'
+                className={`flex flex-col items-start gap-1 p-4 rounded-2xl border-2 text-left transition-all ${coveragePreset === preset.key
+                    ? 'border-primary bg-primary/5 text-primary'
                     : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'
-                }`}
+                  }`}
               >
-                <div className={`p-1.5 rounded-lg shrink-0 ${coveragePreset === preset.key ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
-                  <Users className="w-3.5 h-3.5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-bold truncate leading-tight">{preset.label}</p>
-                  <p className="text-[10px] opacity-60 truncate leading-tight">{preset.sub}</p>
-                </div>
+                <Users className={`w-4 h-4 ${coveragePreset === preset.key ? 'text-primary' : 'text-muted-foreground'}`} />
+                <span className="text-xs font-bold">{preset.label}</span>
+                <span className="text-[10px] opacity-60">{preset.sub}</span>
               </button>
             ))}
           </div>
 
           {/* Custom number input */}
           {coveragePreset === 'custom' && (
-            <div className="pt-0.5">
-              <LabeledField label="Custom number of family members allowed (per member)">
-                <div className="relative w-44">
-                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                  <Input
-                    type="number" min="0" max="20"
-                    value={form.maxDependents ?? 0}
-                    onChange={e => setForm(prev => ({ ...prev, maxDependents: parseInt(e.target.value) || 0 }))}
-                    className="pl-8.5 rounded-xl w-full h-8.5 text-xs font-bold"
-                  />
-                </div>
-              </LabeledField>
-            </div>
+            <LabeledField label="Custom number of family members allowed (per member)">
+              <div className="relative w-48">
+                <Users className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type="number" min="0" max="20"
+                  value={form.maxDependents ?? 0}
+                  onChange={e => setForm(prev => ({ ...prev, maxDependents: parseInt(e.target.value) || 0 }))}
+                  className="pl-10 rounded-xl w-full"
+                />
+              </div>
+            </LabeledField>
           )}
         </section>
 
-        <div className="h-px bg-border/40" />
+        <div className="h-px bg-border/60" />
 
         {/* ── SECTION C: Benefits ──────────────────────────────────────────── */}
-        <section className="space-y-3">
-          <div className="flex items-center justify-between pb-0.5">
+        <section className="space-y-5">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">C</span>
-              <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Benefits</h3>
+              <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-[10px] font-black flex items-center justify-center">C</span>
+              <h3 className="text-sm font-black text-foreground uppercase tracking-wider">Benefits</h3>
             </div>
             <Button
               variant="outline" size="sm"
@@ -758,203 +716,197 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                 setForm({ ...form, benefits: [...form.benefits, mkBenefit()] });
                 setExpandedBenefits(prev => ({ ...prev, [newIdx]: true }));
               }}
-              className="gap-1.5 h-7 text-xs px-2.5"
+              className="gap-1.5 h-8"
             >
               <Plus className="w-3.5 h-3.5" /> Add Benefit
             </Button>
           </div>
 
           {errors.benefits && (
-            <p className="text-destructive text-[11px] font-bold px-3 py-1.5 bg-destructive/5 rounded-xl border border-destructive/20">
+            <p className="text-destructive text-[11px] font-bold px-3 py-2 bg-destructive/5 rounded-xl border border-destructive/20">
               {errors.benefits}
             </p>
           )}
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             {form.benefits.map((b, idx) => {
               const isExpanded = expandedBenefits[idx] !== false;
               return (
-                <div key={b.id} className="relative border border-border rounded-xl p-3 sm:p-3.5 bg-muted/10 hover:bg-muted/15 transition-all">
-                  <div 
-                    className="absolute -top-2.5 left-4 px-2.5 py-0.5 bg-card border border-border rounded-full text-[9px] font-black text-primary uppercase tracking-widest cursor-pointer select-none"
-                    onClick={(e) => toggleBenefit(idx, e)}
-                  >
-                    Benefit {idx + 1} {isExpanded ? '▼' : '▶'}
-                  </div>
-
-                  {form.benefits.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setForm({ ...form, benefits: form.benefits.filter((_, i) => i !== idx) });
-                      }}
-                      className="absolute top-2 right-2 h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all p-0"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
-                  )}
-                  
-                  {/* Accordion Toggle Header for the whole block when collapsed */}
-                  {!isExpanded && (
-                    <div className="cursor-pointer select-none text-xs font-semibold text-muted-foreground pt-1" onClick={(e) => toggleBenefit(idx, e)}>
-                      {b.type === 'custom' ? b.customName || 'Custom Benefit' : BENEFIT_LABELS[b.type] || 'Benefit Details'}
-                      {b.value ? ` - ${b.value}` : ''}
-                    </div>
-                  )}
-
-                  {isExpanded && (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 pt-1">
-                      {/* Benefit type */}
-                      <div className="md:col-span-2">
-                        <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1 block">Benefit Type</Label>
-                        <Select value={b.type} onValueChange={val => updateBenefit(idx, 'type', val)}>
-                          <SelectTrigger className="w-full rounded-xl text-xs h-9">
-                            <SelectValue placeholder="Choose benefit type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Object.entries(BENEFIT_LABELS).map(([v, l]) => (
-                              <SelectItem key={v} value={v}>{l}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Value / Count */}
-                      {b.type === 'custom' ? (
-                        <LabeledField label="Benefit Name">
-                          <Input
-                            value={b.customName || ''}
-                            onChange={e => updateBenefit(idx, 'customName', e.target.value)}
-                            placeholder="e.g. Lab Charges"
-                            className="rounded-xl h-9"
-                          />
-                        </LabeledField>
-                      ) : ['priority_scheduling', 'unlimited_consultations', 'fluoride_application'].includes(b.type) ? null : (
-                        <LabeledField label={['free_consultations', 'free_treatments', 'complimentary_session'].includes(b.type) ? 'Number of Sessions' : 'Discount %'}>
-                          <Input
-                            type="number" min="0"
-                            max={b.type.includes('discount') ? 100 : 999}
-                            value={b.value || ''}
-                            onFocus={e => e.target.select()}
-                            onChange={e => {
-                              const valStr = sanitizeNumericString(e.target.value);
-                              e.target.value = valStr;
-                              updateBenefit(idx, 'value', parseFloat(valStr) || 0);
-                            }}
-                            className="rounded-xl font-bold h-9"
-                          />
-                        </LabeledField>
-                      )}
-
-                      {b.type === 'custom' && (
-                        <LabeledField label="Discount %">
-                          <Input
-                            type="number" min="0" max={100} value={b.value || ''}
-                            onFocus={e => e.target.select()}
-                            onChange={e => {
-                              const valStr = sanitizeNumericString(e.target.value);
-                              e.target.value = valStr;
-                              updateBenefit(idx, 'value', parseFloat(valStr) || 0);
-                            }}
-                            className="rounded-xl font-bold h-9"
-                          />
-                        </LabeledField>
-                      )}
-
-                      {b.type === 'capped_discount' && (
-                        <LabeledField label="Maximum Amount (₹)">
-                          <Input
-                            type="number" min="0" value={b.cap || ''}
-                            onFocus={e => e.target.select()}
-                            onChange={e => {
-                              const valStr = sanitizeNumericString(e.target.value);
-                              e.target.value = valStr;
-                              updateBenefit(idx, 'cap', parseFloat(valStr) || 0);
-                            }}
-                            className="rounded-xl h-9"
-                          />
-                        </LabeledField>
-                      )}
-
-                      {/* Applicable treatments */}
-                      {(b.type === 'treatment_discount' || b.type === 'free_treatments' || b.type === 'complimentary_session') && (
-                        <div className="md:col-span-3">
-                          <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 block">Applicable Treatments</Label>
-                          <div className="flex flex-wrap gap-1.5">
-                            {Object.entries(TREATMENT_LABELS).map(([key, label]) => (
-                              <label
-                                key={key}
-                                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border cursor-pointer transition-all select-none text-[11px] font-bold ${b.treatmentTypes?.includes(key)
-                                    ? 'bg-primary/10 border-primary text-primary'
-                                    : 'bg-background border-border text-muted-foreground hover:border-primary/40'
-                                  }`}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={b.treatmentTypes?.includes(key) ?? false}
-                                  className="sr-only"
-                                  onChange={e => {
-                                    const curr = b.treatmentTypes || [];
-                                    updateBenefit(idx, 'treatmentTypes', e.target.checked ? [...curr, key] : curr.filter(t => t !== key));
-                                  }}
-                                />
-                                {label}
-                              </label>
-                            ))}
-                          </div>
-                          {b.treatmentTypes?.includes('other') && (
-                            <div className="mt-2 max-w-md">
-                              <LabeledField label="Specify Custom Treatment Name">
-                                <Input
-                                  value={b.customTreatmentText || ''}
-                                  onChange={e => updateBenefit(idx, 'customTreatmentText', e.target.value)}
-                                  placeholder="e.g. Tooth Whitening"
-                                  className="rounded-xl font-bold bg-white h-9"
-                                />
-                              </LabeledField>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Description */}
-                      <div className="md:col-span-3">
-                        <LabeledField label="Benefit Description (shown to patients)" error={errors[`b_${idx}`]}>
-                          <Textarea
-                            value={b.description}
-                            onChange={e => updateBenefit(idx, 'description', e.target.value)}
-                            placeholder="e.g. 20% off on all treatments"
-                            className="rounded-xl bg-muted/30 min-h-16 text-xs"
-                            rows={2}
-                          />
-                        </LabeledField>
-                      </div>
-                    </div>
-                  )}
+              <div key={b.id} className="relative border border-border rounded-2xl p-6 bg-muted/10 hover:bg-muted/20 transition-all">
+                <div 
+                  className="absolute -top-2.5 left-5 px-3 py-0.5 bg-card border border-border rounded-full text-[9px] font-black text-primary uppercase tracking-widest cursor-pointer select-none"
+                  onClick={(e) => toggleBenefit(idx, e)}
+                >
+                  Benefit {idx + 1} {isExpanded ? '▼' : '▶'}
                 </div>
-              );
-            })}
+
+                {form.benefits.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setForm({ ...form, benefits: form.benefits.filter((_, i) => i !== idx) });
+                    }}
+                    className="absolute top-3 right-3 h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                )}
+                
+                {/* Accordion Toggle Header for the whole block when collapsed */}
+                {!isExpanded && (
+                  <div className="cursor-pointer select-none text-sm font-semibold text-muted-foreground pt-2" onClick={(e) => toggleBenefit(idx, e)}>
+                    {b.type === 'custom'
+                      ? `${b.customName || 'Custom Benefit'}${b.value ? ` (${b.value}%)` : ''}`
+                      : ['flat_discount', 'treatment_discount'].includes(b.type)
+                        ? `${b.value ? `${b.value}% ` : ''}${BENEFIT_LABELS[b.type] || 'Discount'}`
+                        : b.type === 'capped_discount'
+                          ? `${b.value ? `${b.value}% ` : ''}${BENEFIT_LABELS[b.type] || 'Discount'}${b.cap ? ` (Max ₹${b.cap})` : ''}`
+                          : ['free_consultations', 'free_treatments', 'complimentary_session'].includes(b.type)
+                            ? `${BENEFIT_LABELS[b.type] || 'Benefit Details'}${b.value && b.value > 1 ? ` (${b.value} sessions)` : ''}`
+                            : BENEFIT_LABELS[b.type] || 'Benefit Details'}
+                  </div>
+                )}
+
+                {isExpanded && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-2">
+                    {/* Benefit type */}
+                    <div className="md:col-span-2">
+                      <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2 block">Benefit Type</Label>
+                      <Select value={b.type} onValueChange={val => updateBenefit(idx, 'type', val)}>
+                        <SelectTrigger className="w-full rounded-xl text-sm">
+                          <SelectValue placeholder="Choose benefit type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(BENEFIT_LABELS).map(([v, l]) => (
+                            <SelectItem key={v} value={v}>{l}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Value / Count */}
+                    {b.type === 'custom' ? (
+                      <LabeledField label="Benefit Name">
+                        <Input
+                          value={b.customName || ''}
+                          onChange={e => updateBenefit(idx, 'customName', e.target.value)}
+                          placeholder="e.g. Lab Charges"
+                          className="rounded-xl"
+                        />
+                      </LabeledField>
+                    ) : ['priority_scheduling', 'unlimited_consultations', 'fluoride_application'].includes(b.type) ? null : (
+                      <LabeledField label={['free_consultations', 'free_treatments', 'complimentary_session'].includes(b.type) ? 'Number of Sessions' : 'Discount %'}>
+                        <Input
+                          type="number" min="0"
+                          max={b.type.includes('discount') ? 100 : 999}
+                          value={b.value || ''}
+                          onFocus={e => e.target.select()}
+                          onChange={e => {
+                            const valStr = sanitizeNumericString(e.target.value);
+                            e.target.value = valStr;
+                            updateBenefit(idx, 'value', parseFloat(valStr) || 0);
+                          }}
+                          className="rounded-xl font-bold"
+                        />
+                      </LabeledField>
+                    )}
+
+                    {b.type === 'custom' && (
+                      <LabeledField label="Discount %">
+                        <Input
+                          type="number" min="0" max={100} value={b.value || ''}
+                          onFocus={e => e.target.select()}
+                          onChange={e => {
+                            const valStr = sanitizeNumericString(e.target.value);
+                            e.target.value = valStr;
+                            updateBenefit(idx, 'value', parseFloat(valStr) || 0);
+                          }}
+                          className="rounded-xl font-bold"
+                        />
+                      </LabeledField>
+                    )}
+
+                    {b.type === 'capped_discount' && (
+                      <LabeledField label="Maximum Amount (₹)">
+                        <Input
+                          type="number" min="0" value={b.cap || ''}
+                          onFocus={e => e.target.select()}
+                          onChange={e => {
+                            const valStr = sanitizeNumericString(e.target.value);
+                            e.target.value = valStr;
+                            updateBenefit(idx, 'cap', parseFloat(valStr) || 0);
+                          }}
+                          className="rounded-xl"
+                        />
+                      </LabeledField>
+                    )}
+
+                    {/* Applicable treatments */}
+                    {(b.type === 'treatment_discount' || b.type === 'free_treatments' || b.type === 'complimentary_session') && (
+                      <div className="md:col-span-3">
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2 block">Applicable Treatments</Label>
+                        <div className="flex flex-wrap gap-2">
+                          {Object.entries(TREATMENT_LABELS)
+                            // Teeth cleaning is already baked into this benefit
+                            // type on the backend, so it shouldn't appear as a
+                            // separately selectable "extra" treatment here.
+                            .filter(([key]) => !(b.type === 'complimentary_session' && key === 'cleaning'))
+                            .map(([key, label]) => (
+                            <label
+                              key={key}
+                              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border cursor-pointer transition-all select-none text-xs font-bold ${b.treatmentTypes?.includes(key)
+                                  ? 'bg-primary/10 border-primary text-primary'
+                                  : 'bg-background border-border text-muted-foreground hover:border-primary/40'
+                                }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={b.treatmentTypes?.includes(key) ?? false}
+                                className="sr-only"
+                                onChange={e => {
+                                  const curr = b.treatmentTypes || [];
+                                  updateBenefit(idx, 'treatmentTypes', e.target.checked ? [...curr, key] : curr.filter(t => t !== key));
+                                }}
+                              />
+                              {label}
+                            </label>
+                          ))}
+                        </div>
+                        {b.treatmentTypes?.includes('other') && (
+                          <div className="mt-3 max-w-md">
+                            <LabeledField label="Specify Custom Treatment Name">
+                              <Input
+                                value={b.customTreatmentText || ''}
+                                onChange={e => updateBenefit(idx, 'customTreatmentText', e.target.value)}
+                                placeholder="e.g. Tooth Whitening"
+                                className="rounded-xl font-bold bg-white"
+                              />
+                            </LabeledField>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Description */}
+                    <div className="md:col-span-3">
+                      <LabeledField label="Benefit Description (shown to patients)" error={errors[`b_${idx}`]}>
+                        <Textarea
+                          value={b.description}
+                          onChange={e => updateBenefit(idx, 'description', e.target.value)}
+                          placeholder="e.g. 20% off on all treatments"
+                          className="rounded-xl bg-muted/30 min-h-[80px]"
+                        />
+                      </LabeledField>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )})}
           </div>
         </section>
       </div>
     </Modal>
-
-    {showExitConfirm && (
-      <ConfirmModal
-        title="Unsaved Changes"
-        message="You have unsaved changes in this membership plan form. Are you sure you want to close without saving? All the entered details will be lost."
-        confirmLabel="Discard & Exit"
-        cancelLabel="Keep Editing"
-        variant="danger"
-        onConfirm={() => {
-          setShowExitConfirm(false);
-          setShowForm(false);
-        }}
-        onCancel={() => setShowExitConfirm(false)}
-      />
-    )}
-  </>
   );
 }

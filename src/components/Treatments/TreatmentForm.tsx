@@ -532,6 +532,7 @@ export function TreatmentForm({
             onUpdateSession={updateSession}
             baseDate={formData.date}
             onCompleteSessionTrigger={handleOpenCompleteSession}
+            readOnly={!!treatment}
           />
         </div>
 

@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -12,12 +11,15 @@ export function useCreateConsultationMutation() {
   return useApiMutation<ConsultationResponse, CreateConsultationVariables>({
     endpoint: "/consultations",
     method: "post",
-    transformRequest: (variables: ApiAny) => {
-      if (variables.attachments && variables.attachments.length > 0) {
+    transformRequest: (variables: any) => {
+      const fileAttachments = (variables.attachments || []).filter(
+        (f: any) => f instanceof File || f instanceof Blob,
+      );
+      if (fileAttachments.length > 0) {
         const formData = new FormData();
         Object.keys(variables).forEach((key) => {
           if (key === "attachments") {
-            variables.attachments.forEach((file: File) => {
+            fileAttachments.forEach((file: File) => {
               formData.append("attachments", file);
             });
           } else if (variables[key] !== undefined && variables[key] !== null) {
@@ -32,12 +34,7 @@ export function useCreateConsultationMutation() {
       }
       return variables;
     },
-    headers: (variables: ApiAny) => {
-      if (variables.attachments && variables.attachments.length > 0) {
-        return { "Content-Type": "multipart/form-data" };
-      }
-      return undefined;
-    },
+    headers: () => undefined,
     options: {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["consultations"] });

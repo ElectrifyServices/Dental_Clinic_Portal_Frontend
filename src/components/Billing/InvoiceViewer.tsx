@@ -1,12 +1,22 @@
-import type { ApiAny } from "../../types/api";
 import { useState, useEffect, useMemo } from "react";
-import { Download, Send, FileText, User, Calendar, Building2, CreditCard, Stethoscope } from "lucide-react";
+import {
+  Download,
+  Printer,
+  Send,
+  FileText,
+  User,
+  Calendar,
+  Building2,
+  CreditCard,
+  Stethoscope,
+} from "lucide-react";
 import { Modal, Button, Badge, Card, CardContent, DataTable, Loading, toast } from "@/components/ui";
 import { generateInvoicePDF } from "../../utils/pdfGenerator";
 import { normalizePatient } from "../../hooks/patients/usePatientDetailQuery";
 import { useCorporatePlanQuery } from "../../hooks/corporate/useCorporatePlanQuery";
 import { useInvoiceQuery, normalizeInvoice, fetchInvoiceHistory } from "../../hooks/billing/useInvoiceQuery";
 import { useSendInvoiceMutation } from "../../hooks/billing/useSendInvoiceMutation";
+import apiClient from "../../services/apiClient";
 
 interface InvoiceViewerProps {
   invoiceId: string;
@@ -32,7 +42,7 @@ export function InvoiceViewer({
     setActiveId(invoiceId);
   }, [invoiceId]);
 
-  const { data: invoice, allInvoices: _allInvoices, patient, isLoading: isInvoiceLoading, error } = useInvoiceQuery(activeId, patientId, isMember);
+  const { data: invoice, allInvoices, patient, isLoading: isInvoiceLoading, error } = useInvoiceQuery(activeId, patientId, isMember);
 
   const corporatePlanId = invoice?.corporatePlanId;
   const { data: corporatePlanData } = useCorporatePlanQuery(corporatePlanId, {
@@ -41,7 +51,7 @@ export function InvoiceViewer({
 
   const corporatePlan = useMemo(() => {
     if (!corporatePlanId || !corporatePlanData) return null;
-    const found = (corporatePlanData as ApiAny).data || corporatePlanData;
+    const found = (corporatePlanData as any).data || corporatePlanData;
     if (!found) return null;
     return {
       id: found.id,
@@ -111,7 +121,7 @@ export function InvoiceViewer({
       // Yield to the event loop so the loading spinner appears before heavy processing
       await new Promise(resolve => setTimeout(resolve, 50));
 
-      const queryParams: ApiAny = { invoice_id: invoice.id };
+      const queryParams: any = { invoice_id: invoice.id };
 
       const data = await fetchInvoiceHistory(queryParams);
       let rawData = data?.responseObject?.data || data?.data || data?.invoices || data;
@@ -120,17 +130,17 @@ export function InvoiceViewer({
       if (rawData && rawData.invoices && Array.isArray(rawData.invoices)) {
         rawData = rawData.invoices;
       }
-      const fetchedInvoices = Array.isArray(rawData) ? rawData.map((i: ApiAny) => normalizeInvoice(i)) : [normalizeInvoice(rawData, invoice.id)];
+      const fetchedInvoices = Array.isArray(rawData) ? rawData.map((i: any) => normalizeInvoice(i)) : [normalizeInvoice(rawData, invoice.id)];
 
       if (fetchedInvoices.length > 0) {
         const isStatement = (invoice.invoice_number || "").toUpperCase() === "STATEMENT";
         if (isStatement) {
-          let consolidatedItems: ApiAny[] = [];
+          let consolidatedItems: any[] = [];
           let totalSub = 0, totalTax = 0, totalDiscount = 0, grandTotal = 0, totalPaid = 0, totalPending = 0;
 
-          fetchedInvoices.forEach((inv: ApiAny) => {
+          fetchedInvoices.forEach((inv: any) => {
             if (inv && inv.items) {
-              const itemsWithContext = inv.items.map((item: ApiAny) => ({
+              const itemsWithContext = inv.items.map((item: any) => ({
                 ...item,
                 invoice_number: inv.invoice_number || inv.id,
                 description: `${item.description} (${new Date(inv.date).toLocaleDateString('en-GB')})`
@@ -161,7 +171,7 @@ export function InvoiceViewer({
         } else {
           // Download only the specific invoice
           const targetInvoice = fetchedInvoices.find(
-            (inv: ApiAny) => inv.id === invoice.id || inv.invoice_number === invoice.invoice_number
+            (inv: any) => inv.id === invoice.id || inv.invoice_number === invoice.invoice_number
           ) || fetchedInvoices[0] || invoice;
           await generateInvoicePDF(targetInvoice, freshPatient);
         }
@@ -182,7 +192,7 @@ export function InvoiceViewer({
       await sendInvoiceMutation({ id: invoice.id });
       onUpdateStatus?.(invoice.id, "sent");
       toast.success("Invoice queued for sending");
-    } catch (err: ApiAny) {
+    } catch (err: any) {
       console.error("Failed to send invoice:", err);
       const serverResponse = err.response?.data;
       let errMsg = "";
@@ -260,8 +270,8 @@ export function InvoiceViewer({
               className={`p-2 rounded-xl ${invoice.status === "paid"
                 ? "bg-emerald-500 text-white"
                 : invoice.status === "overdue"
-                  ? "bg-destructive text-white"
-                  : "bg-primary text-white"
+                  ? "bg-destructive/100 text-white"
+                  : "bg-primary/100 text-white"
                 }`}
             >
               <CreditCard className="w-5 h-5" />
@@ -318,7 +328,12 @@ export function InvoiceViewer({
                 <div className="pt-2 border-t border-border/50">
                   <Badge className="text-xs py-1 px-2.5 font-bold bg-indigo-50 text-indigo-700 border-indigo-200">
                     🏢 Corporate Invoice • {
-                      invoice.items?.filter((i: ApiAny) => i.item_type === "MEMBERSHIP" || (i.description && i.description.startsWith("Employee Membership"))).length || invoice.items?.length || 0
+                      invoice.items?.filter((i: any) => 
+                        i.item_type === "MEMBERSHIP" || 
+                        (i.description && (i.description.startsWith("Employee Membership") || i.description.startsWith("Corporate Membership"))) ||
+                        !!i.billing_description_name
+                      ).reduce((sum: number, i: any) => sum + Number(i.quantity ?? i.qty ?? 1), 0) ||
+                      invoice.items?.reduce((sum: number, i: any) => sum + Number(i.quantity ?? i.qty ?? 1), 0) || 0
                     } Employee(s) Billed
                   </Badge>
                 </div>
@@ -397,32 +412,32 @@ export function InvoiceViewer({
               key: "sr_no",
               header: "Sr. No.",
               align: "center",
-              render: (_: ApiAny, idx: number) => (
+              render: (_: any, idx: number) => (
                 <span className="text-muted-foreground font-medium">{idx + 1}</span>
               ),
             },
             {
               key: "description",
               header: "Description",
-              render: (item: ApiAny) => <span className="font-medium text-foreground">{item.description}</span>,
+              render: (item: any) => <span className="font-medium text-foreground">{item.description}</span>,
             },
             {
               key: "quantity",
               header: "Qty",
               align: "center",
-              render: (item: ApiAny) => <span className="text-muted-foreground">{item.quantity}</span>,
+              render: (item: any) => <span className="text-muted-foreground">{item.quantity}</span>,
             },
             {
               key: "rate",
               header: "Rate",
               align: "right",
-              render: (item: ApiAny) => <span className="text-muted-foreground">₹{(item.rate ?? 0).toLocaleString()}</span>,
+              render: (item: any) => <span className="text-muted-foreground">₹{(item.rate ?? 0).toLocaleString()}</span>,
             },
             {
               key: "discount_value",
               header: "Discount",
               align: "right",
-              render: (item: ApiAny) => (
+              render: (item: any) => (
                 <span className="text-destructive font-medium">
                   {item.discount_value ? `${item.discount_value}%` : "—"}
                 </span>
@@ -432,11 +447,11 @@ export function InvoiceViewer({
               key: "amount",
               header: "Amount",
               align: "right",
-              render: (item: ApiAny) => <span className="font-bold text-foreground">₹{(item.amount ?? 0).toLocaleString()}</span>,
+              render: (item: any) => <span className="font-bold text-foreground">₹{(item.amount ?? 0).toLocaleString()}</span>,
             },
           ]}
           data={invoice.items || []}
-          rowKey={(item: ApiAny, idx: number) => item.id || `item-${idx}`}
+          rowKey={(item: any, idx: number) => item.id || `item-${idx}`}
           footer={
             <div className="bg-muted/30 font-medium text-sm divide-y divide-border/60">
               <div className="flex justify-between px-6 py-2">
@@ -452,7 +467,7 @@ export function InvoiceViewer({
 
               <div className="flex justify-between px-6 py-3.5 bg-primary/5 text-base font-black text-primary uppercase tracking-wider">
                 <span>Grand Total</span>
-                <span>₹{((invoice as ApiAny).grand_total || (invoice as ApiAny).grandTotal || invoice.total || 0).toLocaleString()}</span>
+                <span>₹{((invoice as any).grand_total || (invoice as any).grandTotal || invoice.total || 0).toLocaleString()}</span>
               </div>
               {/* <div className="flex justify-between px-6 py-2.5 bg-emerald-50/40 text-emerald-700 font-bold uppercase tracking-wider">
                 <span>Paid Amount</span>

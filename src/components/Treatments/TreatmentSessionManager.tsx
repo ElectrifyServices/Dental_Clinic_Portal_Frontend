@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useEffect, useState, useMemo } from "react";
 import {
   Calendar, Clock, Plus, CheckCircle, Loader2, ChevronDown, ChevronUp,
@@ -7,14 +6,21 @@ import {
   Stethoscope, BadgeCheck, Sparkle, Pill, Pencil, MessageSquareText, Paperclip, Upload, FileText, ExternalLink,
   Percent, AlertCircle, CreditCard
 } from "lucide-react";
-import { Modal, Button, Label, Input, Textarea, Card, MetricCard, ConfirmModal } from "@/components/ui";
-import { DatePicker } from "@/components/ui/DatePicker";
+import { Modal, Button, Badge, Label, Input, Textarea, Card, MetricCard, ConfirmModal } from "@/components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
 import { PrescriptionForm } from "../Doctor/PatientConsultation/PrescriptionForm";
 import { useAvailableSlotsQuery } from "../../hooks/appointments/useAvailableSlotsQuery";
 import { useDoctorsListQuery } from "../../hooks/staff/useDoctorsListQuery";
 
-import { useTreatmentSessionsQuery, useAddTreatmentSessionMutation, useUpdateTreatmentSessionMutation, useCompleteTreatmentSessionMutation, TreatmentSessionResponse, PlanPrescription } from "../../hooks/treatment/useTreatmentSessionHooks";
+import {
+  useTreatmentSessionsQuery,
+  useTreatmentSessionQuery,
+  useAddTreatmentSessionMutation,
+  useUpdateTreatmentSessionMutation,
+  useCompleteTreatmentSessionMutation,
+  TreatmentSessionResponse,
+  PlanPrescription,
+} from "../../hooks/treatment/useTreatmentSessionHooks";
 import { useTreatmentPlanQuery } from "../../hooks/treatment/useTreatmentPlanQuery";
 import { useSendSessionPrescriptionMutation } from "../../hooks/treatment/useSendSessionPrescriptionMutation";
 import { useModal } from "../../contexts/ModalContext";
@@ -22,7 +28,7 @@ import { ConsultationFeedback } from "./ConsultationFeedback";
 import { downloadConsultationPDF } from "../../utils/pdfGenerator";
 import apiClient from "../../services/apiClient";
 
-const extractApiError = (err: ApiAny, fallback: string) => {
+const extractApiError = (err: any, fallback: string) => {
   return err?.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc
     || err?.response?.data?.message
     || err?.message
@@ -61,7 +67,7 @@ const STATUS_CONFIG: Record<string, {
   textColor: string;
   borderColor: string;
   badgeVariant: string;
-  icon: ApiAny;
+  icon: any;
 }> = {
   PLANNED: {
     label: "Planned",
@@ -111,14 +117,24 @@ const getTodayInputValue = () => {
   return local.toISOString().split("T")[0];
 };
 
+// Pre-fills the schedule-session date input with the session's own visit
+// date (e.g. one already set from a consultation) instead of always
+// resetting it to today.
+const toDateInputValue = (d?: string | Date | null) => {
+  if (!d) return getTodayInputValue();
+  const date = new Date(d);
+  if (Number.isNaN(date.getTime())) return getTodayInputValue();
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().split("T")[0];
+};
+
 const convert12to24 = (time12?: string) => {
   if (!time12) return "";
   const trimmed = time12.trim();
   if (!trimmed.includes(" ")) return trimmed;
 
   const [timePart, modifier] = trimmed.split(" ");
-  const [rawHours, minutes] = timePart.split(":");
-  let hours = rawHours;
+  let [hours, minutes] = timePart.split(":");
 
   if (!hours || !minutes || !modifier) return trimmed;
   if (hours === "12") hours = "00";
@@ -157,9 +173,6 @@ function InlineSessionScheduler({
     } else if (apiDoctors.length > 0 && !selectedDoctorId) {
       setSelectedDoctorId(apiDoctors[0].id);
     }
-  // must not depend on selectedDoctorId: this effect writes it, so adding it would snap the
-  // choice back to doctorId every time the user picks a different doctor
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [doctorId, apiDoctors]);
 
   const activeDoctorId = selectedDoctorId || doctorId || (apiDoctors[0]?.id ?? "");
@@ -235,10 +248,11 @@ function InlineSessionScheduler({
           <Label className="text-[10px] font-bold text-emerald-700/70 uppercase tracking-wider mb-1.5 block">
             Date
           </Label>
-          <DatePicker
+          <Input
+            type="date"
             value={draft.date}
             min={getTodayInputValue()}
-            onChange={(val) => onChange({ date: val, time: "" })}
+            onChange={(e) => onChange({ date: e.target.value, time: "" })}
             className="rounded-xl border-emerald-200 bg-white"
           />
         </div>
@@ -354,34 +368,23 @@ export function TreatmentSessionManager({
 
   const { data: apiResponse, isLoading, refetch } = useTreatmentSessionsQuery(treatmentId);
 
-  useEffect(() => {
-    if (treatmentId) {
-      refetch();
-    }
-  }, [treatmentId, refetch]);
-
-  // ── The API wraps everything: responseObject.data.sessions[] + responseObject.data.prescriptions[]
-  // useApiQuery returns the full axios/fetch response, so we unwrap accordingly.
-  // Try both shapes: direct data or nested under responseObject.data
   const responseData = useMemo(() => {
     if (!apiResponse) return null;
-    // Shape 1: apiResponse.data (useApiQuery strips axios wrapper → this is responseObject)
-    const d = (apiResponse as ApiAny)?.data ?? apiResponse;
-    // Shape 2: some interceptors return responseObject.data directly
+    const d = (apiResponse as any)?.responseObject?.data ?? (apiResponse as any)?.data ?? apiResponse;
     return d;
   }, [apiResponse]);
 
   const treatmentPlan = useMemo(() => {
     if (!treatmentPlanResponse) return null;
     return (
-      (treatmentPlanResponse as ApiAny)?.responseObject?.data ??
-      (treatmentPlanResponse as ApiAny)?.data?.data ??
-      (treatmentPlanResponse as ApiAny)?.data ??
+      (treatmentPlanResponse as any)?.responseObject?.data ??
+      (treatmentPlanResponse as any)?.data?.data ??
+      (treatmentPlanResponse as any)?.data ??
       treatmentPlanResponse
     );
   }, [treatmentPlanResponse]);
 
-  const extractDoctorStaffId = (obj: ApiAny): string | null => {
+  const extractDoctorStaffId = (obj: any): string | null => {
     if (!obj) return null;
     const doc = obj.doctor || obj.plan?.doctor || (obj.id && (obj.staff_id || obj.staff) ? obj : null);
     if (doc) {
@@ -429,7 +432,7 @@ export function TreatmentSessionManager({
   const nextSlots = useMemo(() => {
     if (!nextSlotsResponse?.data?.slots || !nextSessionDraft.date) return [];
 
-    return nextSlotsResponse.data.slots.map((slot: ApiAny) => {
+    return nextSlotsResponse.data.slots.map((slot: any) => {
       const time24 = convert12to24(slot.time);
       const slotDateTime = new Date(`${nextSessionDraft.date}T${time24}:00`);
       const isPast =
@@ -447,11 +450,12 @@ export function TreatmentSessionManager({
   }, [nextSessionDraft.date, nextSlotsResponse]);
 
   const [showNewSession, setShowNewSession] = useState(false);
+
   const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set());
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [sessionPreviousPaidAmt, setSessionPreviousPaidAmt] = useState<number>(0);
   const [isEditingCompleted, setIsEditingCompleted] = useState<boolean>(false);
-  const [_originalPaidNow, setOriginalPaidNow] = useState<number>(0);
+  const [originalPaidNow, setOriginalPaidNow] = useState<number>(0);
   const [editingClinicalNotes, setEditingClinicalNotes] = useState<string | null>(null);
   const [editNotes, setEditNotes] = useState("");
   const [showConsultationFeedback, setShowConsultationFeedback] = useState(false);
@@ -465,11 +469,39 @@ export function TreatmentSessionManager({
 
   const [newSession, setNewSession] = useState({
     date: "",
-    time: "09:00 AM",
+    time: "",
     duration: 45,
     cost: 0,
     clinical_objectives: "",
   });
+
+  // "Add Session" — same real-slots pattern as nextSlots above, for the
+  // plan's own (currently treating) doctor. Previously this was a hardcoded
+  // list of times with no idea which slots were actually free.
+  const { data: newSessionSlotsResponse, isLoading: isNewSessionSlotsLoading } = useAvailableSlotsQuery(
+    assignedDoctorId || null,
+    newSession.date || null,
+  );
+
+  const newSessionSlots = useMemo(() => {
+    if (!newSessionSlotsResponse?.data?.slots || !newSession.date) return [];
+
+    return newSessionSlotsResponse.data.slots.map((slot: any) => {
+      const time24 = convert12to24(slot.time);
+      const slotDateTime = new Date(`${newSession.date}T${time24}:00`);
+      const isPast =
+        newSession.date === getTodayInputValue() &&
+        !Number.isNaN(slotDateTime.getTime()) &&
+        slotDateTime.getTime() < Date.now();
+
+      return {
+        time12: slot.time,
+        time24,
+        appointmentCount: slot.appointment_count || 0,
+        isDisabled: slot.disabled === true || isPast,
+      };
+    });
+  }, [newSession.date, newSessionSlotsResponse]);
 
   const [completeForm, setCompleteForm] = useState({
     work_done: "",
@@ -484,9 +516,10 @@ export function TreatmentSessionManager({
     payment_method: "CASH",
   });
 
-  const [prescriptions, setPrescriptions] = useState<ApiAny[]>([]);
-  const [sessionAttachments, setSessionAttachments] = useState<File[]>([]);
   const [noteListMode, setNoteListMode] = useState<"NUMBERED" | "BULLET">("NUMBERED");
+
+  const [prescriptions, setPrescriptions] = useState<any[]>([]);
+  const [sessionAttachments, setSessionAttachments] = useState<File[]>([]);
 
   const handleNoteListModeChange = (newMode: "NUMBERED" | "BULLET") => {
     setNoteListMode(newMode);
@@ -496,7 +529,7 @@ export function TreatmentSessionManager({
 
       const lines = raw.split("\n");
       const updatedLines = lines.map((line, idx) => {
-        const cleanLine = line.replace(/^(\d+\.|\.|•)\s*/, "").trim();
+        const cleanLine = line.replace(/^(\d+\.|\.|\•)\s*/, "").trim();
         if (!cleanLine) return "";
         return newMode === "NUMBERED" ? `${idx + 1}. ${cleanLine}` : `. ${cleanLine}`;
       });
@@ -536,7 +569,7 @@ export function TreatmentSessionManager({
           nextPrefix = `\n${linesBefore.length + 1}. `;
         }
       } else {
-        const match = currentLine.match(/^(\.|•)\s*(.*)/);
+        const match = currentLine.match(/^(\.|\•)\s*(.*)/);
         if (match) {
           const text = match[2].trim();
           if (!text) {
@@ -675,7 +708,7 @@ export function TreatmentSessionManager({
     try {
       await sendPrescription.mutateAsync({ id: treatmentId, sessionId: completingId });
       showToast("Prescription sent to patient via WhatsApp!");
-    } catch (err: ApiAny) {
+    } catch (err: any) {
       showToast(extractApiError(err, "Failed to send prescription"), "error");
     }
   };
@@ -720,15 +753,12 @@ export function TreatmentSessionManager({
         }
       }
     }
-  // the two handlers are rebuilt every render and both set state, so listing
-  // them would re-trigger this one-shot deep link in a loop
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialSessionId, sessions, completingId]);
 
   const totalSessions: number = responseData?.total ?? 0;
   const completedCount: number = responseData?.completed ?? 0;
   const totalFees: number = Number(responseData?.total_fees ?? responseData?.projected_revenue ?? 0);
-  const _sessionProgress = totalSessions > 0 ? (completedCount / totalSessions) * 100 : 0;
+  const sessionProgress = totalSessions > 0 ? (completedCount / totalSessions) * 100 : 0;
 
   const estCost = Number(treatmentPlan?.est_cost) || 0;
   const discountVal = Number(treatmentPlan?.discount_value) || 0;
@@ -794,8 +824,8 @@ export function TreatmentSessionManager({
 
   const getSessionDate = (session: TreatmentSessionResponse) =>
     session.visit_date ||
-    (session as ApiAny).scheduledDate ||
-    (session as ApiAny).suggestedDate;
+    (session as any).scheduledDate ||
+    (session as any).suggestedDate;
 
   const formatTime = (t?: string) => {
     if (!t) return "N/A";
@@ -816,8 +846,8 @@ export function TreatmentSessionManager({
       session.appointment?.start_time ||
       session.appointment?.time ||
       session.start_time ||
-      (session as ApiAny).startTime ||
-      (session as ApiAny).time;
+      (session as any).startTime ||
+      (session as any).time;
 
     if (explicitTime) return explicitTime;
 
@@ -827,15 +857,14 @@ export function TreatmentSessionManager({
   const toggleExpand = (id: string) =>
     setExpandedSessions(prev => {
       const n = new Set(prev);
-      if (n.has(id)) n.delete(id);
-      else n.add(id);
+      n.has(id) ? n.delete(id) : n.add(id);
       return n;
     });
 
   const startSchedulingSession = (session: TreatmentSessionResponse) => {
     setSchedulingSessionId(session.id);
     setScheduleDraft({
-      date: getTodayInputValue(),
+      date: toDateInputValue(getSessionDate(session)),
       time: convert12to24(getSessionTime(session)),
       duration: session.duration_min ?? 45,
     });
@@ -855,6 +884,7 @@ export function TreatmentSessionManager({
 
   const handleAddSession = async () => {
     if (!newSession.date) { showToast("Please select a date", "error"); return; }
+    if (!newSession.time) { showToast("Please select a slot", "error"); return; }
     try {
       // The fee is not captured here — it is entered when the session is
       // marked COMPLETED (CreateTreatmentSessionDto has no session_fee, so
@@ -862,15 +892,18 @@ export function TreatmentSessionManager({
       await addSession.mutateAsync({
         planId: treatmentId,
         visit_date: newSession.date,
-        start_time: newSession.time,
+        start_time: convert12to24(newSession.time),
         duration_min: newSession.duration,
         clinical_objectives: newSession.clinical_objectives,
+        // Book this session against the doctor whose slots were actually
+        // shown, not whatever the plan happens to default to.
+        doctor_id: assignedDoctorId || undefined,
       });
       showToast("Session scheduled successfully!");
       setShowNewSession(false);
-      setNewSession({ date: "", time: "09:00 AM", duration: 45, cost: 0, clinical_objectives: "" });
+      setNewSession({ date: "", time: "", duration: 45, cost: 0, clinical_objectives: "" });
       refetch();
-    } catch (err: ApiAny) {
+    } catch (err: any) {
       showToast(extractApiError(err, "Failed to schedule session"), "error");
     }
   };
@@ -887,12 +920,12 @@ export function TreatmentSessionManager({
         : null;
 
       const fallbackFee = lastCompleted ? (Number(lastCompleted.session_fee) || 0) : 0;
-      const fallbackDiscount = lastCompleted ? (Number((lastCompleted as ApiAny).discount_percentage || (lastCompleted as ApiAny).discount) || 0) : 0;
-      const _fallbackPaid = lastCompleted ? (Number(lastCompleted.paid_amount) || 0) : 0;
+      const fallbackDiscount = lastCompleted ? (Number((lastCompleted as any).discount_percentage || (lastCompleted as any).discount) || 0) : 0;
+      const fallbackPaid = lastCompleted ? (Number(lastCompleted.paid_amount) || 0) : 0;
 
-      const currentFee = estCost || Number(session.session_fee || (session as ApiAny).cost) || fallbackFee || 0;
+      const currentFee = estCost || Number(session.session_fee || (session as any).cost) || fallbackFee || 0;
       const currentDiscount = discountVal || fallbackDiscount || 0;
-      const currentPaid = paidAmt || Number(session.paid_amount || (session as ApiAny).paidAmount) || 0;
+      const currentPaid = paidAmt || Number(session.paid_amount || (session as any).paidAmount) || 0;
 
       setCompleteForm({
         work_done: "",
@@ -936,7 +969,7 @@ export function TreatmentSessionManager({
       }
       showToast(`Session updated to ${STATUS_CONFIG[newStatus]?.label}`);
       refetch();
-    } catch (err: ApiAny) {
+    } catch (err: any) {
       showToast(extractApiError(err, "Failed to update"), "error");
     }
   };
@@ -957,12 +990,13 @@ export function TreatmentSessionManager({
         sessionId: session.id,
         status: "SCHEDULED",
         visit_date: scheduleDraft.date,
+        start_time: scheduleDraft.time,
         duration_min: scheduleDraft.duration,
       });
       showToast("Session scheduled successfully!");
       cancelSchedulingSession();
       refetch();
-    } catch (err: ApiAny) {
+    } catch (err: any) {
       showToast(extractApiError(err, "Failed to schedule session"), "error");
     }
   };
@@ -1000,7 +1034,7 @@ export function TreatmentSessionManager({
         freshSession.discount ||
         freshSession.discountPercentage ||
         session.discount_percentage ||
-        (session as ApiAny).discount ||
+        (session as any).discount ||
         discountVal ||
         0
       );
@@ -1008,7 +1042,7 @@ export function TreatmentSessionManager({
       setCompleteForm({
         work_done: freshSession.work_done || "",
         session_findings: freshSession.session_findings || "",
-        notes: freshSession.notes || freshSession.additional_notes || session.notes || (session as ApiAny).additional_notes || "",
+        notes: freshSession.notes || freshSession.additional_notes || session.notes || (session as any).additional_notes || "",
         next_session_plan: freshSession.next_session_plan || "",
         session_fee: sessionFee,
         discount_value: sessionDiscount,
@@ -1024,7 +1058,7 @@ export function TreatmentSessionManager({
       const rawRx = freshSession.treatmentPrescriptions || freshSession.prescriptions || session.treatmentPrescriptions || session.prescriptions;
       if (Array.isArray(rawRx)) {
         setPrescriptions(
-          rawRx.map((p: ApiAny) => ({
+          rawRx.map((p: any) => ({
             id: p.id,
             medicine: p.medicine_id || p.medicine?.id || "",
             medicineName: p.medicine_name || p.medicine?.name || "",
@@ -1045,7 +1079,7 @@ export function TreatmentSessionManager({
       } else {
         setSessionAttachments([]);
       }
-    } catch (err: ApiAny) {
+    } catch (err: any) {
       showToast(extractApiError(err, "Failed to load session details"), "error");
       setCompletingId(null);
       setIsEditingCompleted(false);
@@ -1073,8 +1107,8 @@ export function TreatmentSessionManager({
     }
     const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     const formattedPrescriptions = prescriptions
-      .filter((p: ApiAny) => p.medicine?.trim())
-      .map((p: ApiAny) => ({
+      .filter((p: any) => p.medicine?.trim())
+      .map((p: any) => ({
         medicine_id: p.medicine,
         dosage: p.dosage,
         timing: p.timing,
@@ -1083,7 +1117,7 @@ export function TreatmentSessionManager({
         duration_type: p.durationUnit?.toUpperCase() || "DAYS",
         qty: parseInt(p.qty) || 0,
       }))
-      .filter((p: ApiAny) => {
+      .filter((p: any) => {
         if (!UUID_REGEX.test(p.medicine_id)) {
           console.warn("Skipping prescription — medicine_id is not a UUID:", p.medicine_id);
           showToast(`Medicine "${p.medicine_id}" was not found in the system. Please re-select it.`, "error");
@@ -1110,7 +1144,7 @@ export function TreatmentSessionManager({
         });
         showToast("Session updated successfully!");
       } else {
-        let nextSessionPayload: ApiAny = {};
+        let nextSessionPayload: any = {};
         if (scheduleNext && nextSessionDraft.date) {
           nextSessionPayload = {
             schedule_next_session: true,
@@ -1156,7 +1190,7 @@ export function TreatmentSessionManager({
         if (sendPrescriptionOnComplete && formattedPrescriptions.length > 0) {
           try {
             await sendPrescription.mutateAsync({ id: treatmentId, sessionId });
-          } catch (err: ApiAny) {
+          } catch (err: any) {
             showToast(extractApiError(err, "Session completed, but sending the prescription failed. You can resend it from the session view."), "error");
           }
         }
@@ -1184,7 +1218,7 @@ export function TreatmentSessionManager({
       if (initialSessionId) {
         onClose();
       }
-    } catch (err: ApiAny) {
+    } catch (err: any) {
       showToast(extractApiError(err, isEditingCompleted ? "Failed to update session" : "Failed to complete session"), "error");
     }
   };
@@ -1204,7 +1238,7 @@ export function TreatmentSessionManager({
       showToast("Clinical objectives updated!");
       setEditingClinicalNotes(null);
       refetch();
-    } catch (err: ApiAny) {
+    } catch (err: any) {
       showToast(extractApiError(err, "Failed to update"), "error");
     }
   };
@@ -1219,7 +1253,7 @@ export function TreatmentSessionManager({
     const isExpanded = expandedSessions.has(session.id);
     const isEditing = editingClinicalNotes === session.id;
     const isScheduling = schedulingSessionId === session.id;
-    const _appointmentTime = formatTime(getSessionTime(session));
+    const appointmentTime = formatTime(getSessionTime(session));
 
     // Prescriptions already merged in sessions useMemo
     const sessionRx: PlanPrescription[] = ((session.treatmentPrescriptions || session.prescriptions) as PlanPrescription[]) ?? [];
@@ -1236,7 +1270,7 @@ export function TreatmentSessionManager({
                 <div className="flex items-center gap-3 mb-3 flex-wrap">
                   <div className={`w-10 h-10 rounded-xl ${cfg.bgColor} flex items-center justify-center`}>
                     <StatusIcon className={`w-5 h-5 ${cfg.textColor}`} />
-                  </div>
+                  </div> 
                   <div>
                     <h4 className="font-black text-foreground">Session {session.visit_number}</h4>
                     <p className="text-xs text-muted-foreground">{formatDate(getSessionDate(session))}</p>
@@ -1246,7 +1280,7 @@ export function TreatmentSessionManager({
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Clock className="w-4 h-4" />
                     <span className="font-medium">
-                      {/* {appointmentTime} • */}
+                      {appointmentTime && appointmentTime !== "N/A" ? `${appointmentTime} • ` : ""}
                       {session.duration_min ?? 45} min
                     </span>
                   </div>
@@ -1278,7 +1312,7 @@ export function TreatmentSessionManager({
                   <div onClick={(e) => e.stopPropagation()}>
                     <Select
                       value={normalizedStatus}
-                      onValueChange={(val) => handleUpdateStatus(session, val as ApiAny)}
+                      onValueChange={(val) => handleUpdateStatus(session, val as any)}
                       disabled={updateSession.isPending}
                     >
                       <SelectTrigger className={`text-[10px] h-auto font-black uppercase tracking-wider px-3 py-1.5 rounded-xl border cursor-pointer outline-none focus:ring-2 transition-all ${cfg.bgColor} ${cfg.textColor} ${cfg.borderColor}`}>
@@ -1749,7 +1783,8 @@ export function TreatmentSessionManager({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label className="text-xs font-semibold block mb-2">Next Session Date</Label>
-                        <DatePicker
+                        <Input
+                          type="date"
                           min={(() => {
                             const today = new Date();
                             const year = today.getFullYear();
@@ -1758,8 +1793,8 @@ export function TreatmentSessionManager({
                             return `${year}-${month}-${day}`;
                           })()}
                           value={nextSessionDraft.date}
-                          onChange={(val) => setNextSessionDraft(p => ({ ...p, date: val, time: "" }))}
-                          className="w-full px-3 py-1.5 text-sm rounded-xl border focus:ring-2 focus:ring-emerald-200 bg-white font-medium"
+                          onChange={(e) => setNextSessionDraft(p => ({ ...p, date: e.target.value, time: "" }))}
+                          className="w-full !inline-flex items-center justify-between px-3 py-1.5 text-sm rounded-xl border focus:ring-2 focus:ring-emerald-200 bg-white font-medium cursor-pointer [&::-webkit-calendar-picker-indicator]:ml-auto [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                         />
                       </div>
 
@@ -1923,10 +1958,10 @@ export function TreatmentSessionManager({
                   {sessionAttachments.length > 0 && (
                     <div className="mt-3 space-y-2">
                       {sessionAttachments.map((file, index) => {
-                        const name = file.name || (file as ApiAny).file_name || "Attachment";
-                        const size = file.size !== undefined ? file.size : ((file as ApiAny).file_size || 0);
-                        const url = file instanceof File ? URL.createObjectURL(file) : ((file as ApiAny).file_url || "");
-                        const type = file.type || (file as ApiAny).file_type || "";
+                        const name = file.name || (file as any).file_name || "Attachment";
+                        const size = file.size !== undefined ? file.size : ((file as any).file_size || 0);
+                        const url = file instanceof File ? URL.createObjectURL(file) : ((file as any).file_url || "");
+                        const type = file.type || (file as any).file_type || "";
                         const isImage = type.startsWith("image/") || /\.(jpg|jpeg|png|gif|webp)$/i.test(name);
 
                         return (
@@ -2287,7 +2322,7 @@ export function TreatmentSessionManager({
             footer={
               <div className="flex gap-3 w-full">
                 <Button variant="outline" onClick={() => setShowNewSession(false)} className="flex-1">Cancel</Button>
-                <Button onClick={handleAddSession} disabled={!newSession.date || addSession.isPending} className="flex-1 gap-2">
+                <Button onClick={handleAddSession} disabled={!newSession.date || !newSession.time || addSession.isPending} className="flex-1 gap-2">
                   {addSession.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                   Schedule Session
                 </Button>
@@ -2297,21 +2332,10 @@ export function TreatmentSessionManager({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <Label className="text-sm font-semibold block mb-2">Visit Date <span className="text-red-500">*</span></Label>
-                <DatePicker value={newSession.date}
-                  onChange={(val) => setNewSession({ ...newSession, date: val })}
+                <Input type="date" value={newSession.date}
+                  onChange={(e) => setNewSession({ ...newSession, time: "", date: e.target.value })}
                   min={new Date().toISOString().split("T")[0]}
-                  className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-primary/20" />
-              </div>
-              <div>
-                <Label className="text-sm font-semibold block mb-2">Start Time</Label>
-                <Select value={newSession.time} onValueChange={(val) => setNewSession({ ...newSession, time: val })}>
-                  <SelectTrigger className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-primary/20 outline-none"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {["09:00 AM", "10:00 AM", "11:00 AM", "11:30 AM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM"].map(t => (
-                      <SelectItem key={t} value={t}>{t}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-primary/20 outline-none" />
               </div>
               <div>
                 <Label className="text-sm font-semibold block mb-2">Duration (minutes)</Label>
@@ -2326,6 +2350,64 @@ export function TreatmentSessionManager({
                   on the "Complete Session" form, which is where the amount
                   actually becomes billable. */}
             </div>
+
+            {/* Real slots for the doctor this plan is actually with — same
+                data the Treatments calendar and Appointments module use —
+                instead of a fixed list of times unrelated to availability. */}
+            {assignedDoctorId && newSession.date ? (
+              <div className="space-y-3 border-t pt-4 mb-6">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-primary" />
+                  <p className="text-xs font-bold text-foreground">Available Slots</p>
+                  {isNewSessionSlotsLoading && <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />}
+                </div>
+
+                {isNewSessionSlotsLoading ? (
+                  <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
+                    {Array.from({ length: 8 }).map((_, index) => (
+                      <div key={index} className="h-10 rounded-xl bg-muted animate-pulse" />
+                    ))}
+                  </div>
+                ) : newSessionSlots.length > 0 ? (
+                  <div className="grid grid-cols-3 md:grid-cols-4 gap-2 max-h-44 overflow-y-auto custom-scrollbar pr-1">
+                    {newSessionSlots.map((slot) => {
+                      const isSelected = newSession.time === slot.time24;
+                      return (
+                        <Button
+                          key={slot.time24}
+                          type="button"
+                          disabled={slot.isDisabled}
+                          onClick={() => !slot.isDisabled && setNewSession({ ...newSession, time: slot.time24 })}
+                          className={[
+                            "h-10 rounded-xl border text-[11px] font-bold transition-all px-2 py-1",
+                            isSelected
+                              ? "bg-primary border-primary text-white hover:bg-primary"
+                              : slot.isDisabled
+                                ? "bg-red-50 border-red-100 text-red-300 line-through cursor-not-allowed hover:bg-red-50"
+                                : "bg-white border-border text-foreground hover:bg-muted hover:border-primary/30",
+                          ].join(" ")}
+                        >
+                          {slot.time12} ({slot.appointmentCount})
+                        </Button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    No slots available for the selected date.
+                  </p>
+                )}
+              </div>
+            ) : newSession.date ? (
+              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-6">
+                This treatment has no linked doctor, so slots cannot be loaded.
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground border-t pt-4 mb-6">
+                Select a date to load available slots.
+              </p>
+            )}
+
             <div className="mb-6">
               <Label className="text-sm font-semibold block mb-2">Clinical Objectives</Label>
               <Textarea value={newSession.clinical_objectives} rows={3}
@@ -2360,7 +2442,7 @@ export function TreatmentSessionManager({
                 }
                 showToast(`Session updated to Cancelled`);
                 refetch();
-              } catch (err: ApiAny) {
+              } catch (err: any) {
                 showToast(extractApiError(err, "Failed to update"), "error");
               } finally {
                 setSessionToCancel(null);
