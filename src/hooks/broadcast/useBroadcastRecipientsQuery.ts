@@ -72,6 +72,9 @@ export function useBroadcastRecipientsQuery(
     options: {
       enabled: options?.enabled ?? true,
       staleTime: 60_000,
+      // SendView unmounts/remounts on every "Send broadcast" tab switch —
+      // refetch then instead of serving a (possibly minutes-old) cached page.
+      refetchOnMount: "always",
       placeholderData: keepPreviousData,
     },
   });
