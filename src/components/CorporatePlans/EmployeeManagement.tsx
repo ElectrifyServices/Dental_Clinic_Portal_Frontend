@@ -4,6 +4,7 @@ import {
   Users, Phone, Search,
   MoreHorizontal, ArrowRightLeft,
   UserPlus, Zap, MessageCircle, Activity, Ban, Wallet,
+  Link2, X,
 } from 'lucide-react';
 import { CorporateEmployee, CorporatePlan, CoverageType } from '../../types';
 import {
@@ -28,6 +29,7 @@ import { WhatsAppHistoryModal } from './Employee/WhatsAppHistoryModal';
 import { BenefitUsageModal } from './Employee/BenefitUsageModal';
 import { CancelMembershipModal } from './Employee/CancelMembershipModal';
 import { RecordRefundModal } from './Employee/RecordRefundModal';
+import { LinkFamilyModal } from './Employee/LinkFamilyModal';
 import { formatPhoneWithCountryCode } from '../../utils/phoneUtils';
 
 interface EmployeeManagementProps {
@@ -78,6 +80,10 @@ export function EmployeeManagement({
   const [benefitUsageEmp, setBenefitUsageEmp] = useState<CorporateEmployee | null>(null);
   const [statusToggleEmp, setStatusToggleEmp] = useState<CorporateEmployee | null>(null);
   const [statusToggleDep, setStatusToggleDep] = useState<any | null>(null);
+  const [linkMode, setLinkMode] = useState(false);
+  const [linkSelectedIds, setLinkSelectedIds] = useState<Set<string>>(new Set());
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [showExitLinkConfirm, setShowExitLinkConfirm] = useState(false);
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(search), 500);
@@ -124,11 +130,32 @@ export function EmployeeManagement({
     else if (Array.isArray(employeesData?.data?.employees)) arr = employeesData.data.employees;
     else if (Array.isArray(employeesData?.employees)) arr = employeesData.employees;
 
-    return arr.map((e: any) => {
-      const activeEnrollment = e.enrollments?.find((en: any) => en.status === 'ACTIVE') || e.enrollments?.[0];
-      const planInfo = activeEnrollment?.plan || {};
+    // A family member can now be linked to a plan different from the head's
+    // own plan (via Link as Family), so each dependent's own active
+    // enrollment must be resolved the same way the head's is — it can no
+    // longer be assumed to match the head's plan.
+    interface EnrollmentLike {
+      status?: string;
+      plan_id?: string;
+      enrollment_date?: string;
+      plan?: { plan_name?: string; company_name?: string; family_coverage_limit?: number };
+    }
+    const resolveActivePlan = (member: { enrollments?: EnrollmentLike[] }) => {
+      const enrollments = member.enrollments ?? [];
+      const activeEnrollment = enrollments.find((en) => en.status === 'ACTIVE') ?? enrollments[0];
+      const planInfo = activeEnrollment?.plan ?? {};
       const planId = activeEnrollment?.plan_id || '';
-      
+      return {
+        planId,
+        planName: planInfo.plan_name || plans.find(p => p.id === planId)?.name || '',
+        planInfo,
+        activeEnrollment,
+      };
+    };
+
+    return arr.map((e: any) => {
+      const { planId, planName, planInfo, activeEnrollment } = resolveActivePlan(e);
+
       return {
         id: e.id,
         employeeId: e.id || '', // No emp_id provided in new json
@@ -142,14 +169,21 @@ export function EmployeeManagement({
         department: '',
         companyName: planInfo.company_name || '',
         corporatePlanId: planId,
-        corporatePlanName: planInfo.plan_name || plans.find(p => p.id === planId)?.name || '',
+        corporatePlanName: planName,
         enrolledAt: activeEnrollment?.enrollment_date || e.created_at || new Date().toISOString(),
         eligible_date: activeEnrollment?.enrollment_date || e.created_at || new Date().toISOString(),
         isActive: e.status === 'ACTIVE',
         status: e.status,
         patientId: e.patient_id || undefined,
         coverageType: (e.family_members?.length > 0 ? 'family' : 'self') as CoverageType,
-        dependents: e.family_members || getDependentsByMember(e.id),
+        dependents: (e.family_members || getDependentsByMember(e.id)).map((dep) => {
+          const depPlan = resolveActivePlan(dep);
+          return {
+            ...dep,
+            corporatePlanId: depPlan.planId,
+            corporatePlanName: depPlan.planName,
+          };
+        }),
         familyCoverageLimit: planInfo.family_coverage_limit || 0,
       };
     });
@@ -290,6 +324,16 @@ export function EmployeeManagement({
         render: (dep: any) => <span className="text-xs text-muted-foreground">{dep.relationship_type || dep.relationship}</span>,
       },
       {
+        key: 'plan',
+        header: 'Plan',
+        render: (dep) => {
+          const plan = plans.find(p => p.id === dep.corporatePlanId);
+          if (plan) return <PlanBadge name={plan.name} code={plan.code} color={plan.color} />;
+          if (dep.corporatePlanName) return <span className="text-sm font-semibold">{dep.corporatePlanName}</span>;
+          return <span className="text-xs text-muted-foreground/60 italic">No plan</span>;
+        },
+      },
+      {
         key: 'contact',
         header: 'Contact',
         render: (dep: any) => dep.phone ? (
@@ -406,8 +450,46 @@ export function EmployeeManagement({
   const avatarGrad = (name: string) =>
     AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length];
 
+  const toggleLinkSelect = (id: string) => {
+    setLinkSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const exitLinkMode = () => {
+    setLinkMode(false);
+    setLinkSelectedIds(new Set());
+  };
+
+  const handleCancelLinkMode = () => {
+    if (linkSelectedIds.size > 0) {
+      setShowExitLinkConfirm(true);
+    } else {
+      exitLinkMode();
+    }
+  };
+
   // ── Table columns ─────────────────────────────────────────────────────────
   const columns = [
+    ...(linkMode ? [{
+      key: 'select', header: '',
+      render: (e: CorporateEmployee) => {
+        const isCancelled = e.status === 'CANCELLED';
+        return (
+          <input
+            type="checkbox"
+            className="w-4 h-4 rounded accent-primary cursor-pointer disabled:cursor-not-allowed disabled:opacity-30"
+            checked={linkSelectedIds.has(e.id)}
+            disabled={isCancelled}
+            title={isCancelled ? 'This membership is cancelled and cannot be linked' : undefined}
+            onClick={(ev: React.MouseEvent) => ev.stopPropagation()}
+            onChange={() => toggleLinkSelect(e.id)}
+          />
+        );
+      },
+    }] : []),
     {
       key: 'member', header: 'Member',
       render: (e: CorporateEmployee) => (
@@ -577,20 +659,50 @@ export function EmployeeManagement({
               </div>
               {/* Action Buttons — always visible */}
               <div className="flex items-center gap-2 shrink-0">
-                <Button onClick={() => setTab('import')} variant="outline" className="gap-1.5 rounded-xl h-10 border-border/60 hover:bg-slate-50 hidden sm:flex">
-                  <Upload className="w-4 h-4" /> Import
-                </Button>
-                <Button onClick={() => setTab('import')} variant="outline" size="icon" className="rounded-xl h-10 w-10 border-border/60 hover:bg-slate-50 flex sm:hidden">
-                  <Upload className="w-4 h-4" />
-                </Button>
-                <Button onClick={() => { setEditEmp(null); setShowForm(true); }} className="gap-1.5 rounded-xl shadow-md shadow-primary/15 bg-primary text-white hover:bg-primary/90 h-10 px-3 hidden sm:flex">
-                  <Plus className="w-4 h-4" /> Add Member
-                </Button>
-                <Button onClick={() => { setEditEmp(null); setShowForm(true); }} size="icon" className="rounded-xl shadow-md shadow-primary/15 bg-primary text-white hover:bg-primary/90 h-10 w-10 flex sm:hidden">
-                  <Plus className="w-4 h-4" />
-                </Button>
+                {linkMode ? (
+                  <Button onClick={handleCancelLinkMode} variant="outline" className="gap-1.5 rounded-xl h-10 border-border/60 hover:bg-slate-50">
+                    <X className="w-4 h-4" /> Cancel
+                  </Button>
+                ) : (
+                  <>
+                    <Button onClick={() => setLinkMode(true)} variant="outline" className="gap-1.5 rounded-xl h-10 border-border/60 hover:bg-slate-50 hidden sm:flex">
+                      <Link2 className="w-4 h-4" /> Link as Family
+                    </Button>
+                    <Button onClick={() => setLinkMode(true)} variant="outline" size="icon" className="rounded-xl h-10 w-10 border-border/60 hover:bg-slate-50 flex sm:hidden">
+                      <Link2 className="w-4 h-4" />
+                    </Button>
+                    <Button onClick={() => setTab('import')} variant="outline" className="gap-1.5 rounded-xl h-10 border-border/60 hover:bg-slate-50 hidden sm:flex">
+                      <Upload className="w-4 h-4" /> Import
+                    </Button>
+                    <Button onClick={() => setTab('import')} variant="outline" size="icon" className="rounded-xl h-10 w-10 border-border/60 hover:bg-slate-50 flex sm:hidden">
+                      <Upload className="w-4 h-4" />
+                    </Button>
+                    <Button onClick={() => { setEditEmp(null); setShowForm(true); }} className="gap-1.5 rounded-xl shadow-md shadow-primary/15 bg-primary text-white hover:bg-primary/90 h-10 px-3 hidden sm:flex">
+                      <Plus className="w-4 h-4" /> Add Member
+                    </Button>
+                    <Button onClick={() => { setEditEmp(null); setShowForm(true); }} size="icon" className="rounded-xl shadow-md shadow-primary/15 bg-primary text-white hover:bg-primary/90 h-10 w-10 flex sm:hidden">
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
+
+            {linkMode && (
+              <div className="flex items-center justify-between gap-2 px-1">
+                <p className="text-xs text-muted-foreground">
+                  Select 2 or more members to link as a family ({linkSelectedIds.size} selected)
+                </p>
+                <Button
+                  onClick={() => setShowLinkModal(true)}
+                  disabled={linkSelectedIds.size < 2}
+                  size="sm"
+                  className="gap-1.5 rounded-xl bg-primary text-white hover:bg-primary/90"
+                >
+                  <Link2 className="w-3.5 h-3.5" /> Link {linkSelectedIds.size > 0 ? `${linkSelectedIds.size} ` : ''}Members
+                </Button>
+              </div>
+            )}
 
             {/* Row 2: Filter Tabs + Plan Select */}
             <div className="flex items-center gap-2 w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -844,9 +956,17 @@ export function EmployeeManagement({
                     <div className="flex items-center justify-between">
                       <div className="min-w-0">
                         <span className="font-bold text-sm text-foreground truncate block">{dep.name}</span>
-                        <span className="inline-block text-[10px] font-bold text-violet-700 bg-violet-50 border border-violet-200 px-2 py-0.5 rounded-full mt-1 uppercase tracking-wide">
-                          {dep.relationship_type || dep.relationship}
-                        </span>
+                        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                          <span className="inline-block text-[10px] font-bold text-violet-700 bg-violet-50 border border-violet-200 px-2 py-0.5 rounded-full uppercase tracking-wide">
+                            {dep.relationship_type || dep.relationship}
+                          </span>
+                          {(() => {
+                            const depPlan = plans.find(p => p.id === dep.corporatePlanId);
+                            if (depPlan) return <PlanBadge name={depPlan.name} code={depPlan.code} color={depPlan.color} />;
+                            if (dep.corporatePlanName) return <span className="text-[10px] font-semibold text-muted-foreground">{dep.corporatePlanName}</span>;
+                            return null;
+                          })()}
+                        </div>
                       </div>
 
                       <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -961,6 +1081,32 @@ export function EmployeeManagement({
         <RecordRefundModal
           employee={recordRefundEmp}
           onClose={() => setRecordRefundEmp(null)}
+        />
+      )}
+
+      {showLinkModal && (
+        <LinkFamilyModal
+          members={apiMembers.filter(e => linkSelectedIds.has(e.id))}
+          onClose={() => setShowLinkModal(false)}
+          onLinked={() => {
+            setShowLinkModal(false);
+            exitLinkMode();
+            refetch();
+          }}
+        />
+      )}
+
+      {showExitLinkConfirm && (
+        <ConfirmModal
+          title="Discard Selection?"
+          message={`You have ${linkSelectedIds.size} member${linkSelectedIds.size > 1 ? 's' : ''} selected for linking. Leaving now will discard this selection.`}
+          confirmLabel="Discard"
+          variant="danger"
+          onConfirm={() => {
+            setShowExitLinkConfirm(false);
+            exitLinkMode();
+          }}
+          onCancel={() => setShowExitLinkConfirm(false)}
         />
       )}
     </div>
