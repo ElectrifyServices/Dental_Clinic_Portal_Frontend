@@ -26,6 +26,7 @@ const BRANDING_DEFAULTS = {
   CLINIC_INSTAGRAM: "@opalsmiles_dental",
   DOCTOR_NAME: "Dr. Rajal Shah",
   DOCTOR_TITLE: "MDS PROSTHODONTIST & IMPLANTOLOGIST",
+  REGISTRATION_NO: "A14535",
   LOGO_URL: logoImg,
 } as const;
 
@@ -67,6 +68,7 @@ function getBrandingTokens() {
         CLINIC_INSTAGRAM: b.instagram ?? BRANDING_DEFAULTS.CLINIC_INSTAGRAM,
         DOCTOR_NAME: b.doctor_name ?? BRANDING_DEFAULTS.DOCTOR_NAME,
         DOCTOR_TITLE: b.doctor_title ?? BRANDING_DEFAULTS.DOCTOR_TITLE,
+        REGISTRATION_NO: b.registration_no ?? BRANDING_DEFAULTS.REGISTRATION_NO,
         LOGO_URL: (t.logo_url && t.logo_url.trim()) ? t.logo_url : BRANDING_DEFAULTS.LOGO_URL,
       };
     }
@@ -417,8 +419,9 @@ function getLetterhead(rightBlock: string, tokens?: ReturnType<typeof getBrandin
     <div style="font-size: 12px; font-weight: 500; color: ${T.INK_MUTED}; margin-top: 4px; letter-spacing: 0.2px; line-height:1.3; text-transform: uppercase;">
       MDS PROSTHODONTIST &amp; IMPLANTOLOGIST
     </div>
+    ${T.REGISTRATION_NO ? `<div style="font-size: 11px; font-weight: 400; color: ${T.INK_MUTED}; margin-top: 2px; letter-spacing: 0.2px; line-height:1.3;">Registered No: ${T.REGISTRATION_NO}</div>` : ""}
   </div>
-  
+
   <!-- Vertical Divider Line -->
   <div style="width:1.5px; height:90px; background:${T.BRAND}; position:relative; z-index:1;"></div>
 
@@ -446,7 +449,7 @@ function getLetterhead(rightBlock: string, tokens?: ReturnType<typeof getBrandin
  *  fill here — the only other place brand color appears besides the top bar.
  *  Marked with `data-footer` so renderContainerToPDF can always pin it to
  *  the bottom of the final page. */
-function getBrandFooter(signatureBlock: string, isInvoice: boolean = false, tokens?: ReturnType<typeof getBrandingTokens>) {
+function getBrandFooter(signatureBlock: string, isInvoice: boolean = false, tokens?: ReturnType<typeof getBrandingTokens>, docLabel?: string) {
   const T = tokens ?? getBrandingTokens();
   // FIX: SVG ko inline-flex banaya aur align-items:center ke saath
   // taaki icon apne parent container ke andar center ho
@@ -491,10 +494,11 @@ style="display:block;width:14px;height:14px;"
     </div>`
     : "<div></div>";
 
-  const computerGeneratedBlock = isInvoice
+  const computerGeneratedLabel = docLabel ?? (isInvoice ? "Invoice" : "");
+  const computerGeneratedBlock = computerGeneratedLabel
     ? `
 <div style="margin-top:10px; border-top:1px solid rgba(255,255,255,0.3); padding-top:8px; text-align:center; font-size:13px; font-weight:600; opacity:0.9; letter-spacing:0.3px;">
-  This is a computer generated Invoice
+  This is a computer generated ${computerGeneratedLabel}
 </div>`
     : "";
 
@@ -1476,14 +1480,23 @@ ${isBlankMode
   `;
   };
 
+  // Prescription swaps the usual "name / specialization / (Signature/Seal)"
+  // text block for the doctor's actual signature image — every other
+  // report type (Clinical/Treatment/X-ray/Full) keeps the text block as-is.
+  const signatureContent =
+    type === "PRESCRIPTION"
+      ? `<img src="/image-removebg-preview.png" style="height:90px; width:auto; display:block; margin:0 auto;" crossorigin="anonymous" />`
+      : `
+<div style="width:200px; border-bottom:1px solid ${T.LINE}; margin-bottom:8px;"></div>
+<div style="font-size:12px; font-weight:400; color:${T.INK};">${displayDoctorName}</div>
+<div style="font-size:12px; color:${T.INK_MUTED}; font-weight:400;">${specialization}</div>
+<div style="font-size:12px; color:#93999e; margin-top:2px;">(Signature/Seal)</div>`;
+
   const getFooter = () =>
     getBrandFooter(
       `
 <div style="text-align:center;">
-<div style="width:200px; border-bottom:1px solid ${T.LINE}; margin-bottom:8px;"></div>
-<div style="font-size:12px; font-weight:400; color:${T.INK};">${displayDoctorName}</div>
-<div style="font-size:12px; color:${T.INK_MUTED}; font-weight:400;">${specialization}</div>
-<div style="font-size:12px; color:#93999e; margin-top:2px;">(Signature/Seal)</div>
+${signatureContent}
 </div>
     ${!isBlankMode && isFollowUp && followUpDate
         ? `
@@ -1496,6 +1509,7 @@ ${isBlankMode
   `,
       false,
       T,
+      type === "PRESCRIPTION" ? "Prescription" : undefined,
     );
 
   let htmlContent = `<div style="width:794px; background:#fff; margin:0; padding:0; font-family: 'Inter', sans-serif; color:${T.INK}; display:flex; flex-direction:column; min-height:auto; box-sizing:border-box;"><div data-header="true"><div style="height:20px; background:${T.BRAND}; width:100%;"></div>${getHeader()}</div>`;
