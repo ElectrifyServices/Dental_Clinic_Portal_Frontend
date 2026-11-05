@@ -955,9 +955,10 @@ export function EmployeeFormModal({
                       <div
                         key={opt.value}
                         onClick={() =>
+                          !editEmp &&
                           handleFormChange("corporatePlanId", opt.value)
                         }
-                        className={`relative flex flex-col h-full p-3 rounded-xl border-2 text-left cursor-pointer transition-all duration-200 hover:shadow-md ${isSelected
+                        className={`relative flex flex-col h-full p-3 rounded-xl border-2 text-left transition-all duration-200 ${editEmp ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:shadow-md"} ${isSelected
                           ? "border-primary bg-primary/5 shadow-sm shadow-primary/5"
                           : "border-border bg-white hover:border-muted-foreground/30"
                           }`}

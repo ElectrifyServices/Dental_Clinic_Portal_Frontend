@@ -226,6 +226,62 @@ export const AppointmentsTab = ({
   </div>
 );
 
+// Doctor / discount / payment / next-visit / notes line shown under a
+// treatment card — only renders the pieces that are actually present, since
+// the list endpoint doesn't always return all of them.
+const TreatmentMeta = ({ treatment }: { treatment: any }) => {
+  const hasDiscount = Number(treatment.discount_value) > 0;
+  const hasPendingAmount =
+    treatment.pending_amount !== null && Number(treatment.pending_amount) > 0;
+  const showPaid =
+    treatment.paid_amount > 0 && treatment.paid_amount !== treatment.cost;
+
+  if (
+    !treatment.doctorName &&
+    !hasDiscount &&
+    !showPaid &&
+    !hasPendingAmount &&
+    !treatment.nextAppointment &&
+    !treatment.notes
+  ) {
+    return null;
+  }
+
+  return (
+    <div className="mt-2 pt-2 border-t border-border/50 space-y-1.5">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+        {treatment.doctorName && (
+          <span className="font-semibold text-foreground/80">
+            Dr. {treatment.doctorName}
+          </span>
+        )}
+        {hasDiscount && (
+          <span>
+            Discount: {treatment.discount_value}
+            {treatment.discount_type === "PERCENTAGE" ? "%" : ""}
+          </span>
+        )}
+        {showPaid && <span>Paid: ₹{treatment.paid_amount.toLocaleString()}</span>}
+        {hasPendingAmount && (
+          <span className="font-semibold text-destructive">
+            Pending: ₹{treatment.pending_amount.toLocaleString()}
+          </span>
+        )}
+        {treatment.nextAppointment && (
+          <span>
+            Next Visit: {new Date(treatment.nextAppointment).toLocaleDateString()}
+          </span>
+        )}
+      </div>
+      {treatment.notes && (
+        <p className="text-xs text-muted-foreground/80 bg-card/60 p-2 rounded-lg border border-border/50">
+          {treatment.notes}
+        </p>
+      )}
+    </div>
+  );
+};
+
 // --- Treatments Tab ---
 export const TreatmentsTab = ({
   patientTreatments,
@@ -274,7 +330,7 @@ export const TreatmentsTab = ({
                       </div>
                       <div>
                         <p className="font-bold text-foreground">
-                          {treatment.procedure}
+                          {treatment.procedure || "Treatment Plan"}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           Tooth:{" "}
@@ -294,6 +350,7 @@ export const TreatmentsTab = ({
                       </span>
                     </div>
                   </div>
+                  <TreatmentMeta treatment={treatment} />
                 </Card>
               ))}
           </div>
@@ -319,7 +376,7 @@ export const TreatmentsTab = ({
                       </div>
                       <div>
                         <p className="font-bold text-foreground">
-                          {treatment.procedure}
+                          {treatment.procedure || "Treatment Plan"}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           Tooth:{" "}
@@ -336,6 +393,7 @@ export const TreatmentsTab = ({
                       </span>
                     </div>
                   </div>
+                  <TreatmentMeta treatment={treatment} />
                 </Card>
               ))}
           </div>
@@ -359,7 +417,7 @@ export const TreatmentsTab = ({
                       <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
                       <div>
                         <p className="font-semibold text-muted-foreground">
-                          {treatment.procedure}
+                          {treatment.procedure || "Treatment Plan"}
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
                           Tooth: {String(treatment.tooth) === "-1" || String(treatment.tooth) === "FM" ? "Full Mouth" : `#${treatment.tooth}`}
@@ -375,6 +433,7 @@ export const TreatmentsTab = ({
                       </p>
                     </div>
                   </div>
+                  <TreatmentMeta treatment={treatment} />
                 </Card>
               ))}
           </div>
