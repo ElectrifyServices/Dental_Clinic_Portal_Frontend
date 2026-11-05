@@ -56,6 +56,28 @@ import {
 const PAGE_SIZE = 25;
 const rowKey = (r: BroadcastRecipient) => `${r.source}:${r.id}`;
 
+/**
+ * Same normalization the backend's broadcast dedup uses (digits only,
+ * strip leading zeros, assume a <=10-digit number needs the country code
+ * prepended) — used here purely to GROUP same-number recipients in the UI
+ * so the user can pick which one to actually send to, instead of the
+ * backend silently keeping the first and skipping the rest.
+ */
+function canonicalPhone(
+  phone: string | null | undefined,
+  countryCode?: string,
+): string | null {
+  const digits = (phone ?? "").replace(/\D/g, "").replace(/^0+/, "");
+  if (digits.length < 7) return null;
+  if (digits.length > 10) return digits;
+  const cc = (countryCode ?? "").replace(/\D/g, "") || "91";
+  return `${cc}${digits}`;
+}
+
+type RecipientDisplayItem =
+  | { kind: "single"; r: BroadcastRecipient }
+  | { kind: "group"; phoneKey: string; members: BroadcastRecipient[] };
+
 const STATUS_VARIANT: Record<
   BroadcastTemplateStatus,
   "green" | "amber" | "red" | "gray"
@@ -208,6 +230,9 @@ function SendView({
   const [scheduleLater, setScheduleLater] = useState(false);
   const [scheduleDate, setScheduleDate] = useState("");
   const [scheduleTime, setScheduleTime] = useState("");
+  // phoneKey -> rowKey of the member currently chosen to represent that
+  // shared number (defaults to the first member of the group when unset).
+  const [groupPicks, setGroupPicks] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -232,7 +257,61 @@ function SendView({
   const sendMutation = useSendBroadcastMutation();
 
   const withPhone = (r: BroadcastRecipient) => Boolean((r.phone ?? "").trim());
-  const pageSelectable = rows.filter(withPhone);
+
+  // Group same-page recipients by (normalized) phone number — when 2+
+  // distinct patients/members share one number, the UI must let the user
+  // pick exactly one to represent that number, instead of silently sending
+  // to whichever one the backend happens to keep first.
+  const phoneGroups = useMemo(() => {
+    const map = new Map<string, BroadcastRecipient[]>();
+    for (const r of rows) {
+      if (!withPhone(r)) continue;
+      const key = canonicalPhone(r.phone, r.country_code);
+      if (!key) continue;
+      const arr = map.get(key) ?? [];
+      arr.push(r);
+      map.set(key, arr);
+    }
+    return map;
+     
+  }, [rows]);
+
+  const itemsToRender: RecipientDisplayItem[] = useMemo(() => {
+    const seenGroupKeys = new Set<string>();
+    const items: RecipientDisplayItem[] = [];
+    for (const r of rows) {
+      const key = withPhone(r) ? canonicalPhone(r.phone, r.country_code) : null;
+      const group = key ? phoneGroups.get(key) : undefined;
+      if (!key || !group || group.length <= 1) {
+        items.push({ kind: "single", r });
+        continue;
+      }
+      if (seenGroupKeys.has(key)) continue;
+      seenGroupKeys.add(key);
+      items.push({ kind: "group", phoneKey: key, members: group });
+    }
+    return items;
+     
+  }, [rows, phoneGroups]);
+
+  const activeOf = (phoneKey: string, members: BroadcastRecipient[]) => {
+    const pickedKey = groupPicks.get(phoneKey);
+    return (pickedKey && members.find((m) => rowKey(m) === pickedKey)) || members[0];
+  };
+
+  // The representative actually eligible for selection per display row —
+  // for a group this is whichever member is currently picked.
+  const pageSelectable = useMemo(
+    () =>
+      itemsToRender
+        .map((item) =>
+          item.kind === "single" ? item.r : activeOf(item.phoneKey, item.members),
+        )
+        .filter(withPhone),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [itemsToRender, groupPicks],
+  );
+
   const allOnPageSelected =
     pageSelectable.length > 0 &&
     pageSelectable.every((r) => selected.has(rowKey(r)));
@@ -254,6 +333,35 @@ function SendView({
       else pageSelectable.forEach((r) => next.set(rowKey(r), r));
       return next;
     });
+
+  // Switching which member represents a shared number — if the previous
+  // representative was already selected, swap the selection over to the
+  // newly-picked one so a checked group row never silently loses its check.
+  const handleGroupPick = (
+    phoneKey: string,
+    members: BroadcastRecipient[],
+    newRowKey: string,
+  ) => {
+    const prevActive = activeOf(phoneKey, members);
+    const prevKey = rowKey(prevActive);
+    const wasSelected = selected.has(prevKey);
+    const newActive = members.find((m) => rowKey(m) === newRowKey);
+
+    setGroupPicks((prev) => {
+      const next = new Map(prev);
+      next.set(phoneKey, newRowKey);
+      return next;
+    });
+
+    if (wasSelected && newActive) {
+      setSelected((prev) => {
+        const next = new Map(prev);
+        next.delete(prevKey);
+        next.set(newRowKey, newActive);
+        return next;
+      });
+    }
+  };
 
   const clearSelection = () => setSelected(new Map());
 
@@ -431,39 +539,87 @@ function SendView({
               </div>
             ) : (
               <ul className="divide-y divide-border">
-                {rows.map((r) => {
-                  const k = rowKey(r);
-                  const noPhone = !withPhone(r);
+                {itemsToRender.map((item) => {
+                  if (item.kind === "single") {
+                    const r = item.r;
+                    const k = rowKey(r);
+                    const noPhone = !withPhone(r);
+                    return (
+                      <li
+                        key={k}
+                        className={`flex items-center gap-3 px-4 py-2.5 ${
+                          noPhone ? "opacity-50" : "hover:bg-muted/30"
+                        }`}
+                      >
+                        <Checkbox
+                          checked={selected.has(k)}
+                          onCheckedChange={() => toggleOne(r)}
+                          disabled={noPhone}
+                          id={`r-${k}`}
+                        />
+                        <Label
+                          htmlFor={`r-${k}`}
+                          className="flex-1 min-w-0 cursor-pointer font-normal"
+                        >
+                          <span className="block text-sm font-medium text-foreground truncate">
+                            {r.name}
+                          </span>
+                          <span className="block text-xs text-muted-foreground">
+                            {noPhone
+                              ? "No phone number"
+                              : `${r.country_code ?? ""} ${r.phone}`}
+                          </span>
+                        </Label>
+                        <StatusBadge
+                          variant={r.source === "patient" ? "violet" : "indigo"}
+                        >
+                          {r.source}
+                        </StatusBadge>
+                      </li>
+                    );
+                  }
+
+                  // Same phone number shared by 2+ distinct patients/members —
+                  // let the user pick which one this broadcast should go to.
+                  const active = activeOf(item.phoneKey, item.members);
+                  const k = rowKey(active);
                   return (
                     <li
-                      key={k}
-                      className={`flex items-center gap-3 px-4 py-2.5 ${
-                        noPhone ? "opacity-50" : "hover:bg-muted/30"
-                      }`}
+                      key={`group:${item.phoneKey}`}
+                      className="flex items-center gap-3 px-4 py-2.5 bg-amber-50/40 hover:bg-amber-50/70"
                     >
                       <Checkbox
                         checked={selected.has(k)}
-                        onCheckedChange={() => toggleOne(r)}
-                        disabled={noPhone}
-                        id={`r-${k}`}
+                        onCheckedChange={() => toggleOne(active)}
+                        id={`r-group-${item.phoneKey}`}
                       />
-                      <Label
-                        htmlFor={`r-${k}`}
-                        className="flex-1 min-w-0 cursor-pointer font-normal"
-                      >
-                        <span className="block text-sm font-medium text-foreground truncate">
-                          {r.name}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <select
+                            value={k}
+                            onChange={(e) =>
+                              handleGroupPick(item.phoneKey, item.members, e.target.value)
+                            }
+                            className="text-sm font-medium text-foreground bg-background border border-input rounded-md px-1.5 py-0.5 max-w-[170px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            {item.members.map((m) => (
+                              <option key={rowKey(m)} value={rowKey(m)}>
+                                {m.name}
+                              </option>
+                            ))}
+                          </select>
+                          <span className="text-[10px] font-bold text-amber-700 bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-full uppercase tracking-wide">
+                            {item.members.length} share this number
+                          </span>
+                        </div>
+                        <span className="block text-xs text-muted-foreground mt-0.5">
+                          {active.country_code ?? ""} {active.phone}
                         </span>
-                        <span className="block text-xs text-muted-foreground">
-                          {noPhone
-                            ? "No phone number"
-                            : `${r.country_code ?? ""} ${r.phone}`}
-                        </span>
-                      </Label>
+                      </div>
                       <StatusBadge
-                        variant={r.source === "patient" ? "violet" : "indigo"}
+                        variant={active.source === "patient" ? "violet" : "indigo"}
                       >
-                        {r.source}
+                        {active.source}
                       </StatusBadge>
                     </li>
                   );

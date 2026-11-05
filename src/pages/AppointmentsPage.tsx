@@ -191,19 +191,14 @@ export const AppointmentsPage: React.FC = () => {
         setActiveModal("patientForm");
         toast.success("Please verify patient details before check-in");
       } else {
-        const finalPhone = (responseData?.patient_phone || appt.patientPhone || "").trim();
-        const finalName = (responseData?.patient_name || appt.patientName || "").toLowerCase().trim();
-        const samePhoneMatch = finalPhone
-          ? patients.find(
-              (p) =>
-                (p.phone || "").trim() === finalPhone &&
-                (p.name || "").toLowerCase().trim() !== finalName,
-            )
-          : undefined;
+        // Server-side lookup across ALL patients (not just whatever page is
+        // currently loaded in `patients`) — see existing_patient_same_phone
+        // in AppointmentService.checkInPatient.
+        const samePhone = responseData?.existing_patient_same_phone;
         setPendingCheckInAppt((prev) => ({
           ...prev,
-          existingPatientSamePhone: samePhoneMatch
-            ? { id: samePhoneMatch.id, name: samePhoneMatch.name, phone: samePhoneMatch.phone }
+          existingPatientSamePhone: samePhone
+            ? { id: samePhone.id, name: samePhone.name }
             : undefined,
         }));
         setActiveModal("patientNotFound");
@@ -275,17 +270,14 @@ export const AppointmentsPage: React.FC = () => {
         
         toast.success("Patient checked in directly");
       } else {
-        const samePhoneMatch = sPhone
-          ? patients.find(
-              (p) =>
-                (p.phone || "").trim() === sPhone &&
-                (p.name || "").toLowerCase().trim() !== sName,
-            )
-          : undefined;
+        // Server-side lookup across ALL patients (not just whatever page is
+        // currently loaded in `patients`) — see existing_patient_same_phone
+        // in AppointmentService.checkInPatient.
+        const samePhone = responseData?.existing_patient_same_phone;
         setPendingCheckInAppt({
           ...appt,
-          existingPatientSamePhone: samePhoneMatch
-            ? { id: samePhoneMatch.id, name: samePhoneMatch.name, phone: samePhoneMatch.phone }
+          existingPatientSamePhone: samePhone
+            ? { id: samePhone.id, name: samePhone.name }
             : undefined,
         });
         setActiveModal("patientNotFound");

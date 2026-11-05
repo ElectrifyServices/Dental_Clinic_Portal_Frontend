@@ -110,6 +110,12 @@ function normalizeToothValue(plan: ApiAny) {
     plan.tooth_no,
   );
 
+  if (Array.isArray(rawTooth)) {
+    if (rawTooth.length === 0) return "—";
+    if (rawTooth.some((t) => t === -1 || t === "-1")) return "FM";
+    return rawTooth.join(", ");
+  }
+
   if (rawTooth === -1 || rawTooth === "-1" || rawTooth === "FM") {
     return "FM";
   }

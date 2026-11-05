@@ -81,7 +81,15 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
   const { data: rawMedicalHistories } = useMedicalHistoriesQuery({ staleTime: 0 });
   const { data: rawAllergies } = useAllergiesQuery({ staleTime: 0 });
 
-  const extractList = (data: ApiAny) => {
+  const matchedCorporatePlan = corporatePlans.find(
+    (p: any) => p.id === formData.corporatePlanId,
+  );
+  const planCode =
+    formData.corporatePlanCode ||
+    matchedCorporatePlan?.plan_code ||
+    matchedCorporatePlan?.code;
+
+  const extractList = (data: any) => {
     if (!data) return [];
     if (Array.isArray(data)) return data;
     if (data && Array.isArray((data as ApiAny).all)) return (data as ApiAny).all;
@@ -250,11 +258,11 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
                     Enrolling in Corporate/Membership Plan
                   </span>
                   <p className="font-bold text-foreground text-sm">
-                    {formData.corporatePlanName || corporatePlans.find((p: ApiAny) => p.id === formData.corporatePlanId)?.name || "Corporate Plan"}
+                    {formData.corporatePlanName || matchedCorporatePlan?.name || "Corporate Plan"}
                   </p>
-                  {formData.corporateMemberId && (
+                  {planCode && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      Member ID: {formData.corporateMemberId}
+                      Plan Code: {planCode}
                     </p>
                   )}
                 </div>

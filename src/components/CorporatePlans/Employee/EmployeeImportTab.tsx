@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { X, Download, AlertTriangle, CheckCircle, PartyPopper } from 'lucide-react';
 import { FileUploadZone, DataTable, Badge, PlanBadge, Button } from '../../ui';
-import { Dialog, DialogContent } from '../../ui/Dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../../ui/Dialog';
 import { CorporateEmployee, CorporatePlan } from '../../../types';
 import { parseXlsx, downloadTemplate } from './importUtils';
 import { useBulkImportEmployeeMutation } from '../../../hooks/corporate/useBulkImportEmployeeMutation';
@@ -213,10 +213,10 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
               <AlertTriangle className="w-9 h-9 text-amber-600" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-lg font-bold text-foreground">Discard Import?</h3>
-              <p className="text-sm text-muted-foreground">
+              <DialogTitle className="text-lg font-bold text-foreground">Discard Import?</DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
                 You have an unsaved preview of {importRows.length} employee{importRows.length > 1 ? 's' : ''}. Leaving now will discard this data and nothing will be imported.
-              </p>
+              </DialogDescription>
             </div>
             <div className="flex items-center gap-2 w-full">
               <Button onClick={() => setShowCancelConfirm(false)} variant="outline" className="flex-1">
@@ -243,10 +243,10 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
         <DialogContent className="max-w-lg">
           <div className="space-y-4">
             <div className="space-y-1">
-              <h3 className="text-lg font-bold text-foreground">Confirm Import</h3>
-              <p className="text-sm text-muted-foreground">
+              <DialogTitle className="text-lg font-bold text-foreground">Confirm Import</DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
                 You are about to import {importRows.length} employee{importRows.length > 1 ? 's' : ''}. Please review the details below before proceeding.
-              </p>
+              </DialogDescription>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -324,12 +324,12 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
               <CheckCircle className="w-9 h-9 text-emerald-600" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-lg font-bold text-foreground flex items-center justify-center gap-2">
+              <DialogTitle className="text-lg font-bold text-foreground flex items-center justify-center gap-2">
                 Import Successful <PartyPopper className="w-5 h-5 text-amber-500" />
-              </h3>
-              <p className="text-sm text-muted-foreground">
+              </DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
                 {successCount} employee{successCount === 1 ? '' : 's'} {successCount === 1 ? 'has' : 'have'} been successfully imported and added to the membership.
-              </p>
+              </DialogDescription>
             </div>
             <Button
               onClick={() => {

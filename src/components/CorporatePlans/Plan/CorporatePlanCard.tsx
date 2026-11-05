@@ -57,6 +57,7 @@ export function CorporatePlanCard({
   const isIndividual = plan.planCategory === 'individual';
   const tier = plan.planTier ? TIER_CONFIG[plan.planTier] : null;
 
+  
   const familyLabel =
     !plan.maxDependents || plan.maxDependents === 0
       ? 'Self Only'

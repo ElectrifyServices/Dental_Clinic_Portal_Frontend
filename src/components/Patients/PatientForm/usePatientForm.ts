@@ -60,6 +60,7 @@ export const usePatientForm = (patient: any, type?: "normal" | "person") => {
     defaultDiscount: 0,
     corporatePlanId: "",
     corporatePlanName: "",
+    corporatePlanCode: "",
     corporateMemberId: "",
     isFOC: false,
     rawAvatarFile: null as File | null,
@@ -288,6 +289,7 @@ export const usePatientForm = (patient: any, type?: "normal" | "person") => {
         ? (plan.plan_id || plan.id || emp.corporate_plan_id || emp.corporatePlanId || emp.company_id)
         : undefined,
       corporatePlanName: plan.plan_name || emp.company_name || emp.companyName || "Corporate Plan",
+      corporatePlanCode: hasActivePlan ? plan.plan_code || undefined : undefined,
       corporateMemberId: emp.id || emp.emp_id || emp.employee_id || emp.employeeId,
     }));
   };
