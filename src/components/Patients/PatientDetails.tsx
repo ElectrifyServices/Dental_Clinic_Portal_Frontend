@@ -226,7 +226,33 @@ export function PatientDetails({
   if (treatmentsData?.data) {
     const rawData = Array.isArray(treatmentsData.data) ? treatmentsData.data : (treatmentsData.data as any).data || [];
     if (Array.isArray(rawData) && rawData.length > 0) {
-      patientTreatments = rawData.map(toUiTreatment);
+      // This endpoint returns one row per patient with the actual treatment
+      // plans nested under `treatment_plan` (procedure/tooth/cost/doctor all
+      // live there, not on the outer patient-summary row) — flatten to one
+      // UI treatment per nested plan, carrying the patient's name/code along
+      // for display. Older/other API shapes that already return flat plan
+      // rows (no `treatment_plan` array) are passed through unchanged.
+      patientTreatments = rawData.flatMap((row, rowIndex) => {
+        const nestedPlans = Array.isArray(row.treatment_plan)
+          ? row.treatment_plan
+          : null;
+        if (!nestedPlans) return [toUiTreatment(row)];
+
+        return nestedPlans.map((plan, planIndex: number) =>
+          toUiTreatment({
+            ...plan,
+            id: plan.id || `${row.id || rowIndex}-${planIndex}`,
+            patient_id: row.id,
+            patient_code: row.patient_code,
+            // `patient_name` (not `name`) — `name` doubles as the procedure
+            // fallback in normalizeProcedure, and this nested plan object has
+            // no procedure field of its own, so merging the patient's name in
+            // as `name` would make it show up as the "procedure" instead.
+            patient_name: row.name,
+            phone: row.phone,
+          }),
+        );
+      });
     }
   }
 
