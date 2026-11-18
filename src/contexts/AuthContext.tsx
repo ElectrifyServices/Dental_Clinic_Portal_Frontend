@@ -11,6 +11,10 @@ import { useLogoutMutation } from "../hooks/auth/useLogoutMutation";
 import { AuthStorage } from "../auth/authStorage";
 import { toast } from "../components/ui";
 import { useTheme } from "./ThemeContext";
+import { queryClient } from "../services/queryClient";
+import { setLoggingOut } from "../services/apiClient";
+import { clearAllSessionStores } from "../hooks/useSessionState";
+import { clearDependents } from "../hooks/corporate/dependentStorage";
 
 interface AuthState {
   user: User | null;
@@ -85,10 +89,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const DEMO_PASSWORD = 'demo';
 
   const login = async (email: string, password?: string) => {
+    setLoggingOut(false);
     dispatch({ type: "LOGIN_START" });
 
     // ── Demo mode: bypass API entirely ───────────────────────────────────────
-    if (email.trim().toLowerCase() === DEMO_EMAIL && password === DEMO_PASSWORD) {
+    // Dev-only: stripped from production bundles (A7).
+    if (import.meta.env.DEV && email.trim().toLowerCase() === DEMO_EMAIL && password === DEMO_PASSWORD) {
       const demoUser = {
         id: 'DEMO-001',
         name: 'Demo Admin',
@@ -250,15 +256,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
+    setLoggingOut(true);
+    // Stop any in-flight data requests so they don't fire 401s during sign-out.
+    await queryClient.cancelQueries();
     try {
       await logoutMutation.mutateAsync({});
     } catch (error) {
     } finally {
       AuthStorage.clear();
-      clearTheme();
       sessionStorage.removeItem('demo_mode');
+      // Unmount the authenticated screens first (router goes to /login)...
       dispatch({ type: "LOGOUT" });
       toast.success("Logged out successfully.");
+      // ...then wipe in-memory data, so mounted queries don't refetch and hit the API.
+      setTimeout(() => {
+        clearTheme();
+        clearAllSessionStores();
+        clearDependents();
+        queryClient.clear();
+      }, 0);
     }
   };
 

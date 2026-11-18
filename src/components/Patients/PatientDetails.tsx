@@ -318,8 +318,8 @@ export function PatientDetails({
         getPrescriptionHTML({
           t,
           localizedClinicName: "Opal Smiles Dental Studio",
-          localizedDoctorName: "Dr. Rajesh Sharma",
-          localizedDoctorDegrees: "BDS, MDS",
+          localizedDoctorName: "",
+          localizedDoctorDegrees: "",
           localizedPatientName: toTitleCase(patient.name),
           previewData,
           localizedGender: patient.gender,
