@@ -3,19 +3,24 @@ import { demoPlanDependents } from '../../data/demoData';
 
 const STORAGE_KEY = 'plan_dependents';
 
-function readAll(): PlanDependent[] {
+// In-Memory storage (No persistent localStorage for health/dependent data)
+let inMemoryDependents: PlanDependent[] = import.meta.env.DEV ? [...demoPlanDependents] : [];
+
+// Ensure legacy persistent key is purged from browser storage
+if (typeof window !== 'undefined') {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as PlanDependent[];
-  } catch {/* ignore */}
-  // Seed demo data on first read
-  const seeded = [...demoPlanDependents] as PlanDependent[];
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
-  return seeded;
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+function readAll(): PlanDependent[] {
+  return inMemoryDependents;
 }
 
 function writeAll(dependents: PlanDependent[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(dependents));
+  inMemoryDependents = dependents;
 }
 
 export function getDependent(id: string): PlanDependent | undefined {
@@ -53,7 +58,12 @@ export function getDependentByPatientId(patientId: string): PlanDependent | unde
   return readAll().find(d => d.patientId === patientId);
 }
 
-/** Dispatches a custom event so components re-render after localStorage writes. */
+/** Dispatches a custom event so components re-render after state changes. */
 export function notifyDependentChange(): void {
   window.dispatchEvent(new CustomEvent('plan_dependents_changed'));
+}
+
+/** Reset dependents on logout */
+export function clearDependents(): void {
+  inMemoryDependents = import.meta.env.DEV ? [...demoPlanDependents] : [];
 }

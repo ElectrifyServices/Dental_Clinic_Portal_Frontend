@@ -1,6 +1,5 @@
 import type { ApiAny } from "../types/api";
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { doctorsWithSchedules } from '../data/doctors';
 import { toast } from '../components/ui';
 
 interface ModalContextType {
@@ -90,7 +89,7 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
   const [bookedFollowUp, setBookedFollowUp] = useState<ApiAny>(null);
   const [draftConsultations, setDraftConsultations] = useState<Record<string, ApiAny>>({});
   const [doctorAvailability, setDoctorAvailability] = useState<Record<string, boolean>>(
-    doctorsWithSchedules.reduce((acc, d) => ({ ...acc, [d.id]: d.isAvailableToday }), {})
+    {}
   );
   const [whatsappPhone, setWhatsappPhone] = useState<string | null>(null);
   const [whatsappPatientName, setWhatsappPatientName] = useState<string | null>(null);

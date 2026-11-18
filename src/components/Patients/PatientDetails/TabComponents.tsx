@@ -1,4 +1,5 @@
 import type { ApiAny } from "../../../types/api";
+import { placeholderImage } from "@/components/ui/InitialsAvatar";
 import { useState } from "react";
 import { Activity, AlertTriangle, Calendar, ChevronDown, CheckCircle, CreditCard, Heart, Image as ImageIcon, Pill, Send, Stethoscope, User, X } from "lucide-react";
 import { Card, Button, Badge, Loading } from "@/components/ui";
@@ -810,11 +811,11 @@ export const DocumentsTab = ({
                   }}
                 >
                   <img
-                    src={docUrl || "https://placehold.co/400x300?text=Document"}
+                    src={docUrl || placeholderImage("Document")}
                     alt={docName}
                     className="w-full h-40 object-cover rounded-lg mb-3 hover:opacity-90 transition-opacity"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = "https://placehold.co/400x300?text=Document";
+                      (e.target as HTMLImageElement).src = placeholderImage("Document");
                     }}
                   />
                   <h4 className="font-semibold text-foreground mb-1 truncate">{docName}</h4>

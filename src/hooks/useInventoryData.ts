@@ -1,9 +1,9 @@
 import type { ApiAny } from "../types/api";
-import { useLocalStorage } from './useLocalStorage';
+import { useSessionState } from './useSessionState';
 import { demoInventory } from '../data/demoData';
 
 export function useInventoryData() {
-  const [inventory, setInventory] = useLocalStorage<ApiAny[]>('inventory', demoInventory);
+  const [inventory, setInventory] = useSessionState<ApiAny[]>('inventory', import.meta.env.DEV ? demoInventory : []);
 
   const handleSaveInventoryItem = (item: ApiAny) => {
     setInventory(prev => {

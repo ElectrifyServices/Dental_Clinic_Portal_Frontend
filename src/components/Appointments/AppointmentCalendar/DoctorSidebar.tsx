@@ -1,4 +1,13 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { InitialsAvatar } from "@/components/ui/InitialsAvatar";
+
+const DoctorPhoto: React.FC<{ name: string; src?: string }> = ({ name, src }) => {
+  const [failed, setFailed] = useState(false);
+  if (!src || failed) return <InitialsAvatar name={name} />;
+  return (
+    <img src={src} alt={name} className="w-full h-full object-cover" onError={() => setFailed(true)} />
+  );
+};
 import { Search, Stethoscope, Calendar as CalendarIcon } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Button, Pagination, SearchInput } from "@/components/ui";
@@ -89,14 +98,7 @@ export const DoctorSidebar: React.FC<DoctorSidebarProps> = ({
                 : "bg-card border-transparent hover:border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted"}`}
           >
             <div className="w-8 h-8 rounded-lg overflow-hidden ring-1 ring-border shrink-0">
-              <img
-                src={doctor.avatar || doctor.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(doctor.name)}&background=random`}
-                alt={doctor.name}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(doctor.name)}&background=random`;
-                }}
-              />
+              <DoctorPhoto name={doctor.name} src={doctor.avatar || doctor.image} />
             </div>
             <div className="min-w-0">
               <p className="text-xs font-bold text-foreground truncate">{doctor.name}</p>
