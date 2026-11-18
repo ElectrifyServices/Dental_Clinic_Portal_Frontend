@@ -39,6 +39,7 @@ import {
   SelectValue,
 } from "./Select";
 export * from "./DropdownMenu";
+export * from "./DatePicker";
 
 // ─── PageHeader ───────────────────────────────────────────────────────────────
 interface PageHeaderProps {

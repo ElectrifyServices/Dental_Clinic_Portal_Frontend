@@ -8,7 +8,7 @@ import {
   mapFormDataToCreatePayload,
 } from './patients/useCreatePatientMutation';
 import { useUpdatePatientMutation } from './patients/useUpdatePatientMutation';
-import { useLocalStorage } from './useLocalStorage';
+import { useSessionState } from './useSessionState';
 import { useMedicalHistoriesQuery } from './patients/useMedicalHistoriesQuery';
 import { useAllergiesQuery } from './patients/useAllergiesQuery';
 import { useBulkImportEmployeeMutation } from './corporate/useBulkImportEmployeeMutation';
@@ -74,7 +74,7 @@ export function usePatientData(params?: { enabled?: boolean }) {
   const { mutateAsync: bulkImportEmployee } = useBulkImportEmployeeMutation();
 
   // Local storage for queue (not part of API)
-  const [queuedPatients, setQueuedPatients] = useLocalStorage<any[]>('queuedPatients', []);
+  const [queuedPatients, setQueuedPatients] = useSessionState<any[]>('queuedPatients', []);
 
   // Normalize API response into a flat list
   const patients = useMemo(() => {

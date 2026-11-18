@@ -1,5 +1,5 @@
 import type { ApiAny } from "../types/api";
-import { useLocalStorage } from './useLocalStorage';
+import { useSessionState } from './useSessionState';
 import { demoCorporatePlans } from '../data/demoData';
 import { useCorporatePlansQuery } from './corporate/useCorporatePlansQuery';
 import { CorporatePlan, PlanBenefitType } from '../types';
@@ -7,8 +7,8 @@ import { mapProcedureLabelToKey } from '../constants/consent.constants';
 import { useMemo } from 'react';
 
 export function useCorporateData(params?: { search?: string; status?: string; planType?: string; enabled?: boolean; }) {
-  const [localPlans, setLocalPlans] = useLocalStorage<ApiAny[]>('corporatePlans', demoCorporatePlans);
-  const [corporateEmployees, setCorporateEmployees] = useLocalStorage<ApiAny[]>('corporateEmployees', []);
+  const [localPlans, setLocalPlans] = useSessionState<ApiAny[]>('corporatePlans', import.meta.env.DEV ? demoCorporatePlans : []);
+  const [corporateEmployees, setCorporateEmployees] = useSessionState<ApiAny[]>('corporateEmployees', []);
 
   const isEnabled = useMemo(() => {
     if (params?.enabled === false) return false;

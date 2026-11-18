@@ -1,5 +1,6 @@
 import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
+import { refreshModeHeaders } from "../../auth/refreshCookieMode";
 
 interface LoginVariables {
   email: string;
@@ -16,7 +17,8 @@ interface LoginResponseData {
   };
   tokens: {
     accessToken: string;
-    refreshToken: string;
+    // Missing when the server puts the refresh token in an HttpOnly cookie
+    refreshToken?: string;
     [key: string]: ApiAny;
   };
   sessionId?: string;
@@ -29,5 +31,6 @@ export function useLoginMutation() {
   return useApiMutation<LoginResponseData, LoginVariables>({
     endpoint: LOGIN_ENDPOINT,
     method: "post",
+    headers: refreshModeHeaders,
   });
 }
