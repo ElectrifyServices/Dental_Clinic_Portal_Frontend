@@ -10,12 +10,21 @@ export function useInvoiceData(params?: { search?: string; status?: string; paym
   const isEnabled = options?.enabled !== false;
 
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [limit, setLimitState] = useState(10);
 
   // Reset page to 1 when filters or search change
   useEffect(() => {
     setPage(1);
   }, [params?.search, params?.status, params?.paymentMethod, params?.startDate, params?.endDate]);
+
+  // Changing the page size while on a later page can request an
+  // out-of-range offset (e.g. page 3 at limit 50 = records 101-150) that no
+  // longer exists, returning an empty list. Reset to page 1 whenever the
+  // limit changes, same as the filter/search reset above.
+  const setLimit = useCallback((newLimit: number) => {
+    setLimitState(newLimit);
+    setPage(1);
+  }, []);
 
   const queryParams = useMemo(() => {
     const filters: any = {};

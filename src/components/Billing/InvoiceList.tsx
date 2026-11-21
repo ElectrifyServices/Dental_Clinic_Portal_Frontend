@@ -673,7 +673,7 @@ export function InvoiceList({
           <div className="flex gap-2">
             <Button
               variant="outline"
-              onClick={() => exportInvoices()}
+              onClick={() => exportInvoices({ startDate, endDate })}
               loading={isExporting}
               className="gap-2"
             >

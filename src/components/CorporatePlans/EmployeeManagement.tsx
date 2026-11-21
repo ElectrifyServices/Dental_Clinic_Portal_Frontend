@@ -82,6 +82,11 @@ export function EmployeeManagement({
   const [statusToggleDep, setStatusToggleDep] = useState<any | null>(null);
   const [linkMode, setLinkMode] = useState(false);
   const [linkSelectedIds, setLinkSelectedIds] = useState<Set<string>>(new Set());
+  // Selected member objects, kept separately from `apiMembers` (which only
+  // holds whatever page/search is currently fetched) — otherwise searching
+  // for a different member replaces `apiMembers` and a previously selected
+  // member (no longer in the current list) disappears from the Link modal.
+  const [linkSelectedMembers, setLinkSelectedMembers] = useState<Map<string, CorporateEmployee>>(new Map());
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [showExitLinkConfirm, setShowExitLinkConfirm] = useState(false);
 
@@ -456,11 +461,22 @@ export function EmployeeManagement({
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
+    setLinkSelectedMembers(prev => {
+      const next = new Map(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        const member = apiMembers.find(e => e.id === id);
+        if (member) next.set(id, member);
+      }
+      return next;
+    });
   };
 
   const exitLinkMode = () => {
     setLinkMode(false);
     setLinkSelectedIds(new Set());
+    setLinkSelectedMembers(new Map());
   };
 
   const handleCancelLinkMode = () => {
@@ -1086,7 +1102,7 @@ export function EmployeeManagement({
 
       {showLinkModal && (
         <LinkFamilyModal
-          members={apiMembers.filter(e => linkSelectedIds.has(e.id))}
+          members={Array.from(linkSelectedMembers.values())}
           onClose={() => setShowLinkModal(false)}
           onLinked={() => {
             setShowLinkModal(false);

@@ -1,11 +1,20 @@
 import { useMutation } from "@tanstack/react-query";
 import apiClient from "../../services/apiClient";
 
+interface ExportInvoicesParams {
+  startDate?: string;
+  endDate?: string;
+}
+
 export function useExportInvoicesMutation() {
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async (params?: ExportInvoicesParams) => {
       const response = await apiClient.post('/invoice/export', {
-        format: 'xlsx'
+        format: 'xlsx',
+        // Omitted when not set — backend exports the full invoice list in
+        // that case, and only the selected range when both/either is given.
+        ...(params?.startDate && { startDate: params.startDate }),
+        ...(params?.endDate && { endDate: params.endDate }),
       }, {
         responseType: 'blob', // Important for downloading files
       });
