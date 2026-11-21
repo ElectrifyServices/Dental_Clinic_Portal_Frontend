@@ -1,4 +1,3 @@
-import type { ApiAny } from "../types/api";
 export interface Prescription {
   id: string;
   medicine: string;
@@ -33,11 +32,11 @@ export interface TreatmentSession {
 
 export interface TreatmentFormProps {
   onClose: () => void;
-  onSave: (treatment: ApiAny) => void;
-  treatment?: ApiAny;
-  patients: ApiAny[];
-  doctors: ApiAny[];
-  treatments?: ApiAny[];
+  onSave: (treatment: any) => void;
+  treatment?: any;
+  patients: any[];
+  doctors: any[];
+  treatments?: any[];
 }
 
 export interface CreateTreatmentSessionDto {

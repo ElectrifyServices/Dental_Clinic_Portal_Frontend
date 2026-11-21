@@ -1,11 +1,10 @@
-import type { ApiAny } from "../../types/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { useApiQuery } from "../useApiQuery";
 import { useApiMutation } from "../useApiMutation";
 
 // Query for fetching Medical Histories
-export const useMedicalHistoriesQuery = (options?: ApiAny) => {
-  return useApiQuery<ApiAny>({
+export const useMedicalHistoriesQuery = (options?: any) => {
+  return useApiQuery<any>({
     queryKey: ["medical-histories"],
     endpoint: "/patientMedical/medical-histories",
     method: "get",
@@ -17,7 +16,7 @@ export const useMedicalHistoriesQuery = (options?: ApiAny) => {
 export const useCreateMedicalHistoryMutation = () => {
   const queryClient = useQueryClient();
 
-  return useApiMutation<ApiAny, { name: string; is_custom: boolean }>({
+  return useApiMutation<any, { name: string; is_custom: boolean }>({
     endpoint: "/patientMedical/medical-histories",
     method: "post",
     options: {
@@ -32,7 +31,7 @@ export const useCreateMedicalHistoryMutation = () => {
 export const useDeleteMedicalHistoryMutation = () => {
   const queryClient = useQueryClient();
 
-  return useApiMutation<ApiAny, string>({
+  return useApiMutation<any, string>({
     getEndpoint: (id: string) => `/patientMedical/medical-histories/${id}`,
     method: "delete",
     options: {

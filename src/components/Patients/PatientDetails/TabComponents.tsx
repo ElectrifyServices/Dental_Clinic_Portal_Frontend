@@ -1,10 +1,31 @@
-import type { ApiAny } from "../../../types/api";
+import { placeholderImage } from "@/components/ui/InitialsAvatar";
 import { useState } from "react";
-import { Activity, AlertTriangle, Calendar, ChevronDown, CheckCircle, CreditCard, Heart, Image as ImageIcon, Pill, Send, Stethoscope, User, X } from "lucide-react";
+import {
+  Activity,
+  AlertTriangle,
+  Briefcase,
+  Calendar,
+  ChevronDown,
+  CheckCircle,
+  Cigarette,
+  CreditCard,
+  Droplet,
+  Heart,
+  Image as ImageIcon,
+  Mail,
+  MapPin,
+  Phone,
+  Pill,
+  Printer,
+  Send,
+  Stethoscope,
+  User,
+  UserCheck,
+  Users,
+  X,
+} from "lucide-react";
 import { Card, Button, Badge, Loading } from "@/components/ui";
-import { cn } from "@/lib/utils";
 import { usePatientDocumentsQuery } from "../../../hooks/patients/usePatientDocumentsQuery";
-import { formatDisplayDate } from "@/utils/dateUtils";
 
 // --- Reusable Empty State Component ---
 const EmptyState = ({
@@ -12,7 +33,7 @@ const EmptyState = ({
   title,
   description,
 }: {
-  icon: ApiAny;
+  icon: any;
   title: string;
   description: string;
 }) => (
@@ -30,21 +51,21 @@ const EmptyState = ({
 );
 
 // --- Medical Info Tab ---
-export const MedicalInfoTab = ({ patient }: { patient: ApiAny }) => (
-  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+export const MedicalInfoTab = ({ patient }: { patient: any }) => (
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
     {/* Medical History */}
-    <Card className="lg:col-span-1 bg-primary/5 rounded-2xl p-4 border border-primary/20 shadow-sm">
-      <h3 className="text-lg font-bold text-primary mb-3 flex items-center">
+    <Card className="lg:col-span-1 bg-primary/5 rounded-2xl p-6 border border-primary/20 shadow-sm">
+      <h3 className="text-lg font-bold text-primary mb-4 flex items-center">
         <Heart className="w-5 h-5 mr-2 text-red-500" /> Medical History
       </h3>
       <div className="space-y-3">
         {(patient?.medicalHistoryNames || patient?.medicalHistory || patient?.medicalHistories || []).length > 0 ? (
-          (patient.medicalHistoryNames || patient.medicalHistory || patient.medicalHistories).map((item: ApiAny, index: number) => {
+          (patient.medicalHistoryNames || patient.medicalHistory || patient.medicalHistories).map((item: any, index: number) => {
             const name = typeof item === "object" ? (item.name || item.history?.name || item.condition || item.history_name) : item;
             return (
               <div
                 key={index}
-                className="bg-card rounded-xl p-3 border border-primary/10 shadow-sm animate-in fade-in duration-200"
+                className="bg-card rounded-xl p-4 border border-primary/10 shadow-sm animate-in fade-in duration-200"
               >
                 <div className="flex items-center">
                   <Heart className="w-4 h-4 text-red-500 mr-2" />
@@ -63,18 +84,18 @@ export const MedicalInfoTab = ({ patient }: { patient: ApiAny }) => (
     </Card>
 
     {/* Allergies */}
-    <Card className="lg:col-span-1 bg-destructive/5 rounded-2xl p-4 border border-destructive/20 shadow-sm">
-      <h3 className="text-lg font-bold text-red-900 mb-3 flex items-center">
+    <Card className="lg:col-span-1 bg-destructive/5 rounded-2xl p-6 border border-destructive/20 shadow-sm">
+      <h3 className="text-lg font-bold text-red-900 mb-4 flex items-center">
         <AlertTriangle className="w-5 h-5 mr-2" /> Allergies & Alerts
       </h3>
       <div className="space-y-3">
         {(patient?.allergyNames || patient?.allergies || []).length > 0 ? (
-          (patient.allergyNames || patient.allergies).map((allergy: ApiAny, index: number) => {
+          (patient.allergyNames || patient.allergies).map((allergy: any, index: number) => {
             const name = typeof allergy === "object" ? (allergy.allergy_name || allergy.name) : allergy;
             return (
               <div
                 key={index}
-                className="bg-card rounded-xl p-3 border border-destructive/20 shadow-sm animate-in fade-in duration-200"
+                className="bg-card rounded-xl p-4 border border-destructive/20 shadow-sm animate-in fade-in duration-200"
               >
                 <div className="flex items-center">
                   <AlertTriangle className="w-4 h-4 text-destructive mr-2" />
@@ -91,27 +112,27 @@ export const MedicalInfoTab = ({ patient }: { patient: ApiAny }) => (
         )}
       </div>
     </Card>
-    <Card className="lg:col-span-2 bg-muted/50 rounded-2xl p-4 border border-border shadow-sm">
-      <h3 className="text-lg font-bold text-foreground mb-3">
+    <Card className="lg:col-span-2 bg-muted/50 rounded-2xl p-6 border border-border shadow-sm">
+      <h3 className="text-lg font-bold text-foreground mb-4">
         Additional Information
       </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {patient.bloodGroup && (
-          <div className="bg-card rounded-xl p-3 text-center border border-border">
+          <div className="bg-card rounded-xl p-4 text-center border border-border">
             <Heart className="w-6 h-6 text-red-500 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">Blood Group</p>
             <p className="font-bold text-destructive">{patient.bloodGroup}</p>
           </div>
         )}
         {patient.occupation && (
-          <div className="bg-card rounded-xl p-3 text-center border border-border">
+          <div className="bg-card rounded-xl p-4 text-center border border-border">
             <User className="w-6 h-6 text-blue-500 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">Occupation</p>
             <p className="font-medium text-foreground">{patient.occupation}</p>
           </div>
         )}
         {patient.maritalStatus && (
-          <div className="bg-card rounded-xl p-3 text-center border border-border">
+          <div className="bg-card rounded-xl p-4 text-center border border-border">
             <User className="w-6 h-6 text-green-500 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">Marital Status</p>
             <p className="font-medium text-foreground capitalize">
@@ -120,7 +141,7 @@ export const MedicalInfoTab = ({ patient }: { patient: ApiAny }) => (
           </div>
         )}
         {patient.insuranceProvider && (
-          <div className="bg-card rounded-xl p-3 text-center border border-border">
+          <div className="bg-card rounded-xl p-4 text-center border border-border">
             <CreditCard className="w-6 h-6 text-purple-500 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">Insurance</p>
             <p className="font-medium text-foreground">
@@ -138,15 +159,15 @@ export const AppointmentsTab = ({
   patientAppointments,
   getStatusColor,
 }: {
-  patientAppointments: ApiAny[];
+  patientAppointments: any[];
   getStatusColor: (s: string) => string;
 }) => (
-  <div className="space-y-3">
+  <div className="space-y-4">
     <h3 className="text-lg font-bold text-foreground">Appointment History</h3>
     {patientAppointments.map((appointment) => (
       <Card
         key={appointment.id}
-        className="bg-card rounded-2xl p-4 border border-border flex flex-col gap-3 shadow-sm hover:shadow-md transition-all duration-300"
+        className="bg-card rounded-2xl p-6 border border-border flex flex-col gap-3 shadow-sm hover:shadow-md transition-all duration-300"
       >
         <div className="flex items-start justify-between">
           <div className="flex items-start">
@@ -158,7 +179,7 @@ export const AppointmentsTab = ({
                 {appointment.treatmentType || appointment.type}
               </p>
               <p className="text-xs text-primary font-bold mt-1">
-                {formatDisplayDate(appointment.date)} • {appointment.time} • {appointment.duration || 15} mins
+                {appointment.date} • {appointment.time} • {appointment.duration || 15} mins
               </p>
               <p className="text-xs text-muted-foreground/80 mt-1 font-semibold">
                 Doctor: Dr. {appointment.doctorName || appointment.doctor}
@@ -206,11 +227,67 @@ export const AppointmentsTab = ({
   </div>
 );
 
+// Doctor / discount / payment / next-visit / notes line shown under a
+// treatment card — only renders the pieces that are actually present, since
+// the list endpoint doesn't always return all of them.
+const TreatmentMeta = ({ treatment }: { treatment: any }) => {
+  const hasDiscount = Number(treatment.discount_value) > 0;
+  const hasPendingAmount =
+    treatment.pending_amount !== null && Number(treatment.pending_amount) > 0;
+  const showPaid =
+    treatment.paid_amount > 0 && treatment.paid_amount !== treatment.cost;
+
+  if (
+    !treatment.doctorName &&
+    !hasDiscount &&
+    !showPaid &&
+    !hasPendingAmount &&
+    !treatment.nextAppointment &&
+    !treatment.notes
+  ) {
+    return null;
+  }
+
+  return (
+    <div className="mt-2 pt-2 border-t border-border/50 space-y-1.5">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+        {treatment.doctorName && (
+          <span className="font-semibold text-foreground/80">
+            Dr. {treatment.doctorName}
+          </span>
+        )}
+        {hasDiscount && (
+          <span>
+            Discount: {treatment.discount_value}
+            {treatment.discount_type === "PERCENTAGE" ? "%" : ""}
+          </span>
+        )}
+        {showPaid && <span>Paid: ₹{treatment.paid_amount.toLocaleString()}</span>}
+        {hasPendingAmount && (
+          <span className="font-semibold text-destructive">
+            Pending: ₹{treatment.pending_amount.toLocaleString()}
+          </span>
+        )}
+        {treatment.nextAppointment && (
+          <span>
+            Next Visit: {new Date(treatment.nextAppointment).toLocaleDateString()}
+          </span>
+        )}
+      </div>
+      {treatment.notes && (
+        <p className="text-xs text-muted-foreground/80 bg-card/60 p-2 rounded-lg border border-border/50">
+          {treatment.notes}
+        </p>
+      )}
+    </div>
+  );
+};
+
 // --- Treatments Tab ---
 export const TreatmentsTab = ({
   patientTreatments,
 }: {
-  patientTreatments: ApiAny[];
+  patientTreatments: any[];
 }) => {
   const hasInProgress = patientTreatments.some(
     (t) => t.status === "in-progress",
@@ -220,7 +297,7 @@ export const TreatmentsTab = ({
 
   if (patientTreatments.length === 0) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-6">
         <h3 className="text-lg font-bold text-foreground">Treatment Journey</h3>
         <EmptyState
           icon={Stethoscope}
@@ -232,7 +309,7 @@ export const TreatmentsTab = ({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <h3 className="text-lg font-bold text-foreground">Treatment Journey</h3>
       {hasInProgress && (
         <div>
@@ -254,14 +331,14 @@ export const TreatmentsTab = ({
                       </div>
                       <div>
                         <p className="font-bold text-foreground">
-                          {treatment.procedure}
+                          {treatment.procedure || "Treatment Plan"}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           Tooth:{" "}
                           <span className="font-bold">{String(treatment.tooth) === "-1" || String(treatment.tooth) === "FM" ? "Full Mouth" : `#${treatment.tooth}`}</span>
                         </p>
-                        <p className="text-[10px] text-muted-foreground font-semibold mt-1">
-                          {formatDisplayDate(treatment.date)}
+                        <p className="text-[10px] text-muted-foreground font-mono mt-1">
+                          {new Date(treatment.date).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
@@ -274,6 +351,7 @@ export const TreatmentsTab = ({
                       </span>
                     </div>
                   </div>
+                  <TreatmentMeta treatment={treatment} />
                 </Card>
               ))}
           </div>
@@ -299,7 +377,7 @@ export const TreatmentsTab = ({
                       </div>
                       <div>
                         <p className="font-bold text-foreground">
-                          {treatment.procedure}
+                          {treatment.procedure || "Treatment Plan"}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           Tooth:{" "}
@@ -316,6 +394,7 @@ export const TreatmentsTab = ({
                       </span>
                     </div>
                   </div>
+                  <TreatmentMeta treatment={treatment} />
                 </Card>
               ))}
           </div>
@@ -339,7 +418,7 @@ export const TreatmentsTab = ({
                       <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
                       <div>
                         <p className="font-semibold text-muted-foreground">
-                          {treatment.procedure}
+                          {treatment.procedure || "Treatment Plan"}
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
                           Tooth: {String(treatment.tooth) === "-1" || String(treatment.tooth) === "FM" ? "Full Mouth" : `#${treatment.tooth}`}
@@ -351,10 +430,11 @@ export const TreatmentsTab = ({
                         ₹{treatment.cost.toLocaleString()}
                       </p>
                       <p className="text-[10px] text-green-600 font-bold uppercase">
-                        {formatDisplayDate(treatment.date)}
+                        {new Date(treatment.date).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
+                  <TreatmentMeta treatment={treatment} />
                 </Card>
               ))}
           </div>
@@ -368,142 +448,87 @@ export const TreatmentsTab = ({
 export const BillingTab = ({
   patient,
   patientInvoices,
-  getStatusColor: _getStatusColor,
+  getStatusColor,
   handleSendReminder,
 }: {
-  patient: ApiAny;
-  patientInvoices: ApiAny[];
+  patient: any;
+  patientInvoices: any[];
   getStatusColor: (s: string) => string;
   handleSendReminder: () => void;
-}) => {
-  const formatInvoiceDate = (dateVal?: string | number | Date) => {
-    if (!dateVal) return null;
-    return formatDisplayDate(dateVal);
-  };
-
-  const getInvoiceStatusBadge = (status?: string) => {
-    const s = (status || "generated").toLowerCase().replace(/_/g, "-");
-    switch (s) {
-      case "paid":
-      case "completed":
-        return "bg-emerald-100 text-emerald-800 border-emerald-200";
-      case "partially-paid":
-      case "pending":
-      case "scheduled":
-        return "bg-amber-100 text-amber-800 border-amber-200";
-      case "generated":
-      case "draft":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      case "cancelled":
-      case "void":
-        return "bg-rose-100 text-rose-800 border-rose-200";
-      default:
-        return "bg-muted text-muted-foreground border-border";
-    }
-  };
-
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-bold text-foreground">Billing History</h3>
-        {patient.outstandingBalance > 0 && (
-          <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-3">
-            <div className="flex items-center justify-between gap-6">
-              <div>
-                <p className="font-semibold text-red-900">Outstanding Balance</p>
-                <p className="text-2xl font-bold text-destructive">
-                  ₹{patient.outstandingBalance.toLocaleString()}
-                </p>
-              </div>
-              <Button
-                onClick={handleSendReminder}
-                variant="destructive"
-                className="flex items-center text-sm font-medium h-auto"
-              >
-                <Send className="w-4 h-4 mr-2" /> Send Reminder
-              </Button>
+}) => (
+  <div className="space-y-4">
+    <div className="flex items-center justify-between">
+      <h3 className="text-lg font-bold text-foreground">Billing History</h3>
+      {patient.outstandingBalance > 0 && (
+        <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4">
+          <div className="flex items-center justify-between gap-6">
+            <div>
+              <p className="font-semibold text-red-900">Outstanding Balance</p>
+              <p className="text-2xl font-bold text-destructive">
+                ₹{patient.outstandingBalance.toLocaleString()}
+              </p>
             </div>
+            <Button
+              onClick={handleSendReminder}
+              variant="destructive"
+              className="flex items-center text-sm font-medium h-auto"
+            >
+              <Send className="w-4 h-4 mr-2" /> Send Reminder
+            </Button>
           </div>
-        )}
-      </div>
-      {patientInvoices.map((invoice) => {
-        const invoiceNumber =
-          invoice.invoice_number ||
-          invoice.invoiceNumber ||
-          invoice.bill_number ||
-          invoice.invoiceNo ||
-          invoice.id;
-
-        const issuedDate = formatInvoiceDate(
-          invoice.invoice_date || invoice.date || invoice.created_at || invoice.createdAt
-        );
-
-        const dueDate = formatInvoiceDate(
-          invoice.due_date || invoice.dueDate
-        );
-
-        const amount = Number(
-          invoice.grand_total ??
-          invoice.total_amount ??
-          invoice.total ??
-          invoice.amount ??
-          invoice.billed_amount ??
-          0
-        );
-
-        const statusText = (invoice.status || "GENERATED").toUpperCase();
-
-        return (
-          <Card
-            key={invoice.id || invoiceNumber}
-            className="bg-card rounded-2xl p-4 border border-border shadow-sm hover:border-primary/20 transition-all"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                  <CreditCard className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="font-bold text-foreground text-sm tracking-tight">{invoiceNumber}</p>
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 text-xs text-muted-foreground mt-0.5">
-                    {issuedDate && <span>Issued: {issuedDate}</span>}
-                    {dueDate && <span>Due: {dueDate}</span>}
-                  </div>
-                </div>
-              </div>
-              <div className="text-right shrink-0">
-                <p className="font-bold text-foreground text-base">
-                  ₹{amount.toLocaleString()}
-                </p>
-                <span
-                  className={cn(
-                    "inline-block mt-1 px-2.5 py-0.5 text-[10px] font-bold rounded-full border",
-                    getInvoiceStatusBadge(invoice.status)
-                  )}
-                >
-                  {statusText}
-                </span>
-              </div>
-            </div>
-          </Card>
-        );
-      })}
-      {patientInvoices.length === 0 && (
-        <EmptyState
-          icon={CreditCard}
-          title="No invoices found"
-          description="No billing records or invoices have been generated for this patient yet."
-        />
+        </div>
       )}
     </div>
-  );
-};
+    {patientInvoices.map((invoice) => {
+      const issuedDate = invoice.invoice_date || invoice.date;
+      const issuedFormatted = issuedDate && !isNaN(new Date(issuedDate).getTime())
+        ? new Date(issuedDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+        : "—";
+
+      return (
+        <Card
+          key={invoice.id}
+          className="bg-card rounded-2xl p-6 border border-border shadow-sm"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <CreditCard className="w-5 h-5 text-muted-foreground/60 mr-3" />
+              <div>
+                <p className="font-semibold text-foreground">
+                  {invoice.invoice_number || invoice.invoiceNumber || "Invoice"}
+                </p>
+                <p className="text-sm text-muted-foreground">Issued: {issuedFormatted}</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="font-bold text-foreground">
+                ₹{(invoice.grand_total ?? invoice.amount ?? invoice.total ?? 0).toLocaleString()}
+              </p>
+              <span
+                className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor((invoice.status || "").toLowerCase())}`}
+              >
+                {(invoice.status || "—").toUpperCase()}
+              </span>
+            </div>
+          </div>
+        </Card>
+      );
+    })}
+    {patientInvoices.length === 0 && (
+      <EmptyState
+        icon={CreditCard}
+        title="No invoices found"
+        description="No billing records or invoices have been generated for this patient yet."
+      />
+    )}
+  </div>
+);
 
 // --- Prescriptions Tab ---
 export const PrescriptionsTab = ({
   patient,
 }: {
-  patient: ApiAny;
+  patient: any;
 }) => {
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
 
@@ -524,8 +549,8 @@ export const PrescriptionsTab = ({
     
     // If the list is flat (items contain medicine_name, medicine_id, or medicine directly), group them:
     if (rawList.length > 0 && (rawList[0].medicine_name || rawList[0].medicine_id || rawList[0].medicine)) {
-      const groups: Record<string, ApiAny> = {};
-      rawList.forEach((item: ApiAny) => {
+      const groups: Record<string, any> = {};
+      rawList.forEach((item: any) => {
         const key = item.source_id || `${item.visit_date || item.created_at || item.createdAt}_${item.procedure || item.treatment || 'Consultation'}`;
         if (!groups[key]) {
           groups[key] = {
@@ -545,12 +570,22 @@ export const PrescriptionsTab = ({
     return rawList;
   })();
 
-  const getRecordDate = (record: ApiAny) => {
+  const getRecordDate = (record: any) => {
     const dateVal = record.date || record.treatment_date || record.created_at || record.createdAt || record.visit_date;
-    return formatDisplayDate(dateVal);
+    if (!dateVal) return "—";
+    try {
+      const d = new Date(dateVal);
+      return !isNaN(d.getTime()) ? d.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }) : String(dateVal);
+    } catch (e) {
+      return String(dateVal);
+    }
   };
 
-  const getRecordTreatment = (record: ApiAny) => {
+  const getRecordTreatment = (record: any) => {
     return (
       record.treatment ||
       record.procedure ||
@@ -571,7 +606,7 @@ export const PrescriptionsTab = ({
         </span>
       </div>
 
-      {prescriptionHistory.map((record: ApiAny, idx: number) => {
+      {prescriptionHistory.map((record: any, idx: number) => {
         const recordId = record.id || record._id || `record-${idx}`;
         const recordDate = getRecordDate(record);
         const recordTreatment = getRecordTreatment(record);
@@ -592,16 +627,16 @@ export const PrescriptionsTab = ({
         return (
           <Card
             key={recordId}
-            className="bg-card rounded-2xl border border-border/80 shadow-sm hover:shadow-md transition-all duration-300 mb-3 overflow-hidden"
+            className="bg-card rounded-2xl border border-border/80 shadow-sm hover:shadow-md transition-all duration-300 mb-4 overflow-hidden"
           >
             {/* Header section - click to expand/collapse */}
-            <div
+            <div 
               onClick={() => toggleCard(recordId)}
-              className="flex items-center justify-between gap-4 p-4 cursor-pointer hover:bg-muted/30 transition-colors select-none"
+              className="flex items-center justify-between gap-4 p-5 cursor-pointer hover:bg-muted/30 transition-colors select-none"
             >
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary mt-1 shadow-sm border border-primary/10">
-                  <Pill className="w-5 h-5 text-primary" />
+                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary mt-1 shadow-sm border border-primary/10">
+                  <Pill className="w-6 h-6 text-primary" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
@@ -643,9 +678,9 @@ export const PrescriptionsTab = ({
 
             {/* Medicine details dropdown content */}
             {isExpanded && (
-              <div className="p-4 pt-0 border-t border-border/40 bg-card space-y-3">
-                <div className="pt-3 space-y-3 animate-in fade-in duration-200">
-                  {prescriptionsList.map((prescription: ApiAny, index: number) => {
+              <div className="p-5 pt-0 border-t border-border/40 bg-card space-y-3">
+                <div className="pt-4 space-y-3 animate-in fade-in duration-200">
+                  {prescriptionsList.map((prescription: any, index: number) => {
                     const medicineName =
                       prescription.medicine_name ||
                       prescription.medicine ||
@@ -663,7 +698,7 @@ export const PrescriptionsTab = ({
                     return (
                       <div
                         key={index}
-                        className="bg-muted/45 hover:bg-muted/65 transition-colors rounded-2xl p-3 border border-border/40"
+                        className="bg-muted/45 hover:bg-muted/65 transition-colors rounded-2xl p-4 border border-border/40"
                       >
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                           <div className="space-y-1">
@@ -766,7 +801,7 @@ export const PrescriptionsTab = ({
 export const DocumentsTab = ({
   patient,
 }: {
-  patient: ApiAny;
+  patient: any;
   loading: boolean;
 }) => {
   const { data: documentsResponse, isLoading } = usePatientDocumentsQuery(patient?.id);
@@ -788,33 +823,33 @@ export const DocumentsTab = ({
 
   return (
     <div>
-      <h3 className="text-lg font-bold text-foreground mb-3">
+      <h3 className="text-lg font-bold text-foreground mb-6">
         Patient Documents & Images
       </h3>
-
+      
       {isLoading ? (
         <Loading type="spinner" text="Loading documents & images..." />
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {documents.map((doc: ApiAny, index: number) => {
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {documents.map((doc: any, index: number) => {
               const docUrl = doc.url || doc.document_url || doc.file_url;
               const docName = doc.file_name || doc.name || doc.document_name || "Document";
-
+              
               return (
                 <Card
                   key={doc.id || index}
-                  className="bg-card rounded-2xl p-4 border border-border hover:shadow-lg transition-all duration-200 shadow-sm cursor-pointer"
+                  className="bg-card rounded-2xl p-6 border border-border hover:shadow-lg transition-all duration-200 shadow-sm cursor-pointer"
                   onClick={() => {
                     if (docUrl) setSelectedImage(docUrl);
                   }}
                 >
                   <img
-                    src={docUrl || "https://placehold.co/400x300?text=Document"}
+                    src={docUrl || placeholderImage("Document")}
                     alt={docName}
                     className="w-full h-40 object-cover rounded-lg mb-3 hover:opacity-90 transition-opacity"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = "https://placehold.co/400x300?text=Document";
+                      (e.target as HTMLImageElement).src = placeholderImage("Document");
                     }}
                   />
                   <h4 className="font-semibold text-foreground mb-1 truncate">{docName}</h4>
@@ -824,7 +859,14 @@ export const DocumentsTab = ({
                     </Badge>
                   )}
                   <p className="text-sm text-muted-foreground">
-                    {formatDisplayDate(doc.uploaded_at || doc.date || doc.created_at)}
+                    {(() => {
+                      const dateVal = doc.uploaded_at || doc.date || doc.created_at;
+                      if (!dateVal) return "Unknown date";
+                      const d = new Date(dateVal);
+                      return !isNaN(d.getTime()) 
+                        ? d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) 
+                        : "Unknown date";
+                    })()}
                   </p>
                 </Card>
               );
@@ -841,7 +883,7 @@ export const DocumentsTab = ({
           {/* Full Screen Image Viewer Modal */}
           {selectedImage && (
             <div 
-              className="fixed inset-0 z-100 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-200"
+              className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-200"
               onClick={() => setSelectedImage(null)}
             >
               <Button 
@@ -870,10 +912,11 @@ export const DocumentsTab = ({
 };
 
 // --- Family Tab ---
-export const FamilyTab = ({ familyMembers }: { familyMembers: ApiAny[] }) => {
-  const calculateAge = (dob: string) => {
-    if (!dob) return "N/A";
+export const FamilyTab = ({ familyMembers }: { familyMembers: any[] }) => {
+  const calculateAge = (dob?: string) => {
+    if (!dob) return null;
     const birthDate = new Date(dob);
+    if (isNaN(birthDate.getTime())) return null;
     const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
     const m = today.getMonth() - birthDate.getMonth();
@@ -881,9 +924,17 @@ export const FamilyTab = ({ familyMembers }: { familyMembers: ApiAny[] }) => {
     return age;
   };
 
+  const formatDate = (val?: string) => {
+    if (!val) return null;
+    const d = new Date(val);
+    return isNaN(d.getTime())
+      ? null
+      : d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+  };
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between border-b border-border pb-3">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between border-b border-border pb-4">
         <div>
           <h3 className="text-xl font-bold text-foreground">Family Members</h3>
           <p className="text-sm text-muted-foreground mt-1">
@@ -896,79 +947,75 @@ export const FamilyTab = ({ familyMembers }: { familyMembers: ApiAny[] }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {familyMembers.map((member) => (
-          <Card
-            key={member.id}
-            className="bg-card rounded-2xl p-4 border border-border hover:shadow-md transition-all group shadow-sm"
-          >
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold text-lg shadow-sm">
-                  {member.name?.[0]?.toUpperCase()}
-                </div>
-                <div>
-                  <p className="font-bold text-foreground text-lg group-hover:text-primary transition-colors">
-                    {member.name}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-black uppercase rounded tracking-wider">
-                      {member.relation || "Relation N/A"}
-                    </span>
-                    <span className="text-xs text-muted-foreground/60 font-medium">
-                      ID: {member.patientCode || member.patient_code || member.id}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div
-                className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${member.status === "active" ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"}`}
-              >
-                {member.status || "Active"}
-              </div>
-            </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {familyMembers.map((member) => {
+          const age = calculateAge(member.dateOfBirth);
+          const lastVisit = formatDate(member.lastVisit);
 
-            <div className="grid grid-cols-2 gap-3 mt-3 border-t border-border pt-3">
-              <div className="bg-muted rounded-xl p-2.5">
-                <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider mb-1 flex items-center gap-1">
-                  <User className="w-3 h-3" /> Age
-                </p>
-                <p className="font-bold text-foreground text-sm">
-                  {calculateAge(member.dateOfBirth)} Years
-                </p>
-              </div>
-              <div className="bg-muted rounded-xl p-2.5">
-                <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider mb-1 flex items-center gap-1">
-                  <Calendar className="w-3 h-3" /> Last Visit
-                </p>
-                <p className="font-bold text-foreground text-sm">
-                  {member.lastVisit && member.lastVisit !== "No visits"
-                    ? formatDisplayDate(member.lastVisit)
-                    : "No visits"}
-                </p>
-              </div>
-              <div className="bg-muted rounded-xl p-2.5 col-span-2">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider mb-1 flex items-center gap-1">
-                      <CreditCard className="w-3 h-3" /> Outstanding Balance
-                    </p>
-                    <p
-                      className={`font-bold text-sm ${member.outstandingBalance > 0 ? "text-destructive" : "text-green-600"}`}
-                    >
-                      ₹{(member.outstandingBalance || 0).toLocaleString()}
-                    </p>
+          const details: { icon: any; label: string; value: string }[] = [];
+          if (age !== null) details.push({ icon: User, label: "Age", value: `${age} Years` });
+          if (member.gender) details.push({ icon: Users, label: "Gender", value: member.gender });
+          if (member.bloodGroup)
+            details.push({ icon: Droplet, label: "Blood Group", value: String(member.bloodGroup).replace(/_/g, " ") });
+          details.push({ icon: Calendar, label: "Last Visit", value: lastVisit || "No visits yet" });
+          if (member.totalVisits)
+            details.push({ icon: Activity, label: "Total Visits", value: String(member.totalVisits) });
+          if (member.phone)
+            details.push({ icon: Phone, label: "Phone", value: `${member.countryCode || ""} ${member.phone}`.trim() });
+          if (member.email) details.push({ icon: Mail, label: "Email", value: member.email });
+          if (member.address) details.push({ icon: MapPin, label: "Address", value: member.address });
+          if (member.occupation) details.push({ icon: Briefcase, label: "Occupation", value: member.occupation });
+          if (member.maritalStatus) details.push({ icon: Heart, label: "Marital Status", value: member.maritalStatus });
+          if (member.referredBy) details.push({ icon: UserCheck, label: "Referred By", value: member.referredBy });
+          if (member.habits) details.push({ icon: Cigarette, label: "Habits", value: member.habits });
+
+          return (
+            <Card
+              key={member.id}
+              className="bg-card rounded-2xl p-5 border border-border hover:shadow-md transition-all group shadow-sm"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold text-xl shadow-sm">
+                    {member.name?.[0]?.toUpperCase()}
                   </div>
-                  {member.outstandingBalance > 0 && (
-                    <span className="text-[10px] font-black text-red-500 bg-destructive/10 px-2 py-1 rounded uppercase animate-pulse">
-                      Payment Due
-                    </span>
-                  )}
+                  <div>
+                    <p className="font-bold text-foreground text-lg group-hover:text-primary transition-colors">
+                      {member.name}
+                    </p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-black uppercase rounded tracking-wider">
+                        {member.relation || "Relation N/A"}
+                      </span>
+                      <span className="text-xs text-muted-foreground/60 font-medium">
+                        ID: {member.patientCode || member.patient_code || member.id}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  className={`shrink-0 px-3 py-1 rounded-full text-[10px] font-bold uppercase ${member.status === "active" ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"}`}
+                >
+                  {member.status || "Active"}
                 </div>
               </div>
-            </div>
-          </Card>
-        ))}
+
+              <div className="grid grid-cols-2 gap-3 mt-4 border-t border-border pt-4">
+                {details.map((d, i) => (
+                  <div
+                    key={i}
+                    className={`bg-muted rounded-xl p-2.5 ${d.value.length > 28 ? "col-span-2" : ""}`}
+                  >
+                    <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider mb-1 flex items-center gap-1">
+                      <d.icon className="w-3 h-3" /> {d.label}
+                    </p>
+                    <p className="font-bold text-foreground text-sm break-words">{d.value}</p>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          );
+        })}
       </div>
 
       {familyMembers.length === 0 && (

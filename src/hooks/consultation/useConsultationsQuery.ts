@@ -1,5 +1,4 @@
 // hooks/consultation/useConsultationsQuery.ts
-import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 import { ConsultationResponse } from "../../types/consultationTypes";
 
@@ -62,7 +61,7 @@ export function useConsultationsQuery(
 ) {
     // Build request body
     const buildRequestBody = () => {
-        const body: ApiAny = {};
+        const body: any = {};
 
         // Pagination
         if (filters.page !== undefined) body.page = filters.page || 1;

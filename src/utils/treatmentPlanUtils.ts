@@ -1,4 +1,3 @@
-import type { ApiAny } from "../types/api";
 import { CreateTreatmentPlanVariables, TreatmentPlanResponse } from "../hooks/treatment/useCreateTreatmentPlanMutation";
 import { UpdateTreatmentPlanVariables } from "../hooks/treatment/useUpdateTreatmentPlanMutation";
 
@@ -13,7 +12,7 @@ export function apiStatusToUi(status: string) {
 }
 
 export function uiStatusToApi(status: string): "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED" {
-  const map: Record<string, ApiAny> = {
+  const map: Record<string, any> = {
     planned: "PLANNED",
     "in-progress": "IN_PROGRESS",
     completed: "COMPLETED",
@@ -22,7 +21,7 @@ export function uiStatusToApi(status: string): "PLANNED" | "IN_PROGRESS" | "COMP
   return map[status] ?? "PLANNED";
 }
 
-export function apiPrescToUi(p: ApiAny) {
+export function apiPrescToUi(p: any) {
   const mapUnit = (unit: string) => {
     if (!unit) return "Days";
     const u = unit.toUpperCase();
@@ -47,7 +46,7 @@ export function apiPrescToUi(p: ApiAny) {
   };
 }
 
-export function apiSessionToUi(s: ApiAny) {
+export function apiSessionToUi(s: any) {
   let formattedDate = "";
   if (s.visit_date) {
     formattedDate = s.visit_date.split("T")[0];
@@ -102,13 +101,19 @@ function firstDefined<T>(...values: T[]): T | undefined {
   return values.find((value) => value !== undefined && value !== null && value !== "");
 }
 
-function normalizeToothValue(plan: ApiAny) {
+function normalizeToothValue(plan: any) {
   const rawTooth = firstDefined(
     plan.tooth_number,
     plan.toothNumber,
     plan.tooth,
     plan.tooth_no,
   );
+
+  if (Array.isArray(rawTooth)) {
+    if (rawTooth.length === 0) return "—";
+    if (rawTooth.some((t) => t === -1 || t === "-1")) return "FM";
+    return rawTooth.join(", ");
+  }
 
   if (rawTooth === -1 || rawTooth === "-1" || rawTooth === "FM") {
     return "FM";
@@ -121,7 +126,7 @@ function normalizeToothValue(plan: ApiAny) {
   return rawTooth ? String(rawTooth) : "—";
 }
 
-function normalizeDoctorName(plan: ApiAny) {
+function normalizeDoctorName(plan: any) {
   return firstDefined(
     plan.doctor?.name,
     plan.doctor?.staff?.name,
@@ -136,7 +141,7 @@ function normalizeDoctorName(plan: ApiAny) {
   ) as string;
 }
 
-function normalizePatientName(plan: ApiAny) {
+function normalizePatientName(plan: any) {
   return firstDefined(
     plan.patient?.name,
     plan.patient_name,
@@ -148,7 +153,7 @@ function normalizePatientName(plan: ApiAny) {
   ) as string;
 }
 
-function normalizePatientId(plan: ApiAny) {
+function normalizePatientId(plan: any) {
   return firstDefined(
     plan.patient_id,
     plan.patient?.id,
@@ -158,7 +163,7 @@ function normalizePatientId(plan: ApiAny) {
   ) as string;
 }
 
-function normalizeProcedure(plan: ApiAny) {
+function normalizeProcedure(plan: any) {
   return firstDefined(
     plan.procedure,
     plan.treatment_name,
@@ -168,7 +173,7 @@ function normalizeProcedure(plan: ApiAny) {
   ) as string;
 }
 
-function normalizeCost(plan: ApiAny) {
+function normalizeCost(plan: any) {
   const raw = firstDefined(
     plan.est_cost,
     plan.cost,
@@ -181,7 +186,7 @@ function normalizeCost(plan: ApiAny) {
   return isNaN(val) ? 0 : val;
 }
 
-function normalizePaidAmount(plan: ApiAny) {
+function normalizePaidAmount(plan: any) {
   const raw = firstDefined(
     plan.total_paid_amount,
     plan.totalPaidAmount,
@@ -193,7 +198,7 @@ function normalizePaidAmount(plan: ApiAny) {
   return isNaN(val) ? 0 : val;
 }
 
-function normalizePendingAmount(plan: ApiAny) {
+function normalizePendingAmount(plan: any) {
   const raw = firstDefined(
     plan.pending_amount,
     plan.pendingAmount,
@@ -204,7 +209,7 @@ function normalizePendingAmount(plan: ApiAny) {
   return isNaN(val) ? 0 : val;
 }
 
-function normalizeFinalCost(plan: ApiAny) {
+function normalizeFinalCost(plan: any) {
   const raw = firstDefined(
     plan.final_cost,
     plan.finalCost,
@@ -219,7 +224,7 @@ function normalizeFinalCost(plan: ApiAny) {
   return isNaN(val) ? 0 : val;
 }
 
-function normalizeDate(plan: ApiAny) {
+function normalizeDate(plan: any) {
   return firstDefined(
     plan.treatment_date,
     plan.treatmentDate,
@@ -230,7 +235,7 @@ function normalizeDate(plan: ApiAny) {
   ) as string;
 }
 
-function normalizeNextAppointment(plan: ApiAny) {
+function normalizeNextAppointment(plan: any) {
   return firstDefined(
     plan.next_appointment,
     plan.nextAppointment,
@@ -240,7 +245,7 @@ function normalizeNextAppointment(plan: ApiAny) {
   ) as string;
 }
 
-function _extractToothNumber(toothValue?: string) {
+function extractToothNumber(toothValue?: string) {
   if (!toothValue) return undefined;
 
   const raw = String(toothValue).trim();
@@ -265,7 +270,7 @@ function _extractToothNumber(toothValue?: string) {
   return toothNumber;
 }
 
-export function toUiTreatment(plan: TreatmentPlanResponse | ApiAny) {
+export function toUiTreatment(plan: TreatmentPlanResponse | any) {
   const rawStatus = plan.overall_status ?? plan.overallStatus ?? plan.status;
 
   return {
@@ -295,8 +300,8 @@ export function toUiTreatment(plan: TreatmentPlanResponse | ApiAny) {
     notes: plan.clinical_notes ?? plan.notes ?? "",
     prescriptions: (plan.prescriptions ?? []).map(apiPrescToUi),
     sessions: (plan.sessions ?? []).map(apiSessionToUi),
-    images: ((plan as ApiAny).attachments || (plan as ApiAny).images || []).map((a: ApiAny) => typeof a === "string" ? a : (a.file_url || a.url || a.path || "")).filter(Boolean),
-    attachments: (plan as ApiAny).attachments || [],
+    images: ((plan as any).attachments || (plan as any).images || []).map((a: any) => typeof a === "string" ? a : (a.file_url || a.url || a.path || "")).filter(Boolean),
+    attachments: (plan as any).attachments || [],
     discount_type: plan.discount_type ?? plan.discountType ?? null,
     discount_value: plan.discount_value ?? plan.discountValue ?? null,
     discount_amount: plan.discount_amount ?? plan.discountAmount ?? 0,
@@ -306,7 +311,7 @@ export function toUiTreatment(plan: TreatmentPlanResponse | ApiAny) {
   };
 }
 
-export function toApiCreatePlan(formData: ApiAny): CreateTreatmentPlanVariables {
+export function toApiCreatePlan(formData: any): CreateTreatmentPlanVariables {
   const extractToothNumbers = (toothStr: string): number[] | undefined => {
     if (!toothStr || toothStr === "\u2014") return undefined;
     if (toothStr === "FM") return [-1];
@@ -318,8 +323,8 @@ export function toApiCreatePlan(formData: ApiAny): CreateTreatmentPlanVariables 
   };
 
   const prescriptions = (formData.prescriptions ?? [])
-    .filter((p: ApiAny) => p.medicine?.trim())
-    .map((p: ApiAny) => ({
+    .filter((p: any) => p.medicine?.trim())
+    .map((p: any) => ({
       medicine_id: p.medicine,
       dosage: p.dosage,
       timing: p.timing,
@@ -331,7 +336,7 @@ export function toApiCreatePlan(formData: ApiAny): CreateTreatmentPlanVariables 
     }));
 
   const sessions = (formData.sessions ?? [])
-    .map((s: ApiAny) => ({
+    .map((s: any) => ({
       visit_date: s.scheduledDate || s.suggestedDate || null,
       duration_min: s.duration || 45,
       clinical_objectives: s.notes || s.description || "",
@@ -364,7 +369,7 @@ export function toApiCreatePlan(formData: ApiAny): CreateTreatmentPlanVariables 
   return payload;
 }
 
-export function toApiUpdatePlan(formData: ApiAny): UpdateTreatmentPlanVariables {
+export function toApiUpdatePlan(formData: any): UpdateTreatmentPlanVariables {
   const extractToothNumbers = (toothStr: string): number[] | undefined => {
     if (!toothStr || toothStr === "\u2014") return undefined;
     if (toothStr === "FM") return [-1];
@@ -376,8 +381,8 @@ export function toApiUpdatePlan(formData: ApiAny): UpdateTreatmentPlanVariables 
   };
 
   const prescriptions = (formData.prescriptions ?? [])
-    .filter((p: ApiAny) => p.medicine?.trim())
-    .map((p: ApiAny) => ({
+    .filter((p: any) => p.medicine?.trim())
+    .map((p: any) => ({
       id: p.id?.startsWith("new-") ? undefined : p.id,
       medicine_id: p.medicine,
       dosage: p.dosage,
@@ -390,7 +395,7 @@ export function toApiUpdatePlan(formData: ApiAny): UpdateTreatmentPlanVariables 
     }));
 
   const sessions = (formData.sessions ?? [])
-    .map((s: ApiAny) => ({
+    .map((s: any) => ({
       id: s.id?.startsWith("session-") ? undefined : s.id,
       visit_date: s.scheduledDate || s.suggestedDate || null,
       duration_min: s.duration || 45,
@@ -434,53 +439,4 @@ export function toApiUpdatePlan(formData: ApiAny): UpdateTreatmentPlanVariables 
   }
 
   return updateData;
-}
-
-export function formatFileSize(bytes?: number | null): string {
-  if (!bytes || bytes <= 0) return "";
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-export function formatFileExtension(attachment: {
-  file_extension?: string | null;
-  file_name?: string | null;
-  file_type?: string | null;
-}): string {
-  // 1. If clean extension provided, use it
-  if (attachment.file_extension) {
-    const clean = attachment.file_extension.replace(/^\./, "").trim();
-    if (clean && clean.length <= 6) return clean.toUpperCase();
-  }
-
-  // 2. Extract from file_name if present
-  if (attachment.file_name && attachment.file_name.includes(".")) {
-    const ext = attachment.file_name.split(".").pop()?.trim();
-    if (ext && ext.length <= 6 && !ext.includes("/")) {
-      return ext.toUpperCase();
-    }
-  }
-
-  // 3. Map MIME type to standard readable badge
-  if (attachment.file_type) {
-    const mime = attachment.file_type.toLowerCase();
-    if (mime.includes("spreadsheetml") || mime.includes("excel")) return "XLSX";
-    if (mime.includes("wordprocessingml") || mime.includes("msword")) return "DOCX";
-    if (mime.includes("presentationml") || mime.includes("powerpoint")) return "PPTX";
-    if (mime.includes("pdf")) return "PDF";
-    if (mime.includes("csv")) return "CSV";
-    if (mime.includes("zip") || mime.includes("compressed")) return "ZIP";
-    if (mime.includes("text/plain")) return "TXT";
-    if (mime.startsWith("image/")) {
-      const sub = mime.split("/")[1]?.split("+")[0]?.trim();
-      return sub && sub.length <= 5 ? sub.toUpperCase() : "IMAGE";
-    }
-    const parts = mime.split("/");
-    if (parts.length === 2 && parts[1].length <= 5) {
-      return parts[1].toUpperCase();
-    }
-  }
-
-  return "";
 }

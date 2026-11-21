@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -9,7 +8,7 @@ export interface SendInvoiceVariables {
 export function useSendInvoiceMutation() {
   const queryClient = useQueryClient();
 
-  return useApiMutation<ApiAny, SendInvoiceVariables>({
+  return useApiMutation<any, SendInvoiceVariables>({
     getEndpoint: (variables) => `/invoice/send/${variables.id}`,
     method: "post",
     options: {

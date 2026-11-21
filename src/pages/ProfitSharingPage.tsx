@@ -1,6 +1,7 @@
   import React, { useState, useMemo } from "react";
 import {
   IndianRupee,
+  User,
   TrendingUp,
   Wallet,
   Activity,
@@ -10,30 +11,9 @@ import {
 } from "lucide-react";
 import { useTreatmentData } from "../hooks/useTreatmentData";
 import { useStaffData } from "../hooks/useStaffData";
-import { MetricCard, PageHeader, Card, Button, DataTable } from "../components/ui";
-import { DatePicker } from "@/components/ui/DatePicker";
+import { MetricCard, PageHeader, Card, Button, Input, DataTable } from "../components/ui";
 
 type DateFilter = "thisMonth" | "lastMonth" | "custom";
-
-/** A staff member, narrowed to the field this page filters on. */
-interface StaffRow {
-  role?: string;
-}
-
-/** A treatment row enriched with the per-procedure profit split shown in the
- *  expanded doctor table. */
-interface ProcedureRow {
-  id?: string;
-  patientName?: string;
-  procedure?: string;
-  date?: string;
-  createdAt?: string;
-  cost?: number | string;
-  mockExpense: number;
-  distributableProfit: number;
-  doctorShare: number;
-  clinicProfit: number;
-}
 
 export const ProfitSharingPage: React.FC = () => {
   const { treatments } = useTreatmentData();
@@ -41,7 +21,7 @@ export const ProfitSharingPage: React.FC = () => {
   const doctorsWithSchedules = useMemo(
     () =>
       staffMembers.filter(
-        (s: StaffRow) => s.role === "doctor" || s.role === "admin",
+        (s: any) => s.role === "doctor" || s.role === "admin",
       ),
     [staffMembers],
   );
@@ -81,7 +61,7 @@ export const ProfitSharingPage: React.FC = () => {
     let totalPayout = 0;
     const doctorStats: Record<
       string,
-      { name: string; specialization: string; profitPercent: number; revenue: number; expenses: number; payout: number; clinicProfit: number; treatments: ProcedureRow[] }
+      { name: string; specialization: string; profitPercent: number; revenue: number; expenses: number; payout: number; clinicProfit: number; treatments: any[] }
     > = {};
 
     filteredTreatments.forEach((t) => {
@@ -164,7 +144,7 @@ export const ProfitSharingPage: React.FC = () => {
             <Button
               key={f.id}
               variant={dateFilter === f.id ? "default" : "ghost"}
-              onClick={() => setDateFilter(f.id as DateFilter)}
+              onClick={() => setDateFilter(f.id as any)}
               className={dateFilter === f.id ? "bg-white text-primary shadow-sm hover:bg-white" : "text-muted-foreground hover:text-foreground"}
               size="sm"
             >
@@ -176,20 +156,22 @@ export const ProfitSharingPage: React.FC = () => {
 
       {dateFilter === "custom" && (
         <div className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-border/60 shadow-sm animate-in slide-in-from-top-2 max-w-md">
-          <DatePicker
+          <Input
+            type="date"
             value={customRange.start}
-            onChange={(val) =>
-              setCustomRange({ ...customRange, start: val })
+            onChange={(e) =>
+              setCustomRange({ ...customRange, start: e.target.value })
             }
             className="w-full bg-slate-50/50"
           />
           <span className="text-muted-foreground/60 font-medium text-sm">
             to
           </span>
-          <DatePicker
+          <Input
+            type="date"
             value={customRange.end}
-            onChange={(val) =>
-              setCustomRange({ ...customRange, end: val })
+            onChange={(e) =>
+              setCustomRange({ ...customRange, end: e.target.value })
             }
             className="w-full bg-slate-50/50"
           />
@@ -231,7 +213,7 @@ export const ProfitSharingPage: React.FC = () => {
       {/* Visual Summary Hint */}
       {stats.totalRev > 0 && (
         <div className="bg-white rounded-2xl border border-border/50 p-5 flex flex-col md:flex-row items-center gap-6 shadow-sm">
-          <div className="shrink-0 w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+          <div className="flex-shrink-0 w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
             <PieChart className="w-8 h-8 text-primary" />
           </div>
           <div className="flex-1 space-y-2">
@@ -328,53 +310,53 @@ export const ProfitSharingPage: React.FC = () => {
                     <div className="overflow-x-auto">
                       <DataTable
                         data={ds.treatments}
-                        rowKey={(row: ProcedureRow) => row.id || Math.random().toString()}
+                        rowKey={(row: any) => row.id || Math.random().toString()}
                         emptyTitle="No procedures found for this period"
                         columns={[
                           { 
                             header: 'Date & Patient', 
                             key: 'patientName', 
-                            render: (t: ProcedureRow) => (
+                            render: (t: any) => (
                               <div className="py-1">
                                 <span className="block font-semibold text-foreground text-[13px]">{t.patientName}</span>
-                                <span className="block text-[11px] text-muted-foreground mt-0.5">{new Date(t.date || t.createdAt || "").toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span>
+                                <span className="block text-[11px] text-muted-foreground mt-0.5">{new Date(t.date || t.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span>
                               </div>
                             ) 
                           },
                           { 
                             header: 'Procedure', 
                             key: 'procedure', 
-                            render: (t: ProcedureRow) => <span className="text-xs font-medium text-muted-foreground">{t.procedure}</span> 
+                            render: (t: any) => <span className="text-xs font-medium text-muted-foreground">{t.procedure}</span> 
                           },
                           { 
                             header: 'Total Bill', 
                             key: 'cost', 
                             align: 'right', 
-                            render: (t: ProcedureRow) => <span className="font-bold text-[13px] text-foreground">₹{Number(t.cost).toLocaleString()}</span> 
+                            render: (t: any) => <span className="font-bold text-[13px] text-foreground">₹{Number(t.cost).toLocaleString()}</span> 
                           },
                           { 
                             header: 'X-Ray/Lab', 
                             key: 'expense', 
                             align: 'right', 
-                            render: (t: ProcedureRow) => <span className="font-bold text-[13px] text-amber-600">-₹{t.mockExpense.toLocaleString()}</span> 
+                            render: (t: any) => <span className="font-bold text-[13px] text-amber-600">-₹{t.mockExpense.toLocaleString()}</span> 
                           },
                           { 
                             header: 'Distributable', 
                             key: 'base', 
                             align: 'right', 
-                            render: (t: ProcedureRow) => <span className="font-bold text-[13px] text-slate-600">₹{t.distributableProfit.toLocaleString()}</span> 
+                            render: (t: any) => <span className="font-bold text-[13px] text-slate-600">₹{t.distributableProfit.toLocaleString()}</span> 
                           },
                           { 
                             header: 'Doctor Share', 
                             key: 'share', 
                             align: 'right', 
-                            render: (t: ProcedureRow) => <span className="font-bold text-[13px] text-blue-600">₹{t.doctorShare.toLocaleString()}</span> 
+                            render: (t: any) => <span className="font-bold text-[13px] text-blue-600">₹{t.doctorShare.toLocaleString()}</span> 
                           },
                           { 
                             header: 'Clinic Profit', 
                             key: 'clinic', 
                             align: 'right', 
-                            render: (t: ProcedureRow) => <span className="font-bold text-[13px] text-emerald-600">₹{t.clinicProfit.toLocaleString()}</span> 
+                            render: (t: any) => <span className="font-bold text-[13px] text-emerald-600">₹{t.clinicProfit.toLocaleString()}</span> 
                           },
                         ]}
                       />

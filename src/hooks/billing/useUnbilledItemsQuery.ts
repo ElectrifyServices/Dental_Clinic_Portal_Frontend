@@ -1,14 +1,13 @@
-import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
-export function useUnbilledItemsQuery(patientId: string, memberId?: string, options?: ApiAny) {
+export function useUnbilledItemsQuery(patientId: string, memberId?: string, options?: any) {
   let endpoint = `/invoice/unbilled-items`;
   if (memberId) {
     endpoint += `?member_id=${memberId}`;
   } else {
     endpoint += `?patientId=${patientId}`;
   }
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["unbilledItems", patientId, memberId],
     endpoint,
     method: "get",

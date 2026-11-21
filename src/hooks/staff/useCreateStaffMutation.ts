@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -9,7 +8,7 @@ export interface CreateStaffVariables {
 export function useCreateStaffMutation() {
   const queryClient = useQueryClient();
 
-  return useApiMutation<ApiAny, CreateStaffVariables>({
+  return useApiMutation<any, CreateStaffVariables>({
     endpoint: "/staff",
     method: "post",
     transformRequest: (variables) => variables.formData,

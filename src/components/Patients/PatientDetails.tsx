@@ -1,6 +1,16 @@
-import type { ApiAny } from "../../types/api";
-import { useState, useEffect, useMemo } from "react";
-import { User, Calendar, Stethoscope, Pill, FileText, Heart, CreditCard, AlertCircle } from "lucide-react";
+import { useState } from "react";
+import {
+  User,
+  Calendar,
+  Stethoscope,
+  Download,
+  QrCode,
+  Pill,
+  FileText,
+  Heart,
+  CreditCard,
+  AlertCircle,
+} from "lucide-react";
 import { Modal, Button, Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui";
 import { OverviewTab } from "./PatientDetails/OverviewTab";
 import {
@@ -25,14 +35,13 @@ import { useTreatmentPlansQuery } from "../../hooks/treatment/useTreatmentPlansQ
 import { toTitleCase } from "@/utils/stringUtils";
 import { toUiTreatment } from "../../utils/treatmentPlanUtils";
 import { useInvoicesQuery } from "../../hooks/billing/useInvoicesQuery";
-import { normalizeInvoice } from "../../hooks/billing/useInvoiceQuery";
 
 interface PatientDetailsProps {
-  patient: ApiAny;
-  familyMembers: ApiAny[];
-  appointments: ApiAny[];
-  treatments: ApiAny[];
-  invoices: ApiAny[];
+  patient: any;
+  familyMembers: any[];
+  appointments: any[];
+  treatments: any[];
+  invoices: any[];
   onClose: () => void;
   onSendReminder: (patientId: string, amount: number) => void;
   onExport?: (patientId: string) => void;
@@ -46,13 +55,13 @@ export function PatientDetails({
   treatments = [],
   invoices = [],
   onSendReminder = () => { },
-  onExport: _onExport = () => { },
+  onExport = () => { },
 }: PatientDetailsProps) {
   const [activeTab, setActiveTab] = useState("overview");
   const [loading, setLoading] = useState(false);
   const [showPrintPreview, setShowPrintPreview] = useState(false);
   const [printLanguage, setPrintLanguage] = useState<"en" | "gu">("en");
-  const [customSections, setCustomSections] = useState<ApiAny[]>([]);
+  const [customSections, setCustomSections] = useState<any[]>([]);
   const [previewData, setPreviewData] = useState({
     bp: "",
     height: "",
@@ -65,32 +74,20 @@ export function PatientDetails({
     nextVisit: "",
   });
 
-  const { data: historyData, refetch: refetchHistory } = usePatientAppointmentHistoryQuery(patient?.id || "");
-  const { data: familyTreeData, refetch: refetchFamily } = usePatientFamilyTreeQuery(patient?.id || "");
-  const { data: prescriptionsData, isLoading: isPrescriptionsLoading, refetch: refetchPrescriptions } = usePatientPrescriptionsQuery(patient?.id || "");
-  const { data: treatmentsData, refetch: refetchTreatments } = useTreatmentPlansQuery(
+  if (!patient) return null;
+
+  const { data: historyData } = usePatientAppointmentHistoryQuery(patient?.id || "");
+  const { data: familyTreeData } = usePatientFamilyTreeQuery(patient?.id || "");
+  const { data: prescriptionsData, isLoading: isPrescriptionsLoading } = usePatientPrescriptionsQuery(patient?.id || "");
+  const { data: treatmentsData } = useTreatmentPlansQuery(
     { all: true, filters: { patientId: [patient?.id || ""] } },
     { enabled: !!patient?.id, refetchOnMount: 'always' }
   );
 
-  const { data: invoicesData, isLoading: _isInvoicesLoading, refetch: refetchInvoices } = useInvoicesQuery(
+  const { data: invoicesData, isLoading: isInvoicesLoading } = useInvoicesQuery(
     { filters: { patient_id: [patient?.id || ""] } },
     { enabled: !!patient?.id, refetchOnMount: 'always' }
   );
-
-  useEffect(() => {
-    if (patient?.id) {
-      refetchHistory();
-      refetchFamily();
-      refetchPrescriptions();
-      refetchTreatments();
-      refetchInvoices();
-    }
-  }, [patient?.id, refetchHistory, refetchFamily, refetchPrescriptions, refetchTreatments, refetchInvoices]);
-
-  // Every hook above runs on each render; the queries are disabled while
-  // `patient` is null, so bailing out here keeps the hook order stable.
-  if (!patient) return null;
 
   const rawPrescriptions =
     prescriptionsData?.responseObject?.data?.prescriptions ||
@@ -103,7 +100,7 @@ export function PatientDetails({
   // Extract family members from API response
   const apiData = familyTreeData?.responseObject?.data || familyTreeData?.data;
 
-  let allFamilyMembers: ApiAny[] = [];
+  let allFamilyMembers: any[] = [];
   if (apiData) {
     if (apiData.primary) {
       allFamilyMembers.push(apiData.primary);
@@ -114,10 +111,10 @@ export function PatientDetails({
   }
 
   // Filter out the current patient so they don't see themselves in their own family list
-  const otherFamilyMembers = allFamilyMembers.filter((m: ApiAny) => m.id !== patient.id);
+  const otherFamilyMembers = allFamilyMembers.filter((m: any) => m.id !== patient.id);
 
   const resolvedFamilyMembers = (otherFamilyMembers.length > 0 || apiData)
-    ? otherFamilyMembers.map((m: ApiAny) => ({
+    ? otherFamilyMembers.map((m: any) => ({
       id: m.id,
       patientCode: m.patient_code || m.patientCode || m.id,
       name: m.name,
@@ -125,6 +122,7 @@ export function PatientDetails({
       relation: m.id === apiData?.primary?.id
         ? "PRIMARY"
         : (m.relation_type || m.relation || m.relationship || "Family"),
+      countryCode: m.country_code || m.countryCode || "",
       phone: m.phone,
       email: m.email,
       dateOfBirth: m.date_of_birth || m.dateOfBirth || m.dob,
@@ -132,9 +130,13 @@ export function PatientDetails({
       bloodGroup: m.blood_group || m.bloodGroup,
       status: m.is_active ? "active" : "inactive",
       lastVisit: m.last_visit_date || m.lastVisit || null,
-      outstandingBalance: m.outstanding_balance || m.outstandingBalance || 0,
       totalVisits: m.total_visits || 0,
       profilePicture: m.profile_picture_url || null,
+      address: m.address || null,
+      occupation: m.occupation || null,
+      maritalStatus: m.marital_status || m.maritalStatus || null,
+      referredBy: m.referred_by || m.referredBy || null,
+      habits: m.habits || null,
     }))
     : familyMembers;
 
@@ -149,7 +151,7 @@ export function PatientDetails({
           year: "numeric",
         })
         : String(dateVal);
-    } catch (_e) {
+    } catch (e) {
       return String(dateVal);
     }
   };
@@ -161,23 +163,23 @@ export function PatientDetails({
   let patientAppointments = localPatientAppointments;
   if (historyData) {
     // Navigate the exact API structure: responseObject.data.history[]
-    const rawAppointments: ApiAny[] =
+    const rawAppointments: any[] =
       historyData?.responseObject?.data?.history ||
       historyData?.data?.history ||
       historyData?.history ||
       (Array.isArray(historyData) ? historyData : []);
 
     if (rawAppointments.length > 0) {
-      patientAppointments = rawAppointments.map((a: ApiAny) => {
-        const dateVal = a.date_ist || a.date;
-        const formattedDate = formatAppointmentDate(dateVal);
+      patientAppointments = rawAppointments.map((a: any) => {
+        let dateVal = a.date_ist || a.date;
+        let formattedDate = formatAppointmentDate(dateVal);
 
         let timeStr = a.start_time_ist || a.time || a.start_time || "";
         if (timeStr) {
           if (timeStr.includes("T")) {
             try {
               timeStr = new Date(timeStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            } catch (_e) { /* unparseable time - keep the raw string */ }
+            } catch (e) { }
           } else if (timeStr.match(/^\d{2}:\d{2}$/) || timeStr.match(/^\d{2}:\d{2}:\d{2}$/)) {
             try {
               const [h, m] = timeStr.split(":");
@@ -185,7 +187,7 @@ export function PatientDetails({
               const ampm = hr >= 12 ? "PM" : "AM";
               hr = hr % 12 || 12;
               timeStr = `${String(hr).padStart(2, '0')}:${m} ${ampm}`;
-            } catch (_e) { /* unparseable time - keep the raw string */ }
+            } catch (e) { }
           }
         }
 
@@ -222,59 +224,55 @@ export function PatientDetails({
   );
 
   if (treatmentsData?.data) {
-    const rawData = Array.isArray(treatmentsData.data) ? treatmentsData.data : (treatmentsData.data as ApiAny).data || [];
+    const rawData = Array.isArray(treatmentsData.data) ? treatmentsData.data : (treatmentsData.data as any).data || [];
     if (Array.isArray(rawData) && rawData.length > 0) {
-      patientTreatments = rawData.map(toUiTreatment);
+      // This endpoint returns one row per patient with the actual treatment
+      // plans nested under `treatment_plan` (procedure/tooth/cost/doctor all
+      // live there, not on the outer patient-summary row) — flatten to one
+      // UI treatment per nested plan, carrying the patient's name/code along
+      // for display. Older/other API shapes that already return flat plan
+      // rows (no `treatment_plan` array) are passed through unchanged.
+      patientTreatments = rawData.flatMap((row, rowIndex) => {
+        const nestedPlans = Array.isArray(row.treatment_plan)
+          ? row.treatment_plan
+          : null;
+        if (!nestedPlans) return [toUiTreatment(row)];
+
+        return nestedPlans.map((plan, planIndex: number) =>
+          toUiTreatment({
+            ...plan,
+            id: plan.id || `${row.id || rowIndex}-${planIndex}`,
+            patient_id: row.id,
+            patient_code: row.patient_code,
+            // `patient_name` (not `name`) — `name` doubles as the procedure
+            // fallback in normalizeProcedure, and this nested plan object has
+            // no procedure field of its own, so merging the patient's name in
+            // as `name` would make it show up as the "procedure" instead.
+            patient_name: row.name,
+            phone: row.phone,
+          }),
+        );
+      });
     }
   }
 
-  const rawInvoiceList: ApiAny[] = useMemo(() => {
-    if (!invoicesData) return [];
-    if (Array.isArray(invoicesData)) return invoicesData;
-    const invData = invoicesData as ApiAny;
-    if (Array.isArray(invData.invoices)) return invData.invoices;
-    if (Array.isArray(invData.data?.invoices)) return invData.data.invoices;
-    if (Array.isArray(invData.data?.data)) return invData.data.data;
-    if (Array.isArray(invData.data)) return invData.data;
-    if (Array.isArray(invData.responseObject?.data?.invoices)) return invData.responseObject.data.invoices;
-    if (Array.isArray(invData.responseObject?.data)) return invData.responseObject.data;
-    return [];
-  }, [invoicesData]);
-
-  const patientInvoices = useMemo(() => {
-    const list = rawInvoiceList.length > 0
-      ? rawInvoiceList
-      : invoices.filter((inv) => inv.patientId === patient.id);
-    return list.map((inv) => normalizeInvoice(inv) || inv);
-  }, [rawInvoiceList, invoices, patient?.id]);
+  const fetchedInvoices = invoicesData?.data?.invoices || invoicesData?.invoices || invoicesData?.data?.data || [];
+  const patientInvoices = fetchedInvoices.length > 0
+    ? fetchedInvoices
+    : invoices.filter((inv) => inv.patientId === patient.id);
 
   const isIncompletePatient = (!patient.gender && !patient.dateOfBirth) || patient.is_direct || patient.status === "incomplete";
 
   const getStatusColor = (status: string) => {
-    const s = String(status || "").toLowerCase().replace(/[_\s]/g, "-");
-    switch (s) {
+    switch (status) {
       case "completed":
       case "paid":
-        return "bg-emerald-50 text-emerald-700 border border-emerald-200";
-      case "booked":
-        return "bg-blue-50 text-blue-700 border border-blue-200";
-      case "rescheduled":
-        return "bg-orange-50 text-orange-700 border border-orange-200";
-      case "checked-in":
-        return "bg-teal-50 text-teal-700 border border-teal-200";
-      case "confirmed":
-        return "bg-indigo-50 text-indigo-700 border border-indigo-200";
+        return "bg-green-100 text-green-800";
       case "pending":
       case "scheduled":
-        return "bg-muted text-muted-foreground border border-border";
+        return "bg-yellow-100 text-yellow-800";
       case "in-progress":
-        return "bg-cyan-50 text-cyan-700 border border-cyan-200";
-      case "cancelled":
-        return "bg-red-50 text-red-700 border border-red-200";
-      case "no-show":
-        return "bg-amber-50 text-amber-700 border border-amber-200";
-      case "follow-up":
-        return "bg-violet-50 text-violet-700 border border-violet-100";
+        return "bg-primary/10 text-primary";
       default:
         return "bg-muted text-foreground";
     }
@@ -287,7 +285,7 @@ export function PatientDetails({
     setLoading(false);
   };
 
-  const _handlePrintBarcode = () => {
+  const handlePrintBarcode = () => {
     const win = window.open("", "_blank");
     if (win) {
       win.document.write(getBarcodeHTML(patient));
@@ -296,7 +294,7 @@ export function PatientDetails({
     }
   };
 
-  const _handleOpenPrintModal = (record?: ApiAny) => {
+  const handleOpenPrintModal = (record?: any) => {
     const latest = record || rawPrescriptions?.[0];
     if (latest) {
       setPreviewData({
@@ -320,8 +318,8 @@ export function PatientDetails({
         getPrescriptionHTML({
           t,
           localizedClinicName: "Opal Smiles Dental Studio",
-          localizedDoctorName: "Dr. Rajesh Sharma",
-          localizedDoctorDegrees: "BDS, MDS",
+          localizedDoctorName: "",
+          localizedDoctorDegrees: "",
           localizedPatientName: toTitleCase(patient.name),
           previewData,
           localizedGender: patient.gender,
@@ -394,7 +392,7 @@ export function PatientDetails({
       }
     >
       {isIncompletePatient && (
-        <div className="bg-orange-500/10 border-2 border-orange-500/20 text-orange-600 rounded-xl p-3 mb-4 flex items-start gap-3 animate-pulse">
+        <div className="bg-orange-500/10 border-2 border-orange-500/20 text-orange-600 rounded-xl p-3 mb-6 flex items-start gap-3 animate-pulse">
           <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-bold uppercase tracking-wide">Incomplete Patient Profile</p>
@@ -402,8 +400,8 @@ export function PatientDetails({
           </div>
         </div>
       )}
-      <div className="space-y-4">
-        <Tabs value={activeTab} onValueChange={(val: ApiAny) => setActiveTab(val)}>
+      <div className="space-y-8">
+        <Tabs value={activeTab} onValueChange={(val: any) => setActiveTab(val)}>
           <TabsList className="w-full justify-start overflow-x-auto flex-nowrap scrollbar-hide">
             {tabs.map((tab) => {
               const Icon = tab.icon;
@@ -420,7 +418,7 @@ export function PatientDetails({
             })}
           </TabsList>
 
-          <div className="min-h-[60vh] mt-4">
+          <div className="min-h-[60vh] mt-6">
             <TabsContent value="overview" className="m-0 focus-visible:outline-none">
               <OverviewTab
                 patient={patient}

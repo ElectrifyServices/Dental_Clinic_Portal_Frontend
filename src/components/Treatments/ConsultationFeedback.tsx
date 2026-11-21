@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import type React from "react";
 import { ClipboardList, ExternalLink, FileText, Loader2, Paperclip, Pill, Stethoscope } from "lucide-react";
 import { Button, Card, Modal } from "@/components/ui";
@@ -14,7 +13,7 @@ interface ConsultationFeedbackProps {
   onClose: () => void;
 }
 
-const getFeedbackItems = (payload: ApiAny): ConsultationFeedbackItem[] => {
+const getFeedbackItems = (payload: any): ConsultationFeedbackItem[] => {
   if (Array.isArray(payload)) return payload;
   if (Array.isArray(payload?.data)) return payload.data;
   if (Array.isArray(payload?.responseObject?.data)) return payload.responseObject.data;
@@ -95,7 +94,7 @@ export function ConsultationFeedback({
         </div>
       ) : isError ? (
         <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-5 text-sm font-semibold text-red-700">
-          {(error as ApiAny)?.response?.data?.message || "Failed to load consultation feedback."}
+          {(error as any)?.response?.data?.message || "Failed to load consultation feedback."}
         </div>
       ) : !feedback ? (
         <div className="rounded-xl border border-dashed border-border bg-muted/20 px-4 py-12 text-center">

@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import React, { useState, useEffect, useMemo } from "react";
 import { Calendar, Save } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -29,11 +28,11 @@ interface AppointmentFormProps {
   onSave: (appointment: Partial<Appointment>) => void;
   appointment?: Appointment;
   isQuickBooking?: boolean;
-  doctors?: ApiAny[];
+  doctors?: any[];
   doctorAvailability?: { [key: string]: boolean };
-  appointments?: ApiAny[];
+  appointments?: any[];
   selectedDate?: Date | null;
-  patients?: ApiAny[];
+  patients?: any[];
   isFollowUp?: boolean;
 }
 
@@ -87,22 +86,18 @@ export function AppointmentForm({
   } | null>(null);
 
   const initialDoctorId = appointment?.doctorId ?? appointment?.doctor_id ?? (doctors && doctors.length > 0 ? doctors[0].id : "1");
-  const initialDoctor = doctors?.find((d: ApiAny) => String(d.id) === String(initialDoctorId));
+  const initialDoctor = doctors?.find((d: any) => String(d.id) === String(initialDoctorId));
   const defaultFee = appointment?.fee ?? appointment?.treatment_cost ?? 0;
   const defaultDoctorName = appointment?.doctorName ?? appointment?.doctor_name ?? (initialDoctor?.name || "Dr. Sharma");
 
   const parsedInitialPhone = useMemo(() => {
     const rawPhone = appointment?.patientPhone ?? appointment?.patient_phone ?? "";
-    const rawCode = (appointment as ApiAny)?.country_code ?? (appointment as ApiAny)?.countryCode ?? "";
+    const rawCode = (appointment as any)?.country_code ?? (appointment as any)?.countryCode ?? "";
     return parsePhoneAndCountry(rawPhone, rawCode);
   }, [appointment]);
 
-  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(
-    appointment?.patientId || (appointment as ApiAny)?.patient_id || null,
-  );
-
   const form = useForm<AppointmentFormData>({
-    resolver: zodResolver(appointmentSchema) as ApiAny,
+    resolver: zodResolver(appointmentSchema) as any,
     defaultValues: {
       patientName: appointment?.patientName ?? appointment?.patient_name ?? "",
       country_code: parsedInitialPhone.countryCode,
@@ -146,7 +141,7 @@ export function AppointmentForm({
     },
   });
 
-  const { data: fetchedAppointmentResponse, isPending: _isFetchingAppointment } = useAppointmentQuery(appointment?.id);
+  const { data: fetchedAppointmentResponse, isPending: isFetchingAppointment } = useAppointmentQuery(appointment?.id);
 
   useEffect(() => {
     if (fetchedAppointmentResponse) {
@@ -241,7 +236,7 @@ export function AppointmentForm({
       ...data,
       duration: Number(data.duration || 15),
       id: appointment?.id || Date.now().toString(),
-      patientId: selectedPatientId || appointment?.patientId || (appointment as ApiAny)?.patient_id || undefined,
+      patientId: appointment?.patientId || Date.now().toString(),
       status: appointment?.status || "scheduled",
     });
   };
@@ -255,12 +250,12 @@ export function AppointmentForm({
     page: 1,
     limit: 100,
     search: debouncedSearch || undefined,
-    filters: { isDropdown: [true] as ApiAny },
+    filters: { isDropdown: [true] as any },
   }, { refetchOnMount: 'always' });
 
   const apiPatients = useMemo(() => {
-    let rawList: ApiAny[] = [];
-    const dataObj: ApiAny = rawPatientsData;
+    let rawList: any[] = [];
+    const dataObj: any = rawPatientsData;
 
     const target = dataObj?.responseObject !== undefined ? dataObj.responseObject : dataObj;
 
@@ -280,7 +275,7 @@ export function AppointmentForm({
       rawList = patients;
     }
 
-    return rawList.map((p: ApiAny) => ({
+    return rawList.map((p: any) => ({
       ...p,
       id: p.id || p.patient_id,
       name: p.name || p.full_name || p.patient_name || "",
@@ -288,22 +283,16 @@ export function AppointmentForm({
     }));
   }, [rawPatientsData, patients, debouncedSearch]);
 
-  const handleChange = (e: React.ChangeEvent<ApiAny>) => {
+  const handleChange = (e: React.ChangeEvent<any>) => {
     const { name, value } = e.target;
     form.setValue(name as keyof AppointmentFormData, value, {
       shouldValidate: true,
     });
-    if (name === "patientName" || name === "patientPhone") {
-      setSelectedPatientId(null);
-    }
     if (name === "patientName" && value.trim().length > 2) {
       const found = apiPatients.find(
-        (p: ApiAny) => p.name.toLowerCase() === value.toLowerCase().trim(),
+        (p: any) => p.name.toLowerCase() === value.toLowerCase().trim(),
       );
       setSuggestion(found ? { name: found.name, phone: found.phone } : null);
-      if (found?.id) {
-        setSelectedPatientId(found.id);
-      }
     }
   };
 
@@ -335,32 +324,31 @@ export function AppointmentForm({
       title={formTitle}
       subtitle={isFollowUp ? "Schedule next visit" : "Complete booking details"}
       onClose={onClose}
-      size="4xl"
-      compact={true}
-      icon={<Calendar className="w-4 h-4" />}
+      size="5xl"
+      icon={<Calendar className="w-5 h-5" />}
       footer={
         <div className="flex justify-between items-center w-full">
           <Button
             variant="ghost"
             onClick={onClose}
-            className="h-8.5 px-4 text-xs font-semibold text-muted-foreground"
+            className="text-muted-foreground"
           >
             Cancel
           </Button>
           {appointment?.status !== "checked-in" && appointment?.status?.toLowerCase() !== "completed" && (
             <Button
               onClick={form.handleSubmit(onSubmit)}
-              className="h-8.5 px-6 rounded-xl text-xs font-semibold shadow-md"
+              className="px-10 shadow-lg"
             >
-              <Save className="w-3.5 h-3.5 mr-1.5" />
+              <Save className="w-4 h-4 mr-2" />
               {submitLabel}
             </Button>
           )}
         </div>
       }
     >
-      <form className="space-y-2 sm:space-y-2.5" onSubmit={form.handleSubmit(onSubmit)}>
-        <fieldset disabled={appointment?.status === "checked-in" || appointment?.status?.toLowerCase() === "completed"} className="space-y-2 sm:space-y-2.5 border-none p-0 m-0">
+      <form className="space-y-3" onSubmit={form.handleSubmit(onSubmit)}>
+        <fieldset disabled={appointment?.status === "checked-in" || appointment?.status?.toLowerCase() === "completed"} className="space-y-3 border-none p-0 m-0">
           <PatientInfoFields
             patientName={formData.patientName}
             patientPhone={formData.patientPhone ?? ""}
@@ -380,14 +368,11 @@ export function AppointmentForm({
             errors={errors}
             patients={apiPatients}
             isLoadingPatients={isPatientsLoading || isPatientsFetching}
-            onSelectPatient={(name, phone, countryCode, patientObj) => {
+            onSelectPatient={(name, phone, countryCode) => {
               form.setValue("patientName", name, { shouldValidate: true });
               form.setValue("patientPhone", phone, { shouldValidate: true });
               if (countryCode) {
                 form.setValue("country_code", countryCode, { shouldValidate: true });
-              }
-              if (patientObj?.id) {
-                setSelectedPatientId(patientObj.id);
               }
               setSuggestion(null);
             }}
@@ -405,7 +390,7 @@ export function AppointmentForm({
             onDurationChange={(val) => form.setValue("duration", val)}
             onDoctorChange={(val) => {
               form.setValue("doctorId", val);
-              const selectedDoctor = doctors.find((d: ApiAny) => d.id === val);
+              const selectedDoctor = doctors.find((d: any) => d.id === val);
               form.setValue("doctorName", selectedDoctor?.name);
             }}
           />

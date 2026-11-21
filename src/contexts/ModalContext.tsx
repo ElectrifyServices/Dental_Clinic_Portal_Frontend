@@ -1,14 +1,12 @@
-import type { ApiAny } from "../types/api";
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { doctorsWithSchedules } from '../data/doctors';
 import { toast } from '../components/ui';
 
 interface ModalContextType {
   activeModal: string | null;
   setActiveModal: (modal: string | null) => void;
 
-  selectedAppointment: ApiAny;
-  setSelectedAppointment: (apt: ApiAny) => void;
+  selectedAppointment: any;
+  setSelectedAppointment: (apt: any) => void;
 
   selectedPatientId: string;
   setSelectedPatientId: (id: string) => void;
@@ -16,23 +14,29 @@ interface ModalContextType {
   selectedItemId: string;
   setSelectedItemId: (id: string) => void;
 
-  selectedEMRRecord: ApiAny;
-  setSelectedEMRRecord: (record: ApiAny) => void;
+  // Which session inside selectedItemId's plan the Session Timeline modal
+  // should land on — shared (not local to ModalRegistry) so other pages,
+  // e.g. Appointments check-in, can open straight to a specific session.
+  selectedSessionId: string | null;
+  setSelectedSessionId: (id: string | null) => void;
 
-  selectedConsentForm: ApiAny;
-  setSelectedConsentForm: (form: ApiAny) => void;
+  selectedEMRRecord: any;
+  setSelectedEMRRecord: (record: any) => void;
 
-  selectedStaffForSalary: ApiAny;
-  setSelectedStaffForSalary: (staff: ApiAny) => void;
+  selectedConsentForm: any;
+  setSelectedConsentForm: (form: any) => void;
 
-  selectedPatientForDiagnose: ApiAny;
-  setSelectedPatientForDiagnose: (patient: ApiAny) => void;
+  selectedStaffForSalary: any;
+  setSelectedStaffForSalary: (staff: any) => void;
 
-  selectedItemForRestock: ApiAny;
-  setSelectedItemForRestock: (item: ApiAny) => void;
+  selectedPatientForDiagnose: any;
+  setSelectedPatientForDiagnose: (patient: any) => void;
 
-  preFilledPatientData: ApiAny;
-  setPreFilledPatientData: (data: ApiAny) => void;
+  selectedItemForRestock: any;
+  setSelectedItemForRestock: (item: any) => void;
+
+  preFilledPatientData: any;
+  setPreFilledPatientData: (data: any) => void;
 
   patientFormType: 'normal' | 'person';
   setPatientFormType: (type: 'normal' | 'person') => void;
@@ -40,18 +44,18 @@ interface ModalContextType {
   parentPatientId: string;
   setParentPatientId: (id: string) => void;
 
-  pendingCheckInAppt: ApiAny;
-  setPendingCheckInAppt: (appt: ApiAny) => void;
+  pendingCheckInAppt: any;
+  setPendingCheckInAppt: (appt: any) => void;
 
   isFollowUpBooking: boolean;
   setIsFollowUpBooking: (val: boolean) => void;
 
-  bookedFollowUp: ApiAny;
-  setBookedFollowUp: (followUp: ApiAny) => void;
+  bookedFollowUp: any;
+  setBookedFollowUp: (followUp: any) => void;
 
-  draftConsultations: Record<string, ApiAny>;
-  setDraftConsultations: React.Dispatch<React.SetStateAction<Record<string, ApiAny>>>;
-  handleDraftUpdate: (patientId: string, data: ApiAny) => void;
+  draftConsultations: Record<string, any>;
+  setDraftConsultations: React.Dispatch<React.SetStateAction<Record<string, any>>>;
+  handleDraftUpdate: (patientId: string, data: any) => void;
 
   doctorAvailability: Record<string, boolean>;
   setDoctorAvailability: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
@@ -61,11 +65,11 @@ interface ModalContextType {
   whatsappPatientName: string | null;
   setWhatsappPatientName: (name: string | null) => void;
 
-  toast: ApiAny;
+  toast: any;
   showToast: (message: string, type?: 'success' | 'error') => void;
 
-  confirmConfig: ApiAny;
-  setConfirmConfig: React.Dispatch<React.SetStateAction<ApiAny>>;
+  confirmConfig: any;
+  setConfirmConfig: React.Dispatch<React.SetStateAction<any>>;
   showConfirm: (title: string, message: string, onConfirm: () => void, confirmLabel?: string, variant?: string, toastMessage?: string) => void;
   confirmDelete: (title: string, message: string, onConfirm: () => void) => void;
 }
@@ -74,28 +78,29 @@ const ModalContext = createContext<ModalContextType | null>(null);
 
 export function ModalProvider({ children }: { children: React.ReactNode }) {
   const [activeModal, setActiveModal] = useState<string | null>(null);
-  const [selectedAppointment, setSelectedAppointment] = useState<ApiAny>(null);
+  const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
   const [selectedPatientId, setSelectedPatientId] = useState('');
   const [selectedItemId, setSelectedItemId] = useState('');
-  const [selectedEMRRecord, setSelectedEMRRecord] = useState<ApiAny>(null);
-  const [selectedConsentForm, setSelectedConsentForm] = useState<ApiAny>(null);
-  const [selectedStaffForSalary, setSelectedStaffForSalary] = useState<ApiAny>(null);
-  const [selectedPatientForDiagnose, setSelectedPatientForDiagnose] = useState<ApiAny>(null);
-  const [selectedItemForRestock, setSelectedItemForRestock] = useState<ApiAny>(null);
-  const [preFilledPatientData, setPreFilledPatientData] = useState<ApiAny>(null);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+  const [selectedEMRRecord, setSelectedEMRRecord] = useState<any>(null);
+  const [selectedConsentForm, setSelectedConsentForm] = useState<any>(null);
+  const [selectedStaffForSalary, setSelectedStaffForSalary] = useState<any>(null);
+  const [selectedPatientForDiagnose, setSelectedPatientForDiagnose] = useState<any>(null);
+  const [selectedItemForRestock, setSelectedItemForRestock] = useState<any>(null);
+  const [preFilledPatientData, setPreFilledPatientData] = useState<any>(null);
   const [patientFormType, setPatientFormType] = useState<'normal' | 'person'>('normal');
   const [parentPatientId, setParentPatientId] = useState('');
-  const [pendingCheckInAppt, setPendingCheckInAppt] = useState<ApiAny>(null);
+  const [pendingCheckInAppt, setPendingCheckInAppt] = useState<any>(null);
   const [isFollowUpBooking, setIsFollowUpBooking] = useState(false);
-  const [bookedFollowUp, setBookedFollowUp] = useState<ApiAny>(null);
-  const [draftConsultations, setDraftConsultations] = useState<Record<string, ApiAny>>({});
+  const [bookedFollowUp, setBookedFollowUp] = useState<any>(null);
+  const [draftConsultations, setDraftConsultations] = useState<Record<string, any>>({});
   const [doctorAvailability, setDoctorAvailability] = useState<Record<string, boolean>>(
-    doctorsWithSchedules.reduce((acc, d) => ({ ...acc, [d.id]: d.isAvailableToday }), {})
+    {}
   );
   const [whatsappPhone, setWhatsappPhone] = useState<string | null>(null);
   const [whatsappPatientName, setWhatsappPatientName] = useState<string | null>(null);
 
-  const [confirmConfig, setConfirmConfig] = useState<ApiAny>({
+  const [confirmConfig, setConfirmConfig] = useState<any>({
     show: false, title: '', message: '', onConfirm: () => {}, confirmLabel: 'Confirm', variant: 'primary', toastMessage: '', isLoading: false
   });
 
@@ -117,15 +122,15 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
         variant,
         isLoading: false,
         onConfirm: async () => {
-          setConfirmConfig((prev: ApiAny) => ({ ...prev, isLoading: true }));
+          setConfirmConfig((prev: any) => ({ ...prev, isLoading: true }));
           try {
             await onConfirm();
-            setConfirmConfig((prev: ApiAny) => ({ ...prev, show: false, isLoading: false }));
+            setConfirmConfig((prev: any) => ({ ...prev, show: false, isLoading: false }));
             if (toastMessage) {
               showToast(toastMessage, 'success');
             }
-          } catch (error: ApiAny) {
-            setConfirmConfig((prev: ApiAny) => ({ ...prev, show: false, isLoading: false }));
+          } catch (error: any) {
+            setConfirmConfig((prev: any) => ({ ...prev, show: false, isLoading: false }));
             const apiError = 
               error?.response?.data?.message || 
               error?.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc ||
@@ -148,7 +153,7 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
     [showConfirm]
   );
 
-  const handleDraftUpdate = useCallback((patientId: string, data: ApiAny) => {
+  const handleDraftUpdate = useCallback((patientId: string, data: any) => {
     setDraftConsultations(prev => {
       if (JSON.stringify(prev[patientId]) === JSON.stringify(data)) return prev;
       return { ...prev, [patientId]: data };
@@ -162,6 +167,7 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
         selectedAppointment, setSelectedAppointment,
         selectedPatientId, setSelectedPatientId,
         selectedItemId, setSelectedItemId,
+        selectedSessionId, setSelectedSessionId,
         selectedEMRRecord, setSelectedEMRRecord,
         selectedConsentForm, setSelectedConsentForm,
         selectedStaffForSalary, setSelectedStaffForSalary,
@@ -186,7 +192,6 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export function useModal(): ModalContextType {
   const ctx = useContext(ModalContext);
   if (!ctx) throw new Error('useModal must be used within ModalProvider');

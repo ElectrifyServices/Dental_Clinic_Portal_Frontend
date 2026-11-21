@@ -1,0 +1,25 @@
+name: Bundle Check (A7)
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+
+jobs:
+  bundle-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npx vite build --outDir "$RUNNER_TEMP/bundle"
+      - name: Fail if demo data or hotlinks are in the bundle
+        run: |
+          if grep -rEn "ui-avatars|placehold\.co|unsplash|azurefd|demo-token|demo@clinic|Rajesh Sharma|Priya Patel|Amit Singh|Dental Syringes|Gold Company Plan" "$RUNNER_TEMP/bundle/assets"; then
+            echo "FAIL: banned strings found in production bundle"; exit 1
+          fi
+          echo "PASS: bundle clean"

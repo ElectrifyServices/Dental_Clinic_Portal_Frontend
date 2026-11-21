@@ -1,8 +1,19 @@
-/* eslint-disable react-refresh/only-export-components */
-import type { ApiAny } from "../../types/api";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { BillingCard } from "./BillingCard";
-import { Plus, Eye, Trash2, MoreVertical, IndianRupee, Send, FileText, History, MessageCircle, X, Filter } from "lucide-react";
+import {
+  Plus,
+  Eye,
+  Trash2,
+  MoreVertical,
+  IndianRupee,
+  Send,
+  FileText,
+  ChevronDown,
+  ChevronRight,
+  History,
+  MessageCircle,
+  X,
+} from "lucide-react";
 import { PaymentHistoryModal } from "./PaymentHistoryModal";
 import { InvoicePaymentModal } from "./InvoicePaymentModal";
 import { WhatsappHistoryModal } from "./WhatsappHistoryModal";
@@ -29,12 +40,8 @@ import {
   SelectContent,
   SelectItem,
   Loading,
-  Label,
-  FilterContainer,
 } from "@/components/ui";
 import { createPortal } from "react-dom";
-import { DatePicker } from "@/components/ui/DatePicker";
-import { cn } from "@/lib/utils";
 
 interface Invoice {
   id: string;
@@ -174,7 +181,7 @@ export function InvoiceList({
       await sendInvoiceMutation({ id });
       onUpdateStatus?.(id, "sent");
       toast.success("Invoice queued for sending");
-    } catch (err: ApiAny) {
+    } catch (err: any) {
       console.error("Failed to send invoice:", err);
       const serverResponse = err.response?.data;
       let errMsg = "";
@@ -239,16 +246,15 @@ export function InvoiceList({
     0
   );
 
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const [payInvoice, setPayInvoice] = useState<Invoice | null>(null);
   const [historyInvoice, setHistoryInvoice] = useState<Invoice | null>(null);
   const [whatsappHistoryPhone, setWhatsappHistoryPhone] = useState<string | null>(null);
   const [whatsappHistoryPatientName, setWhatsappHistoryPatientName] = useState<string | null>(null);
-  const [_expandedRowIds, setExpandedRowIds] = useState<Set<string>>(new Set());
+  const [expandedRowIds, setExpandedRowIds] = useState<Set<string>>(new Set());
 
-  const _toggleRowExpanded = (id: string) => {
+  const toggleRowExpanded = (id: string) => {
     setExpandedRowIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -260,11 +266,13 @@ export function InvoiceList({
     });
   };
 
+  const filtered = invoices || [];
+
   const flatSortedInvoices = useMemo(() => {
-    return [...(invoices || [])].sort((a, b) => {
+    return [...filtered].sort((a, b) => {
       return new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime();
     });
-  }, [invoices]);
+  }, [filtered]);
 
   const openMenu = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
@@ -286,7 +294,7 @@ export function InvoiceList({
     {
       key: "id",
       header: "Invoice",
-      render: (inv: ApiAny) => (
+      render: (inv: any) => (
         <div className="flex items-center gap-1.5 min-w-[160px] flex-wrap">
           {/* Chevron expand/collapse button removed as per request */}
           {/* +N count badge removed as per request */}
@@ -338,7 +346,7 @@ export function InvoiceList({
       key: "amount",
       header: "Grand Total",
       render: (inv: Invoice) => {
-        const displayAmount = (inv as ApiAny).grand_total || (inv as ApiAny).grandTotal || inv.total || inv.amount || 0;
+        const displayAmount = (inv as any).grand_total || (inv as any).grandTotal || inv.total || inv.amount || 0;
         return (
           <span className="font-bold text-foreground">
             ₹{displayAmount.toLocaleString()}
@@ -349,7 +357,7 @@ export function InvoiceList({
     {
       key: "paymentMethod",
       header: "Payment Method",
-      render: (inv: ApiAny) => {
+      render: (inv: any) => {
         let pm = "N/A";
         if (Array.isArray(inv.payment_methods) && inv.payment_methods.length > 0) {
           pm = inv.payment_methods.join(", ");
@@ -370,7 +378,7 @@ export function InvoiceList({
         const meta = STATUS_META[inv.status?.toLowerCase()] || { variant: "gray", label: inv.status };
         return (
           <StatusBadge
-            variant={meta.variant as ApiAny}
+            variant={meta.variant as any}
             className="text-[10px] uppercase font-bold"
           >
             {inv.status}
@@ -397,11 +405,11 @@ export function InvoiceList({
               createPortal(
                 <>
                   <div
-                    className="fixed inset-0 z-9998"
+                    className="fixed inset-0 z-[9998]"
                     onClick={() => setOpenMenuId(null)}
                   />
                   <div
-                    className="fixed z-9999 bg-card rounded-2xl border border-border shadow-2xl w-44 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+                    className="fixed z-[9999] bg-card rounded-2xl border border-border shadow-2xl w-44 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
                     style={{ top: menuPos.top, left: menuPos.left }}
                   >
                     <div className="p-1.5 space-y-0.5">
@@ -463,7 +471,7 @@ export function InvoiceList({
                       <Button
                         variant="ghost"
                         onClick={() => {
-                          onDeleteInvoice?.(inv.id, (inv as ApiAny).invoice_number || inv.id);
+                          onDeleteInvoice?.(inv.id, (inv as any).invoice_number || inv.id);
                           setOpenMenuId(null);
                         }}
                         className="w-full justify-start text-left px-3 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-xl flex items-center gap-2.5 font-medium transition-colors"
@@ -481,11 +489,11 @@ export function InvoiceList({
     },
   ];
 
-  const _subColumns = [
+  const subColumns = [
     {
       key: "id",
       header: "Invoice Number",
-      render: (inv: ApiAny) => (
+      render: (inv: any) => (
         <span className="font-mono text-xs font-bold text-foreground">
           {inv.invoice_number || inv.id}
         </span>
@@ -494,7 +502,7 @@ export function InvoiceList({
     {
       key: "date",
       header: "Date",
-      render: (inv: ApiAny) => (
+      render: (inv: any) => (
         <span className="text-muted-foreground">
           {inv.date
             ? new Date(inv.date).toLocaleDateString("en-IN", {
@@ -511,7 +519,7 @@ export function InvoiceList({
       key: "amount",
       header: "Amount",
       align: "right" as const,
-      render: (inv: ApiAny) => {
+      render: (inv: any) => {
         const hasPaid = inv.paidAmount > 0 || inv.paid_amount > 0;
         const displayAmount = hasPaid ? (inv.pendingAmount ?? inv.pending_amount ?? 0) : (inv.total || inv.amount || 0);
         return (
@@ -524,7 +532,7 @@ export function InvoiceList({
     {
       key: "paymentMethod",
       header: "Payment Method",
-      render: (inv: ApiAny) => {
+      render: (inv: any) => {
         let pm = "N/A";
         if (Array.isArray(inv.payment_methods) && inv.payment_methods.length > 0) {
           pm = inv.payment_methods.join(", ");
@@ -541,11 +549,11 @@ export function InvoiceList({
     {
       key: "status",
       header: "Status",
-      render: (inv: ApiAny) => {
+      render: (inv: any) => {
         const meta = STATUS_META[inv.status?.toLowerCase()] || { variant: "gray", label: inv.status };
         return (
           <StatusBadge
-            variant={meta.variant as ApiAny}
+            variant={meta.variant as any}
             className="text-[9px] uppercase font-bold px-2 py-0.5"
           >
             {inv.status}
@@ -557,7 +565,7 @@ export function InvoiceList({
       key: "actions",
       header: "Actions",
       align: "center" as const,
-      render: (inv: ApiAny) => (
+      render: (inv: any) => (
         <div className="flex items-center justify-center gap-1">
           <div className="relative">
             <Button
@@ -572,11 +580,11 @@ export function InvoiceList({
               createPortal(
                 <>
                   <div
-                    className="fixed inset-0 z-9998"
+                    className="fixed inset-0 z-[9998]"
                     onClick={() => setOpenMenuId(null)}
                   />
                   <div
-                    className="fixed z-9999 bg-card rounded-2xl border border-border shadow-2xl w-44 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+                    className="fixed z-[9999] bg-card rounded-2xl border border-border shadow-2xl w-44 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
                     style={{ top: menuPos.top, left: menuPos.left }}
                   >
                     <div className="p-1.5 space-y-0.5">
@@ -657,31 +665,29 @@ export function InvoiceList({
   const paginatedData = flatSortedInvoices;
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col gap-3">
-      <div className="shrink-0">
-        <PageHeader
-          title="Billing & Invoices"
-          subtitle={`${invoices.length} total invoices recorded`}
-          action={
-            <div className="flex gap-2 flex-wrap">
-              <Button
-                variant="outline"
-                onClick={() => exportInvoices()}
-                loading={isExporting}
-                className="gap-2"
-              >
-                {!isExporting && <FileText className="w-4 h-4" />}
-                {isExporting ? "Exporting..." : "Export"}
-              </Button>
-              <Button onClick={onCreateInvoice} className="gap-2">
-                <Plus className="w-4 h-4" /> Create Invoice
-              </Button>
-            </div>
-          }
-        />
-      </div>
+    <div className="space-y-3">
+      <PageHeader
+        title="Billing & Invoices"
+        subtitle={`${invoices.length} total invoices recorded`}
+        action={
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => exportInvoices()}
+              loading={isExporting}
+              className="gap-2"
+            >
+              {!isExporting && <FileText className="w-4 h-4" />}
+              {isExporting ? "Exporting..." : "Export"}
+            </Button>
+            <Button onClick={onCreateInvoice} className="gap-2">
+              <Plus className="w-4 h-4" /> Create Invoice
+            </Button>
+          </div>
+        }
+      />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 shrink-0">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <MetricCard
           label="Total Billed"
           value={`₹${formatIndianCurrency(totalBilled)}`}
@@ -703,78 +709,118 @@ export function InvoiceList({
         />
       </div>
 
-      <FilterContainer
-        isOpen={isFilterOpen}
-        onClose={() => setIsFilterOpen(false)}
-        className="shrink-0 space-y-3"
-      >
-        <div className="flex items-center gap-2 bg-card p-3 rounded-2xl border border-border shadow-sm max-w-full overflow-x-hidden">
-          <SearchInput
-            value={search}
-            onChange={setSearch}
-            placeholder="Search by patient name or invoice ID…"
-            className="flex-1 min-w-0"
-          />
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setIsFilterOpen((v) => !v)}
-            className={cn("gap-2 shrink-0", hasFilters && "border-primary bg-primary/10 text-primary hover:bg-primary/15")}
-          >
-            <Filter className="w-4 h-4" />
-            <span className="hidden sm:inline">Filters</span>
-          </Button>
-
+      <div className="flex flex-col sm:flex-row gap-2 items-center bg-card p-3 rounded-2xl border border-border shadow-sm flex-wrap">
+        <SearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder="Search by patient name or invoice ID…"
+          className="flex-1 min-w-0 min-w-[200px]"
+        />
+        <div className="flex flex-wrap gap-2 shrink-0">
+          <Select value={status} onValueChange={setStatus}>
+            <SelectTrigger className="h-9 w-[130px] text-xs font-semibold rounded-xl border border-border bg-muted">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              {FILTERS.map((f) => (
+                <SelectItem key={f.key} value={f.key} className="text-xs font-medium">
+                  {f.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {setPaymentMethod && (
+            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+              <SelectTrigger className="h-9 w-[130px] text-xs font-semibold rounded-xl border border-border bg-muted">
+                <SelectValue placeholder="Payment Method" />
+              </SelectTrigger>
+              <SelectContent>
+                {PAYMENT_METHODS.map((f) => (
+                  <SelectItem key={f.key} value={f.key} className="text-xs font-medium">
+                    {f.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          {setStartDate && setEndDate && (
+            <div className="flex items-center gap-1">
+              <input
+                type="date"
+                value={startDate || ""}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="h-9 px-2 text-xs font-semibold rounded-xl border border-border bg-muted focus:outline-none focus:ring-1 focus:ring-primary w-[115px]"
+                placeholder="Start Date"
+                title="Start Date"
+              />
+              <span className="text-xs text-muted-foreground">-</span>
+              <input
+                type="date"
+                min={startDate || ""}
+                value={endDate || ""}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="h-9 px-2 text-xs font-semibold rounded-xl border border-border bg-muted focus:outline-none focus:ring-1 focus:ring-primary w-[115px]"
+                placeholder="End Date"
+                title="End Date"
+              />
+            </div>
+          )}
           {hasFilters && (
-            <Button variant="ghost" onClick={handleClearFilters} className="gap-1 text-muted-foreground shrink-0">
-              <X className="w-3 h-3" /> <span className="hidden sm:inline">Clear</span>
+            <Button
+              variant="outline"
+              onClick={handleClearFilters}
+              className="h-9 px-3 text-xs font-semibold rounded-xl border-border bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80"
+            >
+              <X className="w-3 h-3 mr-1" />
+              Clear
             </Button>
           )}
         </div>
+      </div>
 
-        {isFilterOpen && (
-          <div className="bg-card p-4 sm:p-5 rounded-2xl border border-border shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
-            <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">Advanced Filters</h3>
-            <BillingFilterFields
-              status={status}
-              setStatus={setStatus}
-              paymentMethod={paymentMethod}
-              setPaymentMethod={setPaymentMethod}
-              startDate={startDate}
-              setStartDate={setStartDate}
-              endDate={endDate}
-              setEndDate={setEndDate}
-            />
-          </div>
-        )}
-      </FilterContainer>
-
-      <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">
       {isLoading ? (
         <Loading type="spinner" text="Loading invoices..." className="py-20" />
       ) : (
         <>
           {/* Desktop Table View */}
-          <div className="hidden lg:flex lg:flex-col lg:flex-1 lg:min-h-0">
+          <div className="hidden lg:block">
             <DataTable
-          className="flex-1 min-h-0"
           columns={columns}
-          data={paginatedData as ApiAny[]}
+          data={paginatedData as any[]}
           rowKey={(inv) => inv.id}
           emptyIcon={<FileText className="w-12 h-12 text-muted-foreground/40" />}
           emptyTitle="No invoices found"
           emptySubtitle="Create your first invoice to get started."
           footer={
-            totalItems > 0 ? (
-              <Pagination
-                page={page}
-                totalPages={totalPages}
-                totalItems={totalItems}
-                perPage={limit}
-                onPageChange={onPageChange}
-                onPerPageChange={onLimitChange}
-              />
+            totalPages > 1 ? (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-6 border-t border-border/50 bg-muted/20">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">Rows per page:</span>
+                  <Select
+                    value={String(limit)}
+                    onValueChange={(val) => {
+                      onLimitChange?.(Number(val));
+                    }}
+                  >
+                    <SelectTrigger className="w-20 h-8 text-xs">
+                      <SelectValue placeholder="10" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="5" className="text-xs">5</SelectItem>
+                      <SelectItem value="10" className="text-xs">10</SelectItem>
+                      <SelectItem value="20" className="text-xs">20</SelectItem>
+                      <SelectItem value="50" className="text-xs">50</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Pagination
+                  page={page}
+                  totalPages={totalPages}
+                  totalItems={totalItems}
+                  perPage={limit}
+                  onPageChange={onPageChange}
+                />
+              </div>
             ) : undefined
           }
         />
@@ -808,16 +854,36 @@ export function InvoiceList({
               ))}
             </div>
 
-            {totalItems > 0 && (
+            {totalPages > 1 && (
               <div className="py-4 px-4 border border-border/50 bg-card rounded-2xl shadow-sm mt-4">
-                <Pagination
-                  page={page}
-                  totalPages={totalPages}
-                  totalItems={totalItems}
-                  perPage={limit}
-                  onPageChange={onPageChange}
-                  onPerPageChange={onLimitChange}
-                />
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">Rows per page:</span>
+                    <Select
+                      value={String(limit)}
+                      onValueChange={(val) => {
+                        onLimitChange?.(Number(val));
+                      }}
+                    >
+                      <SelectTrigger className="w-20 h-8 text-xs">
+                        <SelectValue placeholder="10" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="5" className="text-xs">5</SelectItem>
+                        <SelectItem value="10" className="text-xs">10</SelectItem>
+                        <SelectItem value="20" className="text-xs">20</SelectItem>
+                        <SelectItem value="50" className="text-xs">50</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Pagination
+                    page={page}
+                    totalPages={totalPages}
+                    totalItems={totalItems}
+                    perPage={limit}
+                    onPageChange={onPageChange}
+                  />
+                </div>
               </div>
             )}
           </>
@@ -825,7 +891,6 @@ export function InvoiceList({
       </div>
       </>
       )}
-      </div>
 
       {payInvoice && (
         <InvoicePaymentModal
@@ -842,7 +907,7 @@ export function InvoiceList({
               onUpdateStatus?.(id, "paid");
               setPayInvoice(null);
               toast.success("Payment completed successfully!");
-            } catch (err: ApiAny) {
+            } catch (err: any) {
               console.error("Failed to confirm payment:", err);
 
               const serverResponse = err.response?.data;
@@ -878,88 +943,6 @@ export function InvoiceList({
             setWhatsappHistoryPatientName(null);
           }}
         />
-      )}
-    </div>
-  );
-}
-
-function BillingFilterFields({
-  status,
-  setStatus,
-  paymentMethod,
-  setPaymentMethod,
-  startDate,
-  setStartDate,
-  endDate,
-  setEndDate,
-}: {
-  status: string;
-  setStatus: (val: string) => void;
-  paymentMethod?: string;
-  setPaymentMethod?: (val: string) => void;
-  startDate?: string;
-  setStartDate?: (val: string) => void;
-  endDate?: string;
-  setEndDate?: (val: string) => void;
-}) {
-  const selectTriggerClass = "h-10 w-full text-xs font-semibold rounded-xl border border-border bg-muted/50";
-
-  return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <div>
-        <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">Status</Label>
-        <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className={selectTriggerClass}>
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            {FILTERS.map((f) => (
-              <SelectItem key={f.key} value={f.key} className="text-xs font-medium">
-                {f.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      {setPaymentMethod && (
-        <div>
-          <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">Payment Method</Label>
-          <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-            <SelectTrigger className={selectTriggerClass}>
-              <SelectValue placeholder="Payment Method" />
-            </SelectTrigger>
-            <SelectContent>
-              {PAYMENT_METHODS.map((f) => (
-                <SelectItem key={f.key} value={f.key} className="text-xs font-medium">
-                  {f.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
-      {setStartDate && (
-        <div>
-          <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">From Date</Label>
-          <DatePicker
-            value={startDate || ""}
-            onChange={setStartDate}
-            placeholder="Start Date"
-            className="h-10 w-full text-xs font-semibold rounded-xl border border-border bg-muted/50"
-          />
-        </div>
-      )}
-      {setEndDate && (
-        <div>
-          <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">To Date</Label>
-          <DatePicker
-            min={startDate || ""}
-            value={endDate || ""}
-            onChange={setEndDate}
-            placeholder="End Date"
-            className="h-10 w-full text-xs font-semibold rounded-xl border border-border bg-muted/50"
-          />
-        </div>
       )}
     </div>
   );

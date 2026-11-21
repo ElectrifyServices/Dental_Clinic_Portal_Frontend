@@ -1,25 +1,7 @@
-import type { ApiAny } from "../../types/api";
-import { useApiQuery, type ApiQueryOptions } from "../useApiQuery";
+import { useApiQuery } from "../useApiQuery";
 import { LabWork } from "../../types";
 
-/** An attachment row as the lab-work endpoints return it. */
-interface LabWorkDocumentPayload {
-  id?: string;
-  file_name?: string;
-  fileName?: string;
-  name?: string;
-  file_url?: string;
-  fileUrl?: string;
-  url?: string;
-  file_size?: number | string;
-  fileSize?: number | string;
-  size?: number | string;
-  file_type?: string;
-  fileType?: string;
-  type?: string;
-}
-
-export function normalizeLabWork(payload: ApiAny): LabWork | null {
+export function normalizeLabWork(payload: any): LabWork | null {
   if (!payload) return null;
   const lw = payload?.responseObject?.data || payload?.data || payload;
   if (!lw || !lw.id) return null;
@@ -52,7 +34,7 @@ export function normalizeLabWork(payload: ApiAny): LabWork | null {
   const hasWarranty = lw.warranty !== "NO_WARRANTY" && (lw.warranty !== undefined ? true : !!(lw.has_warranty ?? lw.hasWarranty));
 
   // Attachments mapping
-  const attachments = (lw.documents ?? lw.attachments ?? []).map((doc: LabWorkDocumentPayload) => ({
+  const attachments = (lw.documents ?? lw.attachments ?? []).map((doc: any) => ({
     id: doc.id,
     file_name: doc.file_name ?? doc.fileName ?? doc.name ?? "",
     file_url: doc.file_url ?? doc.fileUrl ?? doc.url ?? "",
@@ -93,11 +75,8 @@ export function normalizeLabWork(payload: ApiAny): LabWork | null {
   };
 }
 
-export function useLabWorkQuery(
-  id: string,
-  options?: ApiQueryOptions<ApiAny>,
-) {
-  return useApiQuery<ApiAny>({
+export function useLabWorkQuery(id: string, options?: any) {
+  return useApiQuery<any>({
     queryKey: ["labWork", id],
     endpoint: `/labWork/${id}`,
     method: "get",

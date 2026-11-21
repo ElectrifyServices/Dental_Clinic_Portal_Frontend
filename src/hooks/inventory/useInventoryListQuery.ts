@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
 export interface InventoryQueryParams {
@@ -9,9 +8,9 @@ export interface InventoryQueryParams {
   limit?: number;
 }
 
-export function useInventoryListQuery(params?: InventoryQueryParams, options?: ApiAny) {
+export function useInventoryListQuery(params?: InventoryQueryParams, options?: any) {
   // Construct body payload for POST request
-  const apiParams: Record<string, ApiAny> = {};
+  const apiParams: Record<string, any> = {};
   apiParams.page = params?.page ?? 1;
   apiParams.limit = params?.limit ?? 10;
   if (params?.search) apiParams.search = params.search;
@@ -22,7 +21,7 @@ export function useInventoryListQuery(params?: InventoryQueryParams, options?: A
   }
   if (params?.low_stock) apiParams.low_stock = "true";
 
-  return useApiQuery<ApiAny[]>({
+  return useApiQuery<any[]>({
     queryKey: ["inventory", params],
     endpoint: "/inventory/list",
     method: "post",

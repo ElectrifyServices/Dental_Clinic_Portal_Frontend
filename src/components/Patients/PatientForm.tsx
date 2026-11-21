@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import React, { useState } from "react";
 import { Save, Calendar, CheckCircle, AlertTriangle } from "lucide-react";
 import { usePatientForm } from "./PatientForm/usePatientForm";
@@ -6,20 +5,21 @@ import { Step1BasicInfo } from "./PatientForm/Step1BasicInfo";
 import { Step2MedicalHistory } from "./PatientForm/Step2MedicalHistory";
 import { Step3Consent } from "./PatientForm/Step3Consent";
 import { Step4Review } from "./PatientForm/Step4Review";
+import { PatientData } from "@/types";
 import { useCorporatePlansQuery } from "@/hooks/corporate/useCorporatePlansQuery";
 import { useMedicalHistoriesQuery } from "@/hooks/patients/useMedicalHistoriesQuery";
 import { useAllergiesQuery } from "@/hooks/patients/useAllergiesQuery";
-import { Button, Modal, ConfirmModal } from "@/components/ui";
+import { Button, Modal } from "@/components/ui";
 
 interface PatientFormProps {
   onClose: () => void;
-  onSave: (patient: ApiAny) => void;
-  patient?: ApiAny;
+  onSave: (patient: any) => void;
+  patient?: any;
   type?: "normal" | "person";
   parentId?: string;
   isCheckIn?: boolean;
-  corporateEmployees?: ApiAny[];
-  corporatePlans?: ApiAny[];
+  corporateEmployees?: any[];
+  corporatePlans?: any[];
 }
 
 export function PatientForm({
@@ -29,7 +29,7 @@ export function PatientForm({
   type,
   parentId,
   isCheckIn,
-  corporateEmployees: _corporateEmployees = [],
+  corporateEmployees = [],
   corporatePlans = [],
 }: PatientFormProps) {
   const {
@@ -38,6 +38,7 @@ export function PatientForm({
     loading,
     setLoading,
     validationErrors,
+    isFamilyMember,
     matchedCorporateEmp,
     acceptCorporateEmployee,
     handleChange,
@@ -48,7 +49,7 @@ export function PatientForm({
     handleImageUpload,
     handleConsentFormUpload,
     handleDentalFilesUpload,
-  } = usePatientForm(patient);
+  } = usePatientForm(patient, type);
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   
@@ -66,11 +67,11 @@ export function PatientForm({
   const [step, setStep] = useState(1);
   const [medicalSearch, setMedicalSearch] = useState("");
   const [allergySearch, setAllergySearch] = useState("");
-  const extractIds = (field: ApiAny, idKeys: string[]) => {
+  const extractIds = (field: any, idKeys: string[]) => {
     if (!field) return [];
     if (typeof field === "string") return field.split('\n').filter(Boolean);
     if (Array.isArray(field)) {
-      return field.map((item: ApiAny) => {
+      return field.map((item: any) => {
         if (typeof item === "object" && item !== null) {
           for (const key of idKeys) {
             if (item[key]) return item[key];
@@ -100,59 +101,6 @@ export function PatientForm({
       );
     }
   }, [patient]);
-
-  const [showExitConfirm, setShowExitConfirm] = useState(false);
-
-  const checkHasUnsavedChanges = (): boolean => {
-    if (step > 1) return true;
-    if (selectedMedicalHistory.length > 0 && (!patient || selectedMedicalHistory.length !== (patient?.medicalHistories?.length ?? 0))) return true;
-    if (selectedAllergies.length > 0 && (!patient || selectedAllergies.length !== (patient?.allergies?.length ?? 0))) return true;
-
-    if (!patient) {
-      const hasEnteredDetails = Boolean(
-        formData.name?.trim() ||
-        formData.phone?.trim() ||
-        formData.email?.trim() ||
-        formData.dateOfBirth ||
-        formData.gender ||
-        formData.bloodGroup ||
-        formData.address?.trim() ||
-        formData.occupation?.trim() ||
-        formData.maritalStatus ||
-        formData.corporatePlanId ||
-        formData.avatar ||
-        formData.rawAvatarFile ||
-        formData.patientSignature ||
-        formData.rawConsentFormFile ||
-        (formData.dentalFiles && formData.dentalFiles.length > 0) ||
-        (formData.rawDentalFiles && formData.rawDentalFiles.length > 0)
-      );
-      if (hasEnteredDetails) return true;
-    } else {
-      if (
-        formData.name !== (patient.name || patient.full_name || "") ||
-        formData.phone !== (patient.phone || patient.mobile || "") ||
-        formData.email !== (patient.email || "") ||
-        formData.address !== (patient.address || "") ||
-        formData.occupation !== (patient.occupation || "") ||
-        formData.rawAvatarFile ||
-        formData.rawConsentFormFile ||
-        (formData.rawDentalFiles && formData.rawDentalFiles.length > 0)
-      ) {
-        return true;
-      }
-    }
-    return false;
-  };
-
-  const handleRequestClose = () => {
-    if (showExitConfirm) return;
-    if (checkHasUnsavedChanges()) {
-      setShowExitConfirm(true);
-    } else {
-      onClose();
-    }
-  };
 
 
 
@@ -186,7 +134,7 @@ export function PatientForm({
         id: patient?.id ?? undefined,
         parentId: type === "person" ? parentId : (patient?.primary_patient_id || patient?.primaryPatientId || patient?.parentId || undefined),
       });
-    } catch (_err) {
+    } catch (err) {
       setFormErrors({ submit: "Failed to save patient. Please try again." });
     } finally {
       setLoading(false);
@@ -212,27 +160,26 @@ export function PatientForm({
   };
 
   return (
-    <>
-      <Modal
-        title={
-          patient && patient.id
-            ? "Edit Patient Information"
-            : "New Patient Registration"
-        }
-        subtitle="Complete patient registration"
-        onClose={handleRequestClose}
-        size="5xl"
-        icon={<Calendar className="w-5 h-5" />}
-        footer={
-          <div className="flex justify-between items-center w-full">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={step === 1 ? handleRequestClose : () => handlePrevious(step, setStep)}
-              className="text-foreground border-gray-300 bg-white hover:bg-muted/50 shadow-sm font-bold"
-            >
-              {step === 1 ? "Cancel" : "Previous Step"}
-            </Button>
+    <Modal
+      title={
+        patient && patient.id
+          ? "Edit Patient Information"
+          : "New Patient Registration"
+      }
+      subtitle="Complete patient registration"
+      onClose={onClose}
+      size="5xl"
+      icon={<Calendar className="w-5 h-5" />}
+      footer={
+        <div className="flex justify-between items-center w-full">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={step === 1 ? onClose : () => handlePrevious(step, setStep)}
+            className="text-foreground border-gray-300 bg-white hover:bg-muted/50 shadow-sm font-bold"
+          >
+            {step === 1 ? "Cancel" : "Previous Step"}
+          </Button>
 
           <div className="flex gap-3">
             {step < 4 ? (
@@ -268,8 +215,8 @@ export function PatientForm({
         </div>
       }
     >
-      <div className="space-y-3">
-        <div className="flex items-center justify-between pb-3 border-b border-border px-2">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between pb-4 border-b border-border px-2">
           {[
             { num: 1, label: "Basic Info" },
             { num: 2, label: "Medical History" },
@@ -311,7 +258,7 @@ export function PatientForm({
               matchedCorporateEmp={matchedCorporateEmp}
               acceptCorporateEmployee={acceptCorporateEmployee}
               corporatePlans={corporatePlans}
-              type={type}
+              type={isFamilyMember ? "person" : type}
               handleCustomRelation={handleCustomRelation}
               applyCustomRelation={applyCustomRelation}
               handleImageUpload={handleImageUpload}
@@ -350,7 +297,7 @@ export function PatientForm({
         </form>
 
         {isFormInvalid && (
-          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex flex-col gap-1.5">
+          <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl flex flex-col gap-2">
             <div className="flex items-center gap-3 text-amber-800 font-bold text-sm">
               <AlertTriangle className="w-5 h-5 text-amber-600 animate-pulse" />
               <span>Missing Required Fields:</span>
@@ -364,7 +311,7 @@ export function PatientForm({
         )}
 
         {formErrors.submit && (
-          <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-xl flex items-center gap-3">
+          <div className="mb-4 p-4 bg-destructive/10 border border-destructive/20 rounded-xl flex items-center gap-3">
             <AlertTriangle className="w-5 h-5 text-destructive" />
             <p className="text-sm text-destructive font-medium">
               {formErrors.submit}
@@ -373,21 +320,5 @@ export function PatientForm({
         )}
       </div>
     </Modal>
-
-    {showExitConfirm && (
-      <ConfirmModal
-        title="Unsaved Changes"
-        message="You have unsaved changes in this patient form. Are you sure you want to close without saving? All the entered details will be lost."
-        confirmLabel="Discard & Exit"
-        cancelLabel="Keep Editing"
-        variant="danger"
-        onConfirm={() => {
-          setShowExitConfirm(false);
-          onClose();
-        }}
-        onCancel={() => setShowExitConfirm(false)}
-      />
-    )}
-  </>
   );
 }

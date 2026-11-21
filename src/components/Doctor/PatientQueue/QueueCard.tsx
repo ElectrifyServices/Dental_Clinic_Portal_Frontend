@@ -1,10 +1,23 @@
-import type { ApiAny } from "../../../types/api";
 import { useState, useEffect } from "react";
-import { User, Clock, Stethoscope, MessageSquare, AlertTriangle, FileText, CheckCircle, IndianRupee, MessageCircle, Trash2 } from "lucide-react";
+import {
+  User,
+  Clock,
+  Phone,
+  Stethoscope,
+  MessageSquare,
+  AlertTriangle,
+  FileText,
+  CheckCircle,
+  IndianRupee,
+  MessageCircle,
+  ShieldCheck,
+} from "lucide-react";
 import { Card, CardContent, Button } from "@/components/ui";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/Tooltip";
 import { toTitleCase } from "@/utils/stringUtils";
 import { getFileUrl } from "@/services/apiClient";
 import { useModal } from "@/contexts/ModalContext";
+import { BenefitUsageModal } from "@/components/CorporatePlans/Employee/BenefitUsageModal";
 
 // Calculate age from DOB
 const calcAge = (dob: string) => {
@@ -48,14 +61,13 @@ function useWaitingTime(checkInTime: string) {
 }
 
 interface QueueCardProps {
-  patient: ApiAny;
-  fullPatient: ApiAny;
+  patient: any;
+  fullPatient: any;
   getStatusColor: (s: string) => string;
   getStatusIcon: (s: string) => JSX.Element;
   onUpdatePatientStatus: (id: string, s: string) => void;
-  onSelectPatient: (p: ApiAny) => void;
-  onEditConsultation?: (p: ApiAny) => void;
-  onDeleteConsultation?: (p: ApiAny) => void;
+  onSelectPatient: (p: any) => void;
+  onEditConsultation?: (p: any) => void;
 }
 
 export function QueueCard({
@@ -66,16 +78,17 @@ export function QueueCard({
   onUpdatePatientStatus,
   onSelectPatient,
   onEditConsultation,
-  onDeleteConsultation,
 }: QueueCardProps) {
-  const _waitingTime = useWaitingTime(patient.checkInTime);
+  const waitingTime = useWaitingTime(patient.checkInTime);
   const { setActiveModal, setWhatsappPhone, setWhatsappPatientName } = useModal();
-  const _age = fullPatient ? calcAge(fullPatient.dateOfBirth) : null;
+  const age = fullPatient ? calcAge(fullPatient.dateOfBirth) : null;
   const gender = fullPatient?.gender || "";
   
   const [showAllAllergies, setShowAllAllergies] = useState(false);
+  const [showBenefitUsage, setShowBenefitUsage] = useState(false);
+  const isMembershipPatient = fullPatient?.category === "membership";
   
-  const extractNames = (list: ApiAny, keyName: string) => {
+  const extractNames = (list: any, keyName: string) => {
     if (!list) return [];
     if (typeof list === 'string') return list.split('\n').filter(Boolean);
     if (Array.isArray(list)) {
@@ -103,11 +116,11 @@ export function QueueCard({
 
   return (
     <Card className="hover:shadow-md hover:border-gray-200 transition-all duration-300 rounded-2xl border border-gray-100 bg-white overflow-hidden">
-      <CardContent className="p-4 flex flex-col h-full space-y-3">
+      <CardContent className="p-5 flex flex-col h-full space-y-4">
         {/* Patient Header */}
-        <div className="flex items-start justify-between gap-3 border-b border-gray-50 pb-3 flex-wrap">
+        <div className="flex items-start justify-between gap-3 border-b border-gray-50 pb-4 flex-wrap">
           <div className="flex items-start gap-3 min-w-0">
-            <div className="w-10 h-10 bg-blue-50/70 rounded-xl flex items-center justify-center shrink-0 text-blue-500 border border-blue-100/50 overflow-hidden">
+            <div className="w-12 h-12 bg-blue-50/70 rounded-xl flex items-center justify-center flex-shrink-0 text-blue-500 border border-blue-100/50 overflow-hidden">
               {patient.profile_picture_url || fullPatient?.profile_picture_url || fullPatient?.avatar ? (
                 <img
                   src={getFileUrl(patient.profile_picture_url || fullPatient?.profile_picture_url || fullPatient?.avatar)}
@@ -124,7 +137,7 @@ export function QueueCard({
                 />
               ) : null}
               <User
-                className="w-5 h-5 placeholder-icon"
+                className="w-5.5 h-5.5 placeholder-icon"
                 style={{
                   display: (patient.profile_picture_url || fullPatient?.profile_picture_url || fullPatient?.avatar) ? 'none' : 'block'
                 }}
@@ -162,11 +175,25 @@ export function QueueCard({
                   {getStatusIcon(patient.status)}
                   {patient.status.replace("_", " ")}
                 </span>
+                {isMembershipPatient && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowBenefitUsage(true);
+                    }}
+                    className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[9px] font-black rounded-full uppercase tracking-wider border bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 transition-colors cursor-pointer"
+                    title="View membership benefits usage"
+                  >
+                    <ShieldCheck className="w-2.5 h-2.5" />
+                    Member
+                  </button>
+                )}
               </div>
             </div>
           </div>
           {/* Appointment time */}
-          <div className="text-right shrink-0 pt-0.5">
+          <div className="text-right flex-shrink-0 pt-0.5">
             <div className="text-sm font-black text-blue-600 mb-1">
               {patient.appointmentTime}
             </div>
@@ -177,8 +204,8 @@ export function QueueCard({
         </div>
 
         {/* Contact & Concern */}
-        <div className="space-y-2 text-sm">
-          <div className="flex items-start justify-between gap-2">
+        <div className="space-y-2.5 text-sm">
+          <div className="flex items-start justify-between py-0.5 gap-2">
             <span className="flex items-center text-gray-500 text-xs font-semibold shrink-0">
               <Clock className="w-3.5 h-3.5 mr-2 text-gray-400" /> Slot Duration
             </span>
@@ -187,43 +214,43 @@ export function QueueCard({
             </span>
           </div>
 
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 py-0.5">
             <div className="flex items-center justify-between gap-2">
               <span className="flex items-center text-gray-500 text-xs font-semibold shrink-0">
                 <Stethoscope className="w-3.5 h-3.5 mr-2 text-gray-400" /> Treatment Type
               </span>
               {(!patient.treatmentType || patient.treatmentType.length <= 40) ? (
-                <span className="font-bold text-gray-900 text-right wrap-break-word max-w-[65%] leading-tight">
+                <span className="font-bold text-gray-900 text-right break-words max-w-[65%] leading-tight">
                   {patient.treatmentType || "N/A"}
                 </span>
               ) : null}
             </div>
             {patient.treatmentType && patient.treatmentType.length > 40 && (
-              <div className="text-xs text-gray-700 font-bold leading-normal bg-gray-50/60 p-2.5 rounded-xl border border-gray-100 max-h-24 overflow-y-auto scrollbar-thin pr-1 mt-1 text-left wrap-break-word">
+              <div className="text-xs text-gray-700 font-bold leading-normal bg-gray-50/60 p-2.5 rounded-xl border border-gray-100 max-h-24 overflow-y-auto scrollbar-thin pr-1 mt-1 text-left break-words">
                 {patient.treatmentType}
               </div>
             )}
           </div>
 
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 py-0.5">
             <div className="flex items-center justify-between gap-2">
               <span className="flex items-center text-gray-500 text-xs font-semibold shrink-0">
                 <FileText className="w-3.5 h-3.5 mr-2 text-gray-400" /> Specific Treatment
               </span>
               {(!patient.specificTreatment || patient.specificTreatment.length <= 40) ? (
-                <span className="font-bold text-gray-900 text-right wrap-break-word max-w-[65%] leading-tight">
+                <span className="font-bold text-gray-900 text-right break-words max-w-[65%] leading-tight">
                   {patient.specificTreatment || "N/A"}
                 </span>
               ) : null}
             </div>
             {patient.specificTreatment && patient.specificTreatment.length > 40 && (
-              <div className="text-xs text-gray-700 font-bold leading-normal bg-gray-50/60 p-2.5 rounded-xl border border-gray-100 max-h-24 overflow-y-auto scrollbar-thin pr-1 mt-1 text-left wrap-break-word">
+              <div className="text-xs text-gray-700 font-bold leading-normal bg-gray-50/60 p-2.5 rounded-xl border border-gray-100 max-h-24 overflow-y-auto scrollbar-thin pr-1 mt-1 text-left break-words">
                 {patient.specificTreatment}
               </div>
             )}
           </div>
 
-          <div className="flex items-start justify-between gap-2">
+          <div className="flex items-start justify-between py-0.5 gap-2">
             <span className="flex items-center text-gray-500 text-xs font-semibold shrink-0">
               <IndianRupee className="w-3.5 h-3.5 mr-2 text-gray-400" /> Cost
             </span>
@@ -233,11 +260,11 @@ export function QueueCard({
           </div>
 
           {patient.patientConcern && (
-            <div className="border-t border-gray-50 pt-2">
-              <div className="flex items-center text-gray-500 text-xs font-semibold mb-1">
+            <div className="border-t border-gray-50 pt-2.5 mt-1">
+              <div className="flex items-center text-gray-500 text-xs font-semibold mb-1.5">
                 <MessageSquare className="w-3.5 h-3.5 mr-2 text-gray-400" /> Patient Concern
               </div>
-              <div className="text-xs text-gray-700 font-semibold leading-relaxed bg-gray-50/60 p-2.5 rounded-xl border border-gray-100 max-h-24 overflow-y-auto scrollbar-thin pr-1 wrap-break-word">
+              <div className="text-xs text-gray-700 font-semibold leading-relaxed bg-gray-50/60 p-2.5 rounded-xl border border-gray-100 max-h-24 overflow-y-auto scrollbar-thin pr-1 break-words">
                 {patient.patientConcern}
               </div>
             </div>
@@ -248,7 +275,7 @@ export function QueueCard({
               <div className="flex items-center text-gray-500 text-xs font-semibold mb-1.5">
                 <FileText className="w-3.5 h-3.5 mr-2 text-gray-400" /> Notes
               </div>
-              <div className="text-xs text-gray-700 font-semibold leading-relaxed bg-gray-50/60 p-2.5 rounded-xl border border-gray-100 max-h-24 overflow-y-auto scrollbar-thin pr-1 wrap-break-word">
+              <div className="text-xs text-gray-700 font-semibold leading-relaxed bg-gray-50/60 p-2.5 rounded-xl border border-gray-100 max-h-24 overflow-y-auto scrollbar-thin pr-1 break-words">
                 {patient.appointmentNotes}
               </div>
             </div>
@@ -301,60 +328,28 @@ export function QueueCard({
           {/* Action Button */}
           <div>
             {patient.status === "PENDING" && (
-              <div className="flex gap-2 min-w-0">
-                <Button
-                  onClick={() => {
-                    onUpdatePatientStatus(patient.id, "IN_PROGRESS");
-                    onSelectPatient(patient);
-                  }}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition-all shadow-md shadow-blue-100 flex items-center justify-center gap-2 h-10 min-w-0"
-                >
-                  <Stethoscope className="w-4 h-4 shrink-0" />
-                  <span className="truncate">Start Consultation</span>
-                </Button>
-                {onDeleteConsultation && (
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDeleteConsultation(patient);
-                    }}
-                    variant="outline"
-                    title="Delete Consultation"
-                    className="h-10 px-3 bg-white hover:bg-destructive/10 border-destructive/30 text-destructive rounded-xl font-bold shadow-xs shrink-0 flex items-center justify-center gap-1.5 transition-all"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    <span className="text-xs">Delete</span>
-                  </Button>
-                )}
-              </div>
+              <Button
+                onClick={() => {
+                  onUpdatePatientStatus(patient.id, "IN_PROGRESS");
+                  onSelectPatient(patient);
+                }}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition-all shadow-md shadow-blue-100 flex items-center justify-center gap-2 h-10"
+              >
+                <Stethoscope className="w-4 h-4" />
+                Start Consultation
+              </Button>
             )}
             {patient.status === "IN_PROGRESS" && (
-              <div className="flex gap-2 min-w-0">
-                <Button
-                  onClick={() => {
-                    onUpdatePatientStatus(patient.id, "IN_PROGRESS");
-                    onSelectPatient(patient);
-                  }}
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition-all shadow-md shadow-emerald-100 flex items-center justify-center gap-2 h-10 min-w-0"
-                >
-                  <FileText className="w-4 h-4 shrink-0" />
-                  <span className="truncate">Continue Consultation</span>
-                </Button>
-                {onDeleteConsultation && (
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDeleteConsultation(patient);
-                    }}
-                    variant="outline"
-                    title="Delete Consultation"
-                    className="h-10 px-3 bg-white hover:bg-destructive/10 border-destructive/30 text-destructive rounded-xl font-bold shadow-xs shrink-0 flex items-center justify-center gap-1.5 transition-all"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    <span className="text-xs">Delete</span>
-                  </Button>
-                )}
-              </div>
+              <Button
+                onClick={() => {
+                  onUpdatePatientStatus(patient.id, "IN_PROGRESS");
+                  onSelectPatient(patient);
+                }}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition-all shadow-md shadow-emerald-100 flex items-center justify-center gap-2 h-10"
+              >
+                <FileText className="w-4 h-4" />
+                Continue Consultation
+              </Button>
             )}
             {patient.status === "COMPLETED" && (
               <div className="flex gap-2 min-w-0">
@@ -379,6 +374,17 @@ export function QueueCard({
           </div>
         </div>
       </CardContent>
+      {isMembershipPatient && showBenefitUsage && (
+        <BenefitUsageModal
+          isOpen={showBenefitUsage}
+          onClose={() => setShowBenefitUsage(false)}
+          employee={{
+            id: fullPatient?.id,
+            name: patient.patientName,
+            phone: patient.patientPhone,
+          }}
+        />
+      )}
     </Card>
   );
 }

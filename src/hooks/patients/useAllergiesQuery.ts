@@ -1,11 +1,10 @@
-import type { ApiAny } from "../../types/api";
 import { useQueryClient } from "@tanstack/react-query";
-import { useApiQuery, type ApiQueryOptions } from "../useApiQuery";
+import { useApiQuery } from "../useApiQuery";
 import { useApiMutation } from "../useApiMutation";
 
 // Query for fetching Allergies
-export const useAllergiesQuery = (options?: ApiQueryOptions<ApiAny>) => {
-  return useApiQuery<ApiAny>({
+export const useAllergiesQuery = (options?: any) => {
+  return useApiQuery<any>({
     queryKey: ["allergies"],
     endpoint: "/patientMedical/allergies",
     method: "get",
@@ -17,7 +16,7 @@ export const useAllergiesQuery = (options?: ApiQueryOptions<ApiAny>) => {
 export const useCreateAllergyMutation = () => {
   const queryClient = useQueryClient();
 
-  return useApiMutation<ApiAny, { allergy_name: string; is_custom: boolean }>({
+  return useApiMutation<any, { allergy_name: string; is_custom: boolean }>({
     endpoint: "/patientMedical/allergies",
     method: "post",
     options: {
@@ -32,7 +31,7 @@ export const useCreateAllergyMutation = () => {
 export const useDeleteAllergyMutation = () => {
   const queryClient = useQueryClient();
 
-  return useApiMutation<ApiAny, string>({
+  return useApiMutation<any, string>({
     getEndpoint: (id: string) => `/patientMedical/allergies/${id}`,
     method: "delete",
     options: {

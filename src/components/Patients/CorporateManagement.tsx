@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import React, { useState, useRef } from "react";
@@ -66,12 +65,12 @@ interface CorporateManagementProps {
   onSavePlan: (plan: CorporatePlan) => void;
   onDeletePlan: (id: string) => void;
   onBulkAddPatients: (patients: BulkPatient[]) => void;
-  corporateEmployees: ApiAny[];
+  corporateEmployees: any[];
   onDeleteEmployee: (name: string, email: string) => void;
   onUpdateEmployee: (
     oldName: string,
     oldEmail: string,
-    updatedEmp: ApiAny,
+    updatedEmp: any,
   ) => void;
   onClose: () => void;
 }
@@ -102,7 +101,7 @@ export function CorporateManagement({
     name: string;
     email: string;
   } | null>(null);
-  const [tempEmpData, setTempEmpData] = useState<ApiAny>(null);
+  const [tempEmpData, setTempEmpData] = useState<any>(null);
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Outside click for search suggestions
@@ -240,10 +239,10 @@ export function CorporateManagement({
       const workbook = XLSX.read(data, { type: "array" });
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
-      const rows = XLSX.utils.sheet_to_json(worksheet) as ApiAny[];
+      const rows = XLSX.utils.sheet_to_json(worksheet) as any[];
 
       const importedPatients: BulkPatient[] = rows
-        .map((row: ApiAny) => {
+        .map((row: any) => {
           const getVal = (keys: string[]) => {
             const foundKey = Object.keys(row).find(k => keys.some(key => k.toLowerCase().replace(/[^a-z0-9]/g, '') === key.toLowerCase().replace(/[^a-z0-9]/g, '')));
             return foundKey ? String(row[foundKey]).trim() : '';
@@ -374,7 +373,7 @@ export function CorporateManagement({
               className={`w-full bg-transparent outline-none text-sm font-bold border-b border-transparent focus:border-primary/50 pb-1 ${isDup ? "text-destructive" : "text-foreground"}`}
             />
             {isDup && (
-              <div className="absolute -top-8 left-0 bg-destructive text-white text-[10px] px-2 py-1 rounded shadow-lg font-black uppercase tracking-widest animate-bounce z-60">
+              <div className="absolute -top-8 left-0 bg-destructive text-white text-[10px] px-2 py-1 rounded shadow-lg font-black uppercase tracking-widest animate-bounce z-[60]">
                 Already Registered!
               </div>
             )}
@@ -506,7 +505,7 @@ export function CorporateManagement({
     {
       key: "name",
       header: "Name",
-      render: (emp: ApiAny, idx: number) => {
+      render: (emp: any, idx: number) => {
         const isEditing = editingEmployee?.name === emp.name && editingEmployee?.email === emp.email;
         return (
           <div className="flex items-center gap-3">
@@ -541,7 +540,7 @@ export function CorporateManagement({
     {
       key: "phone",
       header: "Phone",
-      render: (emp: ApiAny) => {
+      render: (emp: any) => {
         const isEditing = editingEmployee?.name === emp.name && editingEmployee?.email === emp.email;
         return isEditing ? (
           <Input
@@ -566,7 +565,7 @@ export function CorporateManagement({
     {
       key: "email",
       header: "Email Address",
-      render: (emp: ApiAny) => {
+      render: (emp: any) => {
         const isEditing = editingEmployee?.name === emp.name && editingEmployee?.email === emp.email;
         return isEditing ? (
           <Input
@@ -591,7 +590,7 @@ export function CorporateManagement({
     {
       key: "gender",
       header: "Gender",
-      render: (emp: ApiAny) => {
+      render: (emp: any) => {
         const isEditing = editingEmployee?.name === emp.name && editingEmployee?.email === emp.email;
         return isEditing ? (
           <Select
@@ -618,7 +617,7 @@ export function CorporateManagement({
       key: "action",
       header: "Action",
       align: "right" as const,
-      render: (emp: ApiAny) => {
+      render: (emp: any) => {
         const isEditing = editingEmployee?.name === emp.name && editingEmployee?.email === emp.email;
         return (
           <div className="flex justify-end gap-1">
@@ -689,9 +688,9 @@ export function CorporateManagement({
         </div>
       }
     >
-      <div className="space-y-4">
+      <div className="space-y-6">
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as ApiAny)}>
+        <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as any)}>
           <TabsList className="grid w-full grid-cols-2 max-w-[400px]">
             <TabsTrigger value="plans">Corporate Plans</TabsTrigger>
             <TabsTrigger value="bulk">Bulk Employee Registration</TabsTrigger>
@@ -700,10 +699,10 @@ export function CorporateManagement({
 
         <div className="min-h-[500px]">
           {activeTab === "plans" ? (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {!showPlanForm ? (
                 <>
-                  <div className="flex justify-between items-center mb-4">
+                  <div className="flex justify-between items-center mb-6">
                     <h3 className="text-lg font-black text-foreground uppercase tracking-widest">
                       Active Corporate Plans
                     </h3>
@@ -719,7 +718,7 @@ export function CorporateManagement({
                     </Button>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {corporatePlans.map((plan) => (
                       <ContentCard
                         key={plan.id}
@@ -756,7 +755,7 @@ export function CorporateManagement({
                           </Button>
                         }
                       >
-                        <div className="grid grid-cols-2 gap-3 mb-3">
+                        <div className="grid grid-cols-2 gap-3 mb-4">
                           <div className="bg-muted p-2 rounded-xl border border-border">
                             <p className="text-[10px] text-muted-foreground/60 font-black uppercase tracking-widest">
                               Discount
@@ -792,8 +791,8 @@ export function CorporateManagement({
                       </ContentCard>
                     ))}
                     {corporatePlans.length === 0 && (
-                      <div className="col-span-full py-14 text-center bg-card rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center">
-                        <Building2 className="w-10 h-10 text-muted-foreground/30 mb-3" />
+                      <div className="col-span-full py-20 text-center bg-card rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center">
+                        <Building2 className="w-12 h-12 text-muted-foreground/30 mb-4" />
                         <h3 className="text-sm font-black text-foreground uppercase tracking-widest">
                           No plans created
                         </h3>
@@ -821,8 +820,8 @@ export function CorporateManagement({
                     </Button>
                   }
                 >
-                  <form onSubmit={handleAddPlan} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <form onSubmit={handleAddPlan} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="md:col-span-2">
                         <Label className="block text-[10px] font-black text-muted-foreground mb-2 uppercase tracking-widest">
                           Company Name
@@ -873,11 +872,11 @@ export function CorporateManagement({
                         <Gift className="w-5 h-5 ml-auto text-primary/40" />
                       </div>
                     </div>
-                    <div className="border-t border-border pt-4">
-                      <h4 className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest mb-3">
+                    <div className="border-t border-border pt-6">
+                      <h4 className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest mb-4">
                         Contact Details
                       </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <Input
                           name="contactPerson"
                           defaultValue={editingPlan?.contactPerson}
@@ -895,11 +894,11 @@ export function CorporateManagement({
                           type="email"
                           defaultValue={editingPlan?.email}
                           placeholder="Email Address"
-                          className="w-full px-4 py-3 border border-border rounded-xl outline-none focus:ring-2 focus:ring-primary/20 font-bold text-sm"
+                          className="w-full md:col-span-2 px-4 py-3 border border-border rounded-xl outline-none focus:ring-2 focus:ring-primary/20 font-bold text-sm"
                         />
                       </div>
                     </div>
-                    <div className="flex gap-4 pt-4">
+                    <div className="flex gap-4 pt-6">
                       <Button
                         variant="outline"
                         type="button"
@@ -917,7 +916,7 @@ export function CorporateManagement({
               )}
             </div>
           ) : (
-            <div className="space-y-4 max-w-5xl mx-auto">
+            <div className="space-y-6 max-w-5xl mx-auto">
               <ContentCard
                 title="Bulk Employee Upload"
                 subtitle="Quickly add multiple employees to a corporate plan"
@@ -949,7 +948,7 @@ export function CorporateManagement({
                   </div>
                 }
               >
-                <div className="mb-4">
+                <div className="mb-6">
                   <Label className="block text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest mb-3">
                     Target Corporate Plan
                   </Label>
@@ -976,7 +975,7 @@ export function CorporateManagement({
 
                 <Button
                   onClick={handleBulkAddRow}
-                  className="mt-4 w-full py-4 border-2 border-dashed border-border rounded-2xl text-[10px] font-black text-muted-foreground uppercase tracking-widest hover:border-primary hover:text-primary transition-all flex items-center justify-center gap-2"
+                  className="mt-6 w-full py-4 border-2 border-dashed border-border rounded-2xl text-[10px] font-black text-muted-foreground uppercase tracking-widest hover:border-primary hover:text-primary transition-all flex items-center justify-center gap-2"
                 >
                   <Plus className="w-5 h-5" />
                   Add Another Row
@@ -1001,8 +1000,8 @@ export function CorporateManagement({
 
         {/* Employee List View Modal Overlay */}
         {viewingEmployeesPlanId && (
-          <div className="absolute inset-0 bg-card z-60 flex flex-col animate-in slide-in-from-right duration-300">
-            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/50">
+          <div className="absolute inset-0 bg-card z-[60] flex flex-col animate-in slide-in-from-right duration-300">
+            <div className="p-6 border-b border-border flex items-center justify-between bg-muted/50">
               <div className="flex items-center gap-4">
                 <Button
                   onClick={() => setViewingEmployeesPlanId(null)}
@@ -1045,7 +1044,7 @@ export function CorporateManagement({
                 </form>
 
                 {showSearchSuggestions && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-card rounded-2xl shadow-2xl border border-border z-70 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-card rounded-2xl shadow-2xl border border-border z-[70] overflow-hidden animate-in fade-in slide-in-from-top-2">
                     {recentSearches.length > 0 && (
                       <div className="p-4 border-b border-border">
                         <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest mb-3">
@@ -1092,7 +1091,7 @@ export function CorporateManagement({
                 )}
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex-1 overflow-y-auto p-6">
               <DataTable
                 columns={employeeColumns}
                 data={filteredEmployees}

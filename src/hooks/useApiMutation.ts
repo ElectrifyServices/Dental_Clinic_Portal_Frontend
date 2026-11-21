@@ -1,4 +1,3 @@
-import type { ApiAny } from "../types/api";
 import apiClient from "../services/apiClient";
 import {
   parseApiResponse,
@@ -10,12 +9,12 @@ interface MutationProps<TData, TVariables> {
   endpoint?: string;
   getEndpoint?: (variables: TVariables) => string;
   method?: "get" | "post" | "put" | "patch" | "delete";
-  options?: Omit<UseMutationOptions<TData, ApiAny, TVariables>, "mutationFn">;
-  transformRequest?: (variables: TVariables) => ApiAny;
-  headers?: ApiAny | ((variables: TVariables) => ApiAny);
+  options?: Omit<UseMutationOptions<TData, any, TVariables>, "mutationFn">;
+  transformRequest?: (variables: TVariables) => any;
+  headers?: any | ((variables: TVariables) => any);
 }
 
-export function useApiMutation<TData, TVariables = ApiAny>({
+export function useApiMutation<TData, TVariables = any>({
   endpoint,
   getEndpoint,
   method = "post",
@@ -23,7 +22,7 @@ export function useApiMutation<TData, TVariables = ApiAny>({
   transformRequest,
   headers,
 }: MutationProps<TData, TVariables>) {
-  return useMutation<TData, ApiAny, TVariables>({
+  return useMutation<TData, any, TVariables>({
     mutationFn: async (variables) => {
       const resolvedEndpoint = getEndpoint?.(variables) ?? endpoint;
       if (!resolvedEndpoint) {
@@ -50,19 +49,19 @@ export function useApiMutation<TData, TVariables = ApiAny>({
         
         // If the API structure uses status codes within the response body
         if (parsed.status && (parsed.status.statusCode < 200 || parsed.status.statusCode >= 300)) {
-          const err: ApiAny = new Error(parsed.status.statusDesc || "API Error");
+          const err: any = new Error(parsed.status.statusDesc || "API Error");
           err.data = parsed.data;
           err.status = parsed.status;
           throw err;
         }
 
         return parsed.data as TData;
-      } catch (error: ApiAny) {
+      } catch (error: any) {
         const serverResponse = error.response?.data;
         if (serverResponse) {
           const parsed = parseApiResponse(serverResponse);
           if (parsed.status && parsed.status.statusDesc) {
-            const err: ApiAny = new Error(parsed.status.statusDesc);
+            const err: any = new Error(parsed.status.statusDesc);
             err.data = parsed.data;
             err.status = parsed.status;
             throw err;

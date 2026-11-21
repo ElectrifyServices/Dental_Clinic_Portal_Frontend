@@ -1,10 +1,9 @@
-import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
 export function useSingleStaffQuery(id?: string, options?: { enabled?: boolean }) {
   const enabled = (options?.enabled ?? true) && !!id;
   
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["singleStaff", id],
     endpoint: `/staff/${id}`,
     method: "get",

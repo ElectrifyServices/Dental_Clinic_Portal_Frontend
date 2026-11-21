@@ -1,15 +1,14 @@
 import React from "react";
-import { UserPlus } from "lucide-react";
 import { usePatientData } from "../hooks/usePatientData";
 import { useModal } from "../contexts/ModalContext";
 import { exportPatientReport } from "../utils/exportPatient";
 import { PatientList } from "../components/Patients/PatientList";
-import { toast, PageHeader, Button } from "../components/ui";
+import { toast, PageHeader } from "../components/ui";
 
 export const PatientsPage: React.FC = () => {
   const {
     patients,
-    handleDeletePatient, handleUpdatePatientStatus,
+    handleSavePatient, handleDeletePatient, handleUpdatePatientStatus,
     patientSearch, setPatientSearch,
     patientStatus, setPatientStatus,
     patientCategory, setPatientCategory,
@@ -38,7 +37,7 @@ export const PatientsPage: React.FC = () => {
   };
 
   const handleDeletePatientWrapper = (id: string) => {
-    const p = patients.find((x) => x.id === id);
+    const p = patients.find((x: any) => x.id === id);
     confirmDelete(
       "Delete Patient",
       `Delete patient ${p?.name}? All history will be removed.`,
@@ -47,7 +46,7 @@ export const PatientsPage: React.FC = () => {
   };
 
   const handleToggleStatus = async (id: string, status: "active" | "inactive") => {
-    const p = patients.find((x) => x.id === id);
+    const p = patients.find((x: any) => x.id === id);
     if (p) {
       await handleUpdatePatientStatus(id, status === "active" ? "ACTIVE" : "INACTIVE");
       toast.success(`Patient marked as ${status}!`);
@@ -66,19 +65,10 @@ export const PatientsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-5 sm:space-y-6 pb-8">
+    <div className="space-y-3">
       <PageHeader
         title="Patients"
         subtitle="Manage and track patient information"
-        className="pb-2 sm:pb-3 mb-1 sm:mb-2"
-        action={
-          <Button
-            onClick={() => handleAddPatient()}
-            className="gap-1.5 shrink-0 shadow-sm"
-          >
-            <UserPlus className="w-4 h-4" /> Add Patient
-          </Button>
-        }
       />
       <PatientList
         patients={patients}

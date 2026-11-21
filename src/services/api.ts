@@ -1,9 +1,4 @@
 // API service layer for backend integration
-
-/** Request bodies are forwarded to the backend as-is; their shape is owned by
- *  each caller, not by this transport layer. */
-type RequestBody = Record<string, unknown>;
-
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://mlhr8xj8-3000.inc1.devtunnels.ms/api';
 
 class ApiService {
@@ -40,14 +35,14 @@ class ApiService {
     return this.request(`/patients/${id}`);
   }
 
-  async createPatient(data: RequestBody) {
+  async createPatient(data: any) {
     return this.request('/patients', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
-  async updatePatient(id: string, data: RequestBody) {
+  async updatePatient(id: string, data: any) {
     return this.request(`/patients/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -59,14 +54,14 @@ class ApiService {
     return this.request('/appointments');
   }
 
-  async createAppointment(data: RequestBody) {
+  async createAppointment(data: any) {
     return this.request('/appointments', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
-  async updateAppointment(id: string, data: RequestBody) {
+  async updateAppointment(id: string, data: any) {
     return this.request(`/appointments/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -79,7 +74,7 @@ class ApiService {
     return this.request(endpoint);
   }
 
-  async createTreatment(data: RequestBody) {
+  async createTreatment(data: any) {
     return this.request('/treatments', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -91,7 +86,7 @@ class ApiService {
     return this.request('/invoices');
   }
 
-  async createInvoice(data: RequestBody) {
+  async createInvoice(data: any) {
     return this.request('/invoices', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -103,7 +98,7 @@ class ApiService {
     return this.request('/inventory');
   }
 
-  async updateInventoryItem(id: string, data: RequestBody) {
+  async updateInventoryItem(id: string, data: any) {
     return this.request(`/inventory/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),

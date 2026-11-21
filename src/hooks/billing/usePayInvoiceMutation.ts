@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -11,7 +10,7 @@ export interface PayInvoiceVariables {
 export function usePayInvoiceMutation() {
   const queryClient = useQueryClient();
 
-  return useApiMutation<ApiAny, PayInvoiceVariables>({
+  return useApiMutation<any, PayInvoiceVariables>({
     getEndpoint: (variables) => `/invoice/mark-paid/${variables.id}`,
     method: "patch",
     transformRequest: (variables) => ({

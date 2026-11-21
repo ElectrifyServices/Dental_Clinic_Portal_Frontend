@@ -1,16 +1,15 @@
-import type { ApiAny } from "../../../types/api";
 import React, { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/Dialog";
-import { Button, DataTable, SearchInput } from "@/components/ui";
+import { Button, DataTable } from "@/components/ui";
 import { Input } from "@/components/ui/Input";
 import { Search, CheckCircle2 } from "lucide-react";
 
 interface CorporateBulkSelectModalProps {
   isOpen: boolean;
   onClose: () => void;
-  employees: ApiAny[];
+  employees: any[];
   linkedItemIds: string[];
-  onAddMultiple: (items: ApiAny[]) => void;
+  onAddMultiple: (items: any[]) => void;
   onRemoveMultiple: (ids: string[]) => void;
 }
 
@@ -107,7 +106,7 @@ export const CorporateBulkSelectModal: React.FC<CorporateBulkSelectModalProps> =
       ),
       className: "w-12 text-center p-4",
       align: "center" as const,
-      render: (emp: ApiAny) => (
+      render: (emp: any) => (
         <input
           type="checkbox"
           checked={localSelection.has(emp.enrollment_id)}
@@ -123,7 +122,7 @@ export const CorporateBulkSelectModal: React.FC<CorporateBulkSelectModalProps> =
       key: "name",
       header: "Employee Name",
       className: "p-4 font-bold text-indigo-900",
-      render: (emp: ApiAny) => (
+      render: (emp: any) => (
         <div>
           <p className="font-bold text-slate-800">{emp.name || "Unknown Name"}</p>
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">{emp.plan_name}</p>
@@ -134,7 +133,7 @@ export const CorporateBulkSelectModal: React.FC<CorporateBulkSelectModalProps> =
       key: "contact",
       header: "Contact Details",
       className: "p-4 font-bold text-indigo-900",
-      render: (emp: ApiAny) => (
+      render: (emp: any) => (
         <div>
           <p className="text-xs text-slate-600">📞 {emp.phone || "N/A"}</p>
           {emp.email && <p className="text-xs text-slate-600">📧 {emp.email}</p>}
@@ -146,7 +145,7 @@ export const CorporateBulkSelectModal: React.FC<CorporateBulkSelectModalProps> =
       header: "Amount (₹)",
       className: "p-4 font-bold text-indigo-900 text-right",
       align: "right" as const,
-      render: (emp: ApiAny) => (
+      render: (emp: any) => (
         <span className="font-black text-emerald-600">
           ₹{(emp.billing_amount || 0).toLocaleString()}
         </span>
@@ -165,12 +164,16 @@ export const CorporateBulkSelectModal: React.FC<CorporateBulkSelectModalProps> =
         </DialogHeader>
 
         <div className="p-4 border-b bg-muted/20 flex flex-col sm:flex-row gap-4 items-center justify-between">
-          <SearchInput
-            placeholder="Search in list..."
-            value={searchTerm}
-            onChange={setSearchTerm}
-            className="w-full sm:w-80 [&>input]:h-10 [&>input]:rounded-xl [&>input]:bg-white [&>input]:text-sm"
-          />
+          <div className="relative w-full sm:w-80">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground z-10" />
+            <Input
+              type="text"
+              placeholder="Search in list..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 h-10 text-sm border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
           <div className="text-sm font-bold text-indigo-700 bg-indigo-50 px-4 py-2 rounded-xl">
             {localSelection.size} / {employees.length} Selected
           </div>
@@ -180,10 +183,10 @@ export const CorporateBulkSelectModal: React.FC<CorporateBulkSelectModalProps> =
           <DataTable
             columns={columns}
             data={filteredEmployees}
-            rowKey={(emp: ApiAny) => emp.enrollment_id}
-            onRowClick={(emp: ApiAny) => toggleOne(emp.enrollment_id)}
+            rowKey={(emp: any) => emp.enrollment_id}
+            onRowClick={(emp: any) => toggleOne(emp.enrollment_id)}
             emptyTitle="No members match your search criteria."
-            rowClassName={(emp: ApiAny) =>
+            rowClassName={(emp: any) =>
               `hover:bg-indigo-50/30 transition-colors cursor-pointer ${
                 localSelection.has(emp.enrollment_id) ? 'bg-indigo-50/40' : ''
               }`

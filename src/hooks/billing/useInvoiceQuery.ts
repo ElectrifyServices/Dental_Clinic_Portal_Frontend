@@ -1,10 +1,8 @@
-import type { ApiAny, ApiRecord } from "../../types/api";
-import type { ApiQueryOptions } from "../useApiQuery";
 import { useApiQuery } from "../useApiQuery";
 import apiClient from "../../services/apiClient";
 import { normalizePatient } from "../patients/usePatientDetailQuery";
 
-export function normalizeInvoice(payload: ApiAny, expectedId?: string) {
+export function normalizeInvoice(payload: any, expectedId?: string) {
   if (!payload) return null;
   let inv = payload?.responseObject?.data || payload?.data || payload?.invoice || payload;
 
@@ -14,7 +12,7 @@ export function normalizeInvoice(payload: ApiAny, expectedId?: string) {
 
   if (Array.isArray(inv)) {
     if (expectedId) {
-      inv = inv.find((i: ApiRecord) => i.id === expectedId || i.invoice_number === expectedId) || inv[0];
+      inv = inv.find((i: any) => i.id === expectedId || i.invoice_number === expectedId) || inv[0];
     } else {
       inv = inv[0];
     }
@@ -24,7 +22,7 @@ export function normalizeInvoice(payload: ApiAny, expectedId?: string) {
 
   // Normalize items array
   const rawItems = inv.invoice_items || inv.invoiceItems || inv.items || [];
-  const parsedItems = rawItems.map((item: ApiRecord) => {
+  let parsedItems = rawItems.map((item: any) => {
     const rate = Number(item.rate ?? item.unit_price ?? item.total_amount ?? item.billed_amount ?? 0);
     const quantity = Number(item.quantity ?? 1);
     const discountPct = Number(item.discount_value ?? item.item_discount ?? 0);
@@ -59,7 +57,7 @@ export function normalizeInvoice(payload: ApiAny, expectedId?: string) {
     !!inv.is_corporate_billing ||
     hasNoPatientOrMember ||
     parsedItems.some(
-      (item: ApiAny) =>
+      (item: any) =>
         (item.description && item.description.startsWith("Employee Membership")) ||
         (item.item_type === "MEMBERSHIP" && !!item.billing_description_name) ||
         !!item.billing_description_name
@@ -80,7 +78,7 @@ export function normalizeInvoice(payload: ApiAny, expectedId?: string) {
 
     if (!companyName) {
       const itemWithCompany = parsedItems.find(
-        (i: ApiAny) => i.billing_description_name || i.company_name
+        (i: any) => i.billing_description_name || i.company_name
       );
       if (itemWithCompany) {
         companyName =
@@ -91,20 +89,20 @@ export function normalizeInvoice(payload: ApiAny, expectedId?: string) {
   }
 
   // Consolidate corporate membership items if present
-  const isCorporateItem = (item: ApiAny) =>
+  const isCorporateItem = (item: any) =>
     item.item_type === "MEMBERSHIP" ||
     (item.description && item.description.startsWith("Employee Membership")) ||
     (isCorporateInvoice && !!item.billing_description_name);
 
   const corpItems = parsedItems.filter(isCorporateItem);
-  const otherItems = parsedItems.filter((item: ApiAny) => !isCorporateItem(item));
+  const otherItems = parsedItems.filter((item: any) => !isCorporateItem(item));
 
   let items = parsedItems;
 
   if (corpItems.length > 0) {
     // Group corporate items by (billing_description_name or rate)
-    const groupedMap = new Map<string, ApiAny[]>();
-    corpItems.forEach((item: ApiAny) => {
+    const groupedMap = new Map<string, any[]>();
+    corpItems.forEach((item: any) => {
       const key = `${item.billing_description_name || companyName || 'Corporate Plan'}_${item.rate}`;
       if (!groupedMap.has(key)) {
         groupedMap.set(key, []);
@@ -112,8 +110,8 @@ export function normalizeInvoice(payload: ApiAny, expectedId?: string) {
       groupedMap.get(key)!.push(item);
     });
 
-    const consolidatedCorpItems: ApiAny[] = [];
-    groupedMap.forEach((groupItems: ApiAny[]) => {
+    const consolidatedCorpItems: any[] = [];
+    groupedMap.forEach((groupItems: any[]) => {
       const totalQty = groupItems.reduce((acc, i) => acc + (i.quantity || 1), 0);
       const unitRate = groupItems[0].rate || (groupItems[0].total_amount ? groupItems[0].total_amount / (groupItems[0].quantity || 1) : 0);
       const discountPct = groupItems[0].discount_value || 0;
@@ -146,7 +144,7 @@ export function normalizeInvoice(payload: ApiAny, expectedId?: string) {
   const taxVal = Number(inv.tax_percentage ?? inv.tax ?? 18);
   
   const subtotal = items.length > 0
-    ? items.reduce((sum: number, item: ApiAny) => sum + item.amount, 0)
+    ? items.reduce((sum: number, item: any) => sum + item.amount, 0)
     : Number(inv.subtotal ?? 0);
     
   const discountAmount = Number(inv.discount_amount ?? (inv.is_complimentary ? subtotal : (subtotal * discountVal) / 100));
@@ -154,7 +152,7 @@ export function normalizeInvoice(payload: ApiAny, expectedId?: string) {
   
   const total = items.length > 0
     ? (inv.is_complimentary ? 0 : (subtotal - discountAmount + taxAmount))
-    : Number(inv.total_amount ?? inv.grand_total ?? inv.total ?? inv.billed_amount ?? inv.amount ?? 0);
+    : Number(inv.total_amount ?? inv.total ?? 0);
 
   const paidAmount = Number(inv.paid_amount ?? inv.paidAmount ?? 0);
   const pendingAmount = Number(inv.pending_amount ?? inv.pendingAmount ?? 0);
@@ -172,7 +170,7 @@ export function normalizeInvoice(payload: ApiAny, expectedId?: string) {
     isCorporateInvoice,
     companyName,
     phone: (() => {
-      const p = inv.phone || inv.patient_phone || (inv.patient?.phone) || (inv.member?.phone) || inv.member_phone || '';
+      let p = inv.phone || inv.patient_phone || (inv.patient?.phone) || (inv.member?.phone) || inv.member_phone || '';
       const cc = inv.country_code || inv.patient_country_code || (inv.patient?.country_code) || (inv.member?.country_code) || inv.member_country_code || '';
       if (!p) return '';
       if (p.startsWith('+')) return p;
@@ -199,10 +197,10 @@ export function normalizeInvoice(payload: ApiAny, expectedId?: string) {
   };
 }
 
-export function useInvoiceQuery(id: string, patientId?: string, isMember?: boolean, options?: ApiQueryOptions<ApiRecord>) {
-  const queryParams: ApiRecord = { invoice_id: id };
+export function useInvoiceQuery(id: string, patientId?: string, isMember?: boolean, options?: any) {
+  const queryParams: any = { invoice_id: id };
   
-  const query = useApiQuery<ApiRecord>({
+  const query = useApiQuery<any>({
     queryKey: ["invoice", id],
     endpoint: `/invoice/history`,
     method: "get",
@@ -224,7 +222,7 @@ export function useInvoiceQuery(id: string, patientId?: string, isMember?: boole
     rawData = rawData.invoices;
   }
   const allInvoices = Array.isArray(rawData)
-    ? rawData.map((inv: ApiAny) => normalizeInvoice(inv))
+    ? rawData.map((inv: any) => normalizeInvoice(inv))
     : rawData ? [normalizeInvoice(rawData)] : [];
 
   return {
@@ -235,7 +233,7 @@ export function useInvoiceQuery(id: string, patientId?: string, isMember?: boole
   };
 }
 
-export async function fetchInvoiceHistory(params?: ApiRecord) {
+export async function fetchInvoiceHistory(params?: any) {
   const res = await apiClient.get("/invoice/history", { params });
   return res.data;
 }

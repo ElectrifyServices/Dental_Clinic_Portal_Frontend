@@ -1,14 +1,13 @@
-import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { AuthStorage } from "../../auth/authStorage";
 
 export interface SendConsultationVariables {
   id: string;
-  type: "CLINICAL" | "TREATMENT" | "PRESCRIPTION" | "FULL";
+  type: "CLINICAL" | "TREATMENT" | "PRESCRIPTION" | "FULL" | "XRAY";
 }
 
 export function useSendConsultationMutation() {
-  return useApiMutation<ApiAny, SendConsultationVariables>({
+  return useApiMutation<any, SendConsultationVariables>({
     getEndpoint: (variables) => {
       if (variables.type === "CLINICAL") {
         return `/consultations/${variables.id}/Observations`;
@@ -18,6 +17,9 @@ export function useSendConsultationMutation() {
       }
       if (variables.type === "FULL") {
         return `/consultations/${variables.id}/send-full-summary`;
+      }
+      if (variables.type === "XRAY") {
+        return `/consultations/${variables.id}/xray`;
       }
       return `/consultations/${variables.id}/prescriptions`;
     },
@@ -29,7 +31,7 @@ export function useSendConsultationMutation() {
       };
     },
     transformRequest: (variables) => {
-      if (variables.type === "FULL") {
+      if (variables.type === "FULL" || variables.type === "XRAY") {
         return undefined;
       }
       return { type: variables.type };

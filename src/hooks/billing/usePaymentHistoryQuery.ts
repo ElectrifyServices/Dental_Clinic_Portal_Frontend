@@ -1,8 +1,7 @@
-import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
-export function usePaymentHistoryQuery(invoiceId: string, options?: ApiAny) {
-  return useApiQuery<ApiAny>({
+export function usePaymentHistoryQuery(invoiceId: string, options?: any) {
+  return useApiQuery<any>({
     queryKey: ["paymentHistory", invoiceId],
     endpoint: `/invoice/payment-history/${invoiceId}`,
     method: "get",

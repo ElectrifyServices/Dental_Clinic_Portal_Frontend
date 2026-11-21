@@ -1,11 +1,10 @@
-import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 import { getFileUrl } from "../../services/apiClient";
 import { useMemo } from "react";
 
-export function useDoctorsListQuery(search?: string, pageOrOptions?: number | ApiAny, limit?: number, options?: ApiAny) {
+export function useDoctorsListQuery(search?: string, pageOrOptions?: number | any, limit?: number, options?: any) {
   let page: number | undefined;
-  let queryOptions: ApiAny = options;
+  let queryOptions: any = options;
 
   if (typeof pageOrOptions === "object" && pageOrOptions !== null) {
     queryOptions = pageOrOptions;
@@ -13,7 +12,7 @@ export function useDoctorsListQuery(search?: string, pageOrOptions?: number | Ap
     page = pageOrOptions;
   }
 
-  const body: ApiAny = {
+  const body: any = {
     search: search || undefined,
     filters: {
       roles: ["DOCTOR"]
@@ -28,7 +27,7 @@ export function useDoctorsListQuery(search?: string, pageOrOptions?: number | Ap
     body.limit = 1000;
   }
 
-  const query = useApiQuery<ApiAny>({
+  const query = useApiQuery<any>({
     queryKey: ["doctorsList", search, page, limit],
     endpoint: "/staff/list",
     method: "post",
@@ -37,29 +36,29 @@ export function useDoctorsListQuery(search?: string, pageOrOptions?: number | Ap
   });
 
   const doctors = useMemo(() => {
-    let rawList: ApiAny[] = [];
+    let rawList: any[] = [];
     const apiData = query.data;
 
     if (Array.isArray(apiData)) {
       rawList = apiData;
-    } else if (apiData && Array.isArray((apiData as ApiAny).responseObject?.data)) {
-      rawList = (apiData as ApiAny).responseObject.data;
-    } else if (apiData && apiData.responseObject?.data && Array.isArray((apiData as ApiAny).responseObject.data.staffs)) {
-      rawList = (apiData as ApiAny).responseObject.data.staffs;
-    } else if (apiData && apiData.responseObject?.data && Array.isArray((apiData as ApiAny).responseObject.data.data)) {
-      rawList = (apiData as ApiAny).responseObject.data.data;
-    } else if (apiData && Array.isArray((apiData as ApiAny).data?.staffs)) {
-      rawList = (apiData as ApiAny).data.staffs;
-    } else if (apiData && Array.isArray((apiData as ApiAny).data?.data)) {
-      rawList = (apiData as ApiAny).data.data;
-    } else if (apiData && Array.isArray((apiData as ApiAny).data)) {
-      rawList = (apiData as ApiAny).data;
-    } else if (apiData && Array.isArray((apiData as ApiAny).staffs)) {
-      rawList = (apiData as ApiAny).staffs;
+    } else if (apiData && Array.isArray((apiData as any).responseObject?.data)) {
+      rawList = (apiData as any).responseObject.data;
+    } else if (apiData && apiData.responseObject?.data && Array.isArray((apiData as any).responseObject.data.staffs)) {
+      rawList = (apiData as any).responseObject.data.staffs;
+    } else if (apiData && apiData.responseObject?.data && Array.isArray((apiData as any).responseObject.data.data)) {
+      rawList = (apiData as any).responseObject.data.data;
+    } else if (apiData && Array.isArray((apiData as any).data?.staffs)) {
+      rawList = (apiData as any).data.staffs;
+    } else if (apiData && Array.isArray((apiData as any).data?.data)) {
+      rawList = (apiData as any).data.data;
+    } else if (apiData && Array.isArray((apiData as any).data)) {
+      rawList = (apiData as any).data;
+    } else if (apiData && Array.isArray((apiData as any).staffs)) {
+      rawList = (apiData as any).staffs;
     }
 
     return rawList
-      .filter((s) => s && typeof s === "object" && s.status !== "INACTIVE")
+      .filter((s) => s && typeof s === "object")
       .map((s) => {
         return {
           id: s.id,
@@ -72,54 +71,43 @@ export function useDoctorsListQuery(search?: string, pageOrOptions?: number | Ap
           qualification: s.personal_profile?.qualification || s.qualification || "",
           location: s.personal_profile?.department || s.department || "Main Clinic",
           image: getFileUrl(s.profile_picture_url) || getFileUrl(s.profile_picture) || getFileUrl(s.avatar) || "",
-          isActive: s.status !== "INACTIVE",
         };
       });
   }, [query.data]);
 
-  const paginationObj = useMemo(() => {
-    const apiData = query.data as ApiAny;
-    return (
-      apiData?.responseObject?.pagination ||
-      apiData?.pagination ||
-      apiData?.data?.pagination ||
-      apiData?.responseObject?.data?.pagination ||
-      null
-    );
-  }, [query.data]);
-
   const total = useMemo(() => {
-    const apiData = query.data as ApiAny;
-    const fromPagination =
-      paginationObj?.total_items ??
-      paginationObj?.totalItems ??
-      paginationObj?.total;
-
-    if (fromPagination !== undefined && fromPagination !== null && !isNaN(Number(fromPagination))) {
-      return Number(fromPagination);
-    }
-
-    const fallbackTotal =
-      (apiData as ApiAny)?.pagination?.totalItems ||
-      (apiData as ApiAny)?.data?.pagination?.totalItems ||
-      (apiData as ApiAny)?.pagination?.total ||
-      (apiData as ApiAny)?.total ||
-      doctors.length;
-
-    return Number(fallbackTotal) || 0;
-  }, [query.data, paginationObj, doctors.length]);
+    const apiData = query.data;
+    return (
+      // useApiQuery already unwraps responseObject, so this is the actual
+      // shape the /staff/list endpoint sends back — the other guesses below
+      // never matched it, which is why pagination looked stuck at 1 page
+      // regardless of how many doctors existed.
+      (apiData as any)?.pagination?.total_items ||
+      (apiData as any)?.pagination?.totalItems ||
+      (apiData as any)?.data?.pagination?.totalItems ||
+      (apiData as any)?.responseObject?.data?.pagination?.total ||
+      (apiData as any)?.responseObject?.data?.pagination?.totalItems ||
+      (apiData as any)?.responseObject?.data?.pagination?.total_items ||
+      (apiData as any)?.pagination?.total ||
+      (apiData as any)?.total ||
+      doctors.length
+    );
+  }, [query.data, doctors.length]);
 
   const totalPages = useMemo(() => {
-    const fromPagination =
-      paginationObj?.total_pages ??
-      paginationObj?.totalPages;
-
-    if (fromPagination !== undefined && fromPagination !== null && !isNaN(Number(fromPagination)) && Number(fromPagination) > 0) {
-      return Number(fromPagination);
-    }
-
+    const apiData = query.data;
+    const computedTotalPages = (
+      (apiData as any)?.pagination?.total_pages ||
+      (apiData as any)?.pagination?.totalPages ||
+      (apiData as any)?.data?.pagination?.totalPages ||
+      (apiData as any)?.responseObject?.data?.pagination?.totalPages ||
+      (apiData as any)?.responseObject?.data?.pagination?.total_pages ||
+      (apiData as any)?.totalPages ||
+      1
+    );
+    if (computedTotalPages > 1) return computedTotalPages;
     return limit ? Math.max(1, Math.ceil(total / limit)) : 1;
-  }, [paginationObj, total, limit]);
+  }, [query.data, total, limit]);
 
   return {
     ...query,

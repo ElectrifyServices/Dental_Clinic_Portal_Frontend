@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
 // ─── API Response Types ───────────────────────────────────────────────────────
@@ -18,7 +17,7 @@ export interface DoctorScheduleResponse {
   slot_duration_mins?: number;
   buffer_time_mins?: number;
   day_schedules?: DayScheduleResponse[];
-  [key: string]: ApiAny;
+  [key: string]: any;
 }
 
 // ─── Response → Internal State Mapper ────────────────────────────────────────
@@ -57,13 +56,13 @@ export function mapApiResponseToScheduleState(
   if (!data) return null;
 
   // Unwrap common response envelopes
-  let raw: ApiAny = data;
+  let raw: any = data;
   if (raw?.responseObject) raw = raw.responseObject;
   if (raw?.data?.responseObject) raw = raw.data.responseObject;
   if (raw?.data?.data) raw = raw.data.data;
   if (raw?.data) raw = raw.data;
 
-  let daySchedules: ApiAny[] = [];
+  let daySchedules: any[] = [];
   if (Array.isArray(raw)) {
     daySchedules = raw;
   } else if (raw?.day_schedules) {

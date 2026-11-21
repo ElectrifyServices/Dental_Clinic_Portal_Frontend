@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { Package, SlidersHorizontal } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,17 +18,16 @@ import {
 } from "@/lib/schemas/inventory.schema";
 
 interface AdjustFormProps {
-  item: ApiAny;
+  item: any;
   onClose: () => void;
-  onSave: (data: ApiAny) => void;
+  onSave: (data: any) => void;
 }
 
 export function AdjustForm({ item, onClose, onSave }: AdjustFormProps) {
   const form = useForm<AdjustFormData>({
-    resolver: zodResolver(adjustSchema) as ApiAny,
+    resolver: zodResolver(adjustSchema) as any,
     defaultValues: {
-      quantity: "" as unknown as number,
-      reason: "",
+      quantity: 0,
       reference_id: "",
     },
   });
@@ -39,7 +37,6 @@ export function AdjustForm({ item, onClose, onSave }: AdjustFormProps) {
       id: item.id,
       quantity_delta: data.quantity,
       reason: data.reason,
-      reference_id: data.reference_id,
     });
   };
 
@@ -100,12 +97,8 @@ export function AdjustForm({ item, onClose, onSave }: AdjustFormProps) {
                       {...field}
                       type="number"
                       placeholder="(+5 or -2)"
-                      value={field.value ?? ""}
-                      onChange={(e) =>
-                        field.onChange(
-                          e.target.value === "" ? "" : Number(e.target.value)
-                        )
-                      }
+                      value={field.value === 0 ? "" : field.value}
+                      onChange={(e) => field.onChange(e.target.value === "" ? "" : Number(e.target.value))}
                       onFocus={(e) => e.target.select()}
                     />
                   </FormControl>
@@ -118,15 +111,9 @@ export function AdjustForm({ item, onClose, onSave }: AdjustFormProps) {
               name="reason"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    Reason <span className="text-destructive">*</span>
-                  </FormLabel>
+                  <FormLabel>Reason</FormLabel>
                   <FormControl>
-                    <Input
-                      {...field}
-                      value={field.value ?? ""}
-                      placeholder="e.g. Audit mismatch correction"
-                    />
+                    <Input {...field} placeholder="e.g. Audit mismatch correction" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

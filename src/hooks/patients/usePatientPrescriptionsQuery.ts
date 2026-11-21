@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
 export interface PrescriptionFilters {
@@ -9,7 +8,7 @@ export interface PrescriptionFilters {
 }
 
 export function usePatientPrescriptionsQuery(patientId: string, filters: PrescriptionFilters = {}, enabled = true) {
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["patients", "prescriptions", patientId, filters],
     endpoint: `/patient/prescriptions/${patientId}`,
     method: "get",

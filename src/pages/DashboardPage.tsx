@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Calendar } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useAppointmentData } from '../hooks/useAppointmentData';
 import { useModal } from '../contexts/ModalContext';
-import { Button, FilterTabs, PageHeader } from '@/components/ui';
-import { DatePicker } from '@/components/ui/DatePicker';
+import { Button, FilterTabs, Input } from '@/components/ui';
 import { EnhancedDashboardStats } from '../components/Dashboard/DashboardStats';
 import { TodayAppointments } from '../components/Dashboard/TodayAppointments';
 import { RecentPatients } from '../components/Dashboard/RecentPatients';
@@ -23,12 +22,12 @@ export const DashboardPage: React.FC = () => {
   const [period, setPeriod] = useState('today');
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
- 
-  const {
-    appointments,
-    setStartDate,
-    setEndDate,
-    setApptFilter,
+  
+  const { 
+    appointments, 
+    setStartDate, 
+    setEndDate, 
+    setApptFilter, 
     setSelectedDate,
     pagination,
     page,
@@ -38,7 +37,7 @@ export const DashboardPage: React.FC = () => {
     apptSearch,
     setApptSearch
   } = useAppointmentData({ limit: 10 });
- 
+  
   const { state } = useAuth();
   const { setActiveModal, setSelectedPatientId, setPreFilledPatientData, setPatientFormType } = useModal();
 
@@ -46,20 +45,19 @@ export const DashboardPage: React.FC = () => {
     const now = new Date();
     let startD: Date;
     let endD: Date;
-   
+    
     switch (period) {
       case 'today':
         startD = new Date();
         endD = new Date();
         break;
-      case 'week': {
+      case 'week':
         const day = now.getDay();
-        const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+        const diff = now.getDate() - day + (day === 0 ? -6 : 1); 
         startD = new Date(now.setDate(diff));
         endD = new Date(startD);
         endD.setDate(startD.getDate() + 6);
         break;
-      }
       case 'month':
         startD = new Date(now.getFullYear(), now.getMonth(), 1);
         endD = new Date(now.getFullYear(), now.getMonth() + 1, 0);
@@ -76,9 +74,9 @@ export const DashboardPage: React.FC = () => {
         startD = new Date();
         endD = new Date();
     }
-   
+    
     const formatDate = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-   
+    
     const startStr = formatDate(startD);
     const endStr = formatDate(endD);
 
@@ -103,44 +101,51 @@ export const DashboardPage: React.FC = () => {
   });
 
   return (
-    <div className="space-y-5 sm:space-y-6">
+    <div className="space-y-4">
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <PageHeader
-        title={`${greeting}, ${state.user?.name?.split(' ')[0] ?? 'Doctor'}`}
-        subtitle={`${day} · Here's your clinic overview`}
-        className="mb-1 sm:mb-2"
-        action={
-          <Button onClick={handleAddPatient} className="gap-1.5 shrink-0 shadow-sm">
-            <UserPlus className="w-4 h-4" /> Add Patient
-          </Button>
-        }
-      >
-        <div className="flex items-center gap-2 flex-wrap w-full xl:w-auto">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-card/60 backdrop-blur-md px-5 py-4 rounded-2xl border border-white/50 shadow-sm -mt-3 md:-mt-5">
+        <div>
+          <h1 className="text-xl font-bold text-foreground tracking-tight">
+            {greeting},{' '}
+            <span className="text-primary">{state.user?.name?.split(' ')[0] ?? 'Doctor'}</span>
+          </h1>
+          <p className="text-[11px] text-muted-foreground font-medium mt-0.5">
+            {day} · Here's your clinic overview
+          </p>
+        </div>
+        
+        <div className="flex items-center gap-4 flex-wrap">
           {period === 'custom' && (
             <div className="flex items-center gap-2">
-              <DatePicker
+              <Input
+                type="date"
                 value={customStart}
-                onChange={(val) => setCustomStart(val)}
-                className="h-9 w-auto text-xs px-2 py-1"
+                onChange={(e) => setCustomStart(e.target.value)}
+                className="h-9 w-auto text-xs px-2 py-1 bg-white/50"
               />
               <span className="text-muted-foreground text-xs font-medium">to</span>
-              <DatePicker
+              <Input
+                type="date"
                 value={customEnd}
-                onChange={(val) => setCustomEnd(val)}
-                className="h-9 w-auto text-xs px-2 py-1"
+                onChange={(e) => setCustomEnd(e.target.value)}
+                className="h-9 w-auto text-xs px-2 py-1 bg-white/50"
               />
             </div>
           )}
-
-          <div className="bg-muted/50 rounded-lg p-1 border border-border/50 max-w-full">
+          
+          <div className="bg-white/50 rounded-lg p-1 border border-border/50 max-w-full">
             <FilterTabs
               tabs={PERIODS}
               active={period}
               onChange={setPeriod}
             />
           </div>
+          
+          <Button onClick={handleAddPatient} className="gap-2 flex-shrink-0 shadow-sm w-full sm:w-auto">
+            <UserPlus className="w-4 h-4" /> Add New Patient
+          </Button>
         </div>
-      </PageHeader>
+      </div>
 
       {/* ── KPI Grid + Revenue Chart + Goal ────────────────────────────── */}
       <EnhancedDashboardStats period={period} customStart={customStart} customEnd={customEnd} />
@@ -149,10 +154,10 @@ export const DashboardPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Appointments List */}
         <div className="lg:col-span-2">
-          <TodayAppointments
-            appointments={appointments}
-            period={period}
-            customStart={customStart}
+          <TodayAppointments 
+            appointments={appointments} 
+            period={period} 
+            customStart={customStart} 
             customEnd={customEnd}
             pagination={pagination}
             page={page}

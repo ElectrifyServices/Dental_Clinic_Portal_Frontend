@@ -1,8 +1,7 @@
-import type { ApiAny } from "../../../types/api";
-import { DatePicker } from "@/components/ui/DatePicker";
+import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Loading } from "@/components/ui/Loading";
-import { SearchInput, FilterContainer } from "@/components/ui";
+import { SearchInput } from "@/components/ui";
 import React, { useState } from "react";
 import {
   Search,
@@ -14,19 +13,19 @@ import {
   Pill,
   FileText,
   Send,
+  Camera,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/Card";
 import { getConsultationReportAvailability } from "../../../utils/consultationReportUtils";
 
 interface HistoryListProps {
-  data: ApiAny[];
-  pageData: ApiAny[];
-  patients: ApiAny[];
+  data: any[];
+  pageData: any[];
+  patients: any[];
   search: string;
   onSearchChange: (val: string) => void;
   showFilters: boolean;
   onToggleFilters: () => void;
-  onCloseFilters?: () => void;
   startDate: string;
   onStartDateChange: (val: string) => void;
   endDate: string;
@@ -36,9 +35,9 @@ interface HistoryListProps {
   activeFilters: number;
   activeMenuId: number | null;
   onSetActiveMenuId: (id: number | null) => void;
-  onSelectRecord: (record: ApiAny) => void;
-  onDownloadPDF: (record: ApiAny, type: ApiAny) => void;
-  onSendPDF: (record: ApiAny, type: ApiAny) => void;
+  onSelectRecord: (record: any) => void;
+  onDownloadPDF: (record: any, type: any) => void;
+  onSendPDF: (record: any, type: any) => void;
   onDeleteClick: (id: number, e: React.MouseEvent) => void;
   safePage: number;
   PAGE_SIZE: number;
@@ -52,7 +51,6 @@ export function HistoryList({
   onSearchChange,
   showFilters,
   onToggleFilters,
-  onCloseFilters,
   startDate,
   onStartDateChange,
   endDate,
@@ -93,7 +91,7 @@ export function HistoryList({
   ];
   const avatarColor = (id: number) => avatarColors[id % avatarColors.length];
 
-  const fmtShort = (d: ApiAny) => {
+  const fmtShort = (d: any) => {
     if (!d) return "—";
     const date = new Date(d);
     if (isNaN(date.getTime())) return "—";
@@ -106,11 +104,7 @@ export function HistoryList({
 
   return (
     <div className="flex flex-col h-full" onClick={() => { setActiveDownloadMenuId(null); setActiveSendMenuId(null); }}>
-      <FilterContainer
-        isOpen={showFilters}
-        onClose={() => (onCloseFilters ? onCloseFilters() : (showFilters && onToggleFilters()))}
-        className="shrink-0 px-5 py-2.5 border-b border-border bg-muted space-y-2"
-      >
+      <div className="flex-shrink-0 px-5 py-2.5 border-b border-border bg-muted space-y-2">
         <div className="flex gap-2">
           <SearchInput
             value={search}
@@ -139,16 +133,18 @@ export function HistoryList({
                 Date Range:
               </span>
               <div className="flex items-center gap-1.5">
-                <DatePicker
+                <Input
+                  type="date"
                   value={startDate}
-                  onChange={(val) => onStartDateChange(val)}
-                  className="h-auto px-2.5 py-1 text-xs rounded-lg shadow-sm"
+                  onChange={(e) => onStartDateChange(e.target.value)}
+                  className="px-2.5 py-1 text-xs rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm"
                 />
                 <span className="text-xs text-muted-foreground/60">to</span>
-                <DatePicker
+                <Input
+                  type="date"
                   value={endDate}
-                  onChange={(val) => onEndDateChange(val)}
-                  className="h-auto px-2.5 py-1 text-xs rounded-lg shadow-sm"
+                  onChange={(e) => onEndDateChange(e.target.value)}
+                  className="px-2.5 py-1 text-xs rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm"
                 />
                 {(startDate || endDate) && (
                   <Button
@@ -180,7 +176,7 @@ export function HistoryList({
             </div>
           </div>
         )}
-      </FilterContainer>
+      </div>
 
       <div className="flex-1 overflow-y-auto p-4 relative">
         {isLoading && pageData.length === 0 ? (
@@ -216,7 +212,7 @@ export function HistoryList({
                 <CardHeader className="p-4 pb-3 border-b">
                   <div className="flex justify-between items-start">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${avatarColor(item.id)}`}>
+                      <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${avatarColor(item.id)}`}>
                         {initials(item.patient?.name)}
                       </div>
                       <div className="min-w-0">
@@ -310,6 +306,18 @@ export function HistoryList({
                         >
                           <Pill className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Prescription Only
                         </Button>
+                        <Button
+                          variant="ghost"
+                          onClick={(e) => {
+                            if (!reportAvailability.xray) return;
+                            e.stopPropagation();
+                            onDownloadPDF(item, 'XRAY');
+                            setActiveDownloadMenuId(null);
+                          }}
+                          className={`w-full px-4 py-2 text-left text-xs font-semibold flex items-center justify-start gap-2 h-auto ${reportAvailability.xray ? "text-muted-foreground hover:bg-cyan-50 hover:text-cyan-700 cursor-pointer" : "opacity-50 cursor-not-allowed text-muted-foreground/60 hover:bg-transparent"}`}
+                        >
+                          <Camera className="w-3.5 h-3.5 text-cyan-600 shrink-0" /> X-Ray &amp; Radiology
+                        </Button>
                         <div className="h-px bg-muted my-1" />
                         <Button
                           variant="ghost"
@@ -375,6 +383,18 @@ export function HistoryList({
                           className={`w-full px-4 py-2 text-left text-xs font-semibold flex items-center justify-start gap-2 h-auto ${reportAvailability.prescription ? "text-muted-foreground hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer" : "opacity-50 cursor-not-allowed text-muted-foreground/60 hover:bg-transparent"}`}
                         >
                           <Pill className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Prescription Only
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          onClick={(e) => {
+                            if (!reportAvailability.xray) return;
+                            e.stopPropagation();
+                            onSendPDF(item, 'XRAY');
+                            setActiveSendMenuId(null);
+                          }}
+                          className={`w-full px-4 py-2 text-left text-xs font-semibold flex items-center justify-start gap-2 h-auto ${reportAvailability.xray ? "text-muted-foreground hover:bg-cyan-50 hover:text-cyan-700 cursor-pointer" : "opacity-50 cursor-not-allowed text-muted-foreground/60 hover:bg-transparent"}`}
+                        >
+                          <Camera className="w-3.5 h-3.5 text-cyan-600 shrink-0" /> X-Ray &amp; Radiology
                         </Button>
                         <div className="h-px bg-muted my-1" />
                         <Button

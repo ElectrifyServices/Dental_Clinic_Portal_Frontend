@@ -1,5 +1,4 @@
 // pages/ConsultationPage.tsx
-import type { ApiAny } from "../types/api";
 import React, { useMemo, useEffect, useState } from "react";
 import { useConsultationData } from "../hooks/useConsultationData";
 import { useModal } from "../contexts/ModalContext";
@@ -10,16 +9,17 @@ import { useAppointmentData } from "../hooks/useAppointmentData";
 import { PatientQueue } from "../components/Doctor/PatientQueue";
 import { useDebounce } from "../hooks/useDebounce";
 import { useSendConsultationMutation } from "../hooks/consultation/useSendConsultationMutation";
+import { Loader2 } from "lucide-react";
 import { Loading } from "@/components/ui";
 
 export const ConsultationPage: React.FC = () => {
-  const normalizeConsultationResult = (payload: ApiAny) =>
+  const normalizeConsultationResult = (payload: any) =>
     payload?.data?.data ||
     payload?.data ||
     payload?.responseObject?.data?.data ||
     payload?.responseObject?.data ||
     payload;
-  const findConsultationId = (payload: ApiAny, depth = 0): string | undefined => {
+  const findConsultationId = (payload: any, depth = 0): string | undefined => {
     if (!payload || depth > 4) return undefined;
     if (typeof payload.id === "string" && payload.id.length === 36) return payload.id;
     if (typeof payload.consultation_id === "string" && payload.consultation_id.length === 36) {
@@ -48,8 +48,9 @@ export const ConsultationPage: React.FC = () => {
     consultations,
     handleUpdatePatientStatus,
     handleSaveConsultation,
-    handleDeleteConsultation,
+    handleCompleteConsultation,
     isLoading,
+    refetch,
     updateFilters,
     totalItems,
     totalPages,
@@ -60,7 +61,7 @@ export const ConsultationPage: React.FC = () => {
   } = useConsultationData();
 
   const queuedPatients = useMemo(() => {
-    return consultations.map((c: ApiAny) => {
+    return consultations.map((c: any) => {
       let status = (c.status || "").toUpperCase();
       if (status === "WAITING" || status === "SCHEDULED") status = "PENDING";
       else if (status === "IN-CONSULTATION" || status === "CONSULTING") status = "IN_PROGRESS";
@@ -80,6 +81,8 @@ export const ConsultationPage: React.FC = () => {
         specificTreatment: c.specificTreatment,
         appointmentNotes: c.appointmentNotes,
         appointmentCost: c.appointmentCost,
+        doctorId: c.doctorId || c.doctor_id || c.doctor?.id,
+        doctorName: c.doctorName || c.doctor?.name,
       };
     });
   }, [consultations]);
@@ -115,12 +118,12 @@ export const ConsultationPage: React.FC = () => {
   }, [debouncedSearch, filterStatus, updateFilters]);
 
   const activeDoctors = useMemo(
-    () => staffMembers.filter((s: ApiAny) => s.role === "doctor" || s.role === "admin"),
+    () => staffMembers.filter((s: any) => s.role === "doctor" || s.role === "admin"),
     [staffMembers]
   );
 
-  const handleSelectPatient = (p: ApiAny) => {
-    const bg = patients.find((bp) => bp.phone === p.patientPhone);
+  const handleSelectPatient = (p: any) => {
+    const bg = patients.find((bp: any) => bp.phone === p.patientPhone);
     setSelectedPatientForDiagnose({
       ...p,
       phone: p.patientPhone,
@@ -137,8 +140,8 @@ export const ConsultationPage: React.FC = () => {
     setActiveModal("diagnoseForm");
   };
 
-  const handleEditConsultation = (p: ApiAny) => {
-    const bg = patients.find((bp) => bp.phone === p.patientPhone);
+  const handleEditConsultation = (p: any) => {
+    const bg = patients.find((bp: any) => bp.phone === p.patientPhone);
     setSelectedPatientForDiagnose({
       ...p,
       consultationId: p.id,
@@ -168,10 +171,13 @@ export const ConsultationPage: React.FC = () => {
     const cleanPhone = (phone || "").replace(/\D/g, "");
 
     const ex = (trimmedName && cleanPhone) ? patients.find(
-      (p: ApiAny) =>
+      (p: any) =>
         p.name.toLowerCase() === trimmedName.toLowerCase() &&
         p.phone.replace(/\D/g, "") === cleanPhone
     ) : null;
+
+    const fallbackDocId = dId || (activeDoctors.some((d: any) => d.id === state.user?.id) ? state.user?.id : activeDoctors[0]?.id) || "";
+    const fallbackDocName = dName || (activeDoctors.find((d: any) => d.id === fallbackDocId)?.name) || state.user?.name || "Doctor";
 
     if (ex) {
       setSelectedPatientForDiagnose({
@@ -183,8 +189,8 @@ export const ConsultationPage: React.FC = () => {
         treatmentType: ex.treatmentType || "General Consultation",
         patientConcern: "",
         status: "in-consultation",
-        doctorId: dId || state.user?.id || "1",
-        doctorName: dName || state.user?.name || "Doctor",
+        doctorId: fallbackDocId,
+        doctorName: fallbackDocName,
         appointmentTime: time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         isDirect: true,
         patientHistory: {
@@ -206,8 +212,8 @@ export const ConsultationPage: React.FC = () => {
         treatmentType: "General Consultation",
         patientConcern: "",
         status: "in-consultation",
-        doctorId: dId || state.user?.id || "1",
-        doctorName: dName || state.user?.name || "Doctor",
+        doctorId: fallbackDocId,
+        doctorName: fallbackDocName,
         appointmentTime: time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         isDirect: true,
         patientHistory: {
@@ -227,7 +233,7 @@ export const ConsultationPage: React.FC = () => {
   };
 
   // Called when the doctor completes a consultation from the modal
-  const onCompleteConsultation = async (consultationData: ApiAny) => {
+  const onCompleteConsultation = async (consultationData: any) => {
     try {
       // Map tooth chart state to tooth_findings array
       const standardConditions = ['normal', 'caries', 'missing', 'restored', 'endo', 'crown', 'extract', 'other'];
@@ -271,22 +277,22 @@ export const ConsultationPage: React.FC = () => {
 
       // Map treatment plans to treatments array
       const treatments = (consultationData.treatmentPlans || [])
-        .map((tp: ApiAny) => {
+        .map((tp: any) => {
           let toothArray: number[] = [];
           if (Array.isArray(tp.tooth)) {
-            toothArray = tp.tooth.map((t: ApiAny) => {
+            toothArray = tp.tooth.map((t: any) => {
               const str = String(t).trim();
               if (str.toUpperCase() === "FM" || str.includes("Full Mouth") || str.startsWith("-1")) return -1;
               const parsed = parseInt(str);
               return isNaN(parsed) ? null : parsed;
-            }).filter((n: number | null) => n !== null) as number[];
+            }).filter((n: any) => n !== null) as number[];
           } else if (typeof tp.tooth === "string" && tp.tooth.trim()) {
             toothArray = tp.tooth.split(",").map((s: string) => {
               const str = s.trim();
               if (str.toUpperCase() === "FM" || str.includes("Full Mouth") || str.startsWith("-1")) return -1;
               const parsed = parseInt(str);
               return isNaN(parsed) ? null : parsed;
-            }).filter((n: number | null) => n !== null) as number[];
+            }).filter((n: any) => n !== null) as number[];
           } else if (typeof tp.tooth === "number") {
             toothArray = [tp.tooth];
           }
@@ -303,14 +309,15 @@ export const ConsultationPage: React.FC = () => {
             est_cost: parseFloat(tp.cost) || 0,
             discount_value: parseFloat(tp.discount_value) || 0,
             treatment_date: tp.planDate || new Date().toISOString().split('T')[0],
+            start_time: tp.startTime || undefined,
             is_active: tp.isActive ?? true
           };
         });
 
       // Map prescriptions array
       const prescriptions = (consultationData.prescriptions || [])
-        .filter((p: ApiAny) => p.medicine)
-        .map((p: ApiAny) => ({
+        .filter((p: any) => p.medicine)
+        .map((p: any) => ({
           medicine_name: p.medicine,
           dosage: p.dosage,
           timing: p.timing,
@@ -323,7 +330,7 @@ export const ConsultationPage: React.FC = () => {
 
       const resolvedPatientId = consultationData.patientId;
       const isWalkIn = resolvedPatientId && String(resolvedPatientId).startsWith("WALK-");
-      const apiPayload: ApiAny = {
+      const apiPayload: any = {
         patientId: isWalkIn ? undefined : resolvedPatientId,
         patient_name: isWalkIn
           ? (consultationData.patientName || consultationData.name || consultationData.directPatientName)
@@ -374,7 +381,7 @@ export const ConsultationPage: React.FC = () => {
 
       showToast("Consultation completed successfully", "success");
       return normalizedConsultation;
-    } catch (err: ApiAny) {
+    } catch (err: any) {
       let errorMessage = "Failed to save consultation";
       if (err?.response?.data?.message) {
         errorMessage = Array.isArray(err.response.data.message)
@@ -393,14 +400,13 @@ export const ConsultationPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-3 pb-8">
+    <div className="h-[calc(100vh-120px)] flex flex-col">
       <PatientQueue
         doctorName={state.user?.name || "Doctor"}
         queuedPatients={queuedPatients}
         onSelectPatient={handleSelectPatient}
         onEditConsultation={handleEditConsultation}
         onUpdatePatientStatus={handleUpdatePatientStatus}
-        onDeleteConsultation={handleDeleteConsultation}
         onDirectConsultation={handleDirectConsultation}
         onRegisterNew={handleRegisterNew}
         patients={patients}

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/Button";
-import { Clock } from "lucide-react";
+﻿import { Clock } from "lucide-react";
 
 interface Slot {
   time24: string;
@@ -39,7 +39,7 @@ export function TimeSlotGrid({
                     : slot.isPast
                       ? "bg-muted text-muted-foreground/60 border-border cursor-not-allowed opacity-60"
                       : selectedTime === slot.time12
-                        ? "bg-linear-to-r from-blue-600 to-cyan-600 text-white border-primary shadow-md transform scale-105"
+                        ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white border-primary shadow-md transform scale-105"
                         : "bg-green-50/50 text-green-700 border-green-200 hover:border-green-400 hover:bg-green-50"
                 }`}
               >

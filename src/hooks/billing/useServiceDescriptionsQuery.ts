@@ -1,15 +1,14 @@
-import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
 export interface ServiceDescriptionListParams {
   page?: number;
   limit?: number;
   search?: string;
-  filters?: Record<string, ApiAny>;
+  filters?: Record<string, any>;
 }
 
-export function useServiceDescriptionsQuery(params: ServiceDescriptionListParams = {}, options?: ApiAny) {
-  const body: Record<string, ApiAny> = {
+export function useServiceDescriptionsQuery(params: ServiceDescriptionListParams = {}, options?: any) {
+  const body: Record<string, any> = {
     page: params.page ?? 1,
     limit: params.limit ?? 100,
   };
@@ -22,7 +21,7 @@ export function useServiceDescriptionsQuery(params: ServiceDescriptionListParams
     body.filters = params.filters;
   }
 
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["billingDescriptions", body],
     endpoint: "/billingDescription/list",
     method: "post",

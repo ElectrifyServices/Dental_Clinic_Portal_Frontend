@@ -3,7 +3,7 @@ import html2canvas from "html2canvas";
 import logoImg from "../logo.png";
 import { formatPhoneWithCountryCode } from "./phoneUtils";
 
-export type PDFReportType = "FULL" | "CLINICAL" | "TREATMENT" | "PRESCRIPTION";
+export type PDFReportType = "FULL" | "CLINICAL" | "TREATMENT" | "PRESCRIPTION" | "XRAY";
 
 // ---------------------------------------------------------------------------
 // Brand tokens — read dynamically from login API (stored in localStorage).
@@ -26,6 +26,7 @@ const BRANDING_DEFAULTS = {
   CLINIC_INSTAGRAM: "@opalsmiles_dental",
   DOCTOR_NAME: "Dr. Rajal Shah",
   DOCTOR_TITLE: "MDS PROSTHODONTIST & IMPLANTOLOGIST",
+  REGISTRATION_NO: "A14535",
   LOGO_URL: logoImg,
 } as const;
 
@@ -67,6 +68,7 @@ function getBrandingTokens() {
         CLINIC_INSTAGRAM: b.instagram ?? BRANDING_DEFAULTS.CLINIC_INSTAGRAM,
         DOCTOR_NAME: b.doctor_name ?? BRANDING_DEFAULTS.DOCTOR_NAME,
         DOCTOR_TITLE: b.doctor_title ?? BRANDING_DEFAULTS.DOCTOR_TITLE,
+        REGISTRATION_NO: b.registration_no ?? BRANDING_DEFAULTS.REGISTRATION_NO,
         LOGO_URL: (t.logo_url && t.logo_url.trim()) ? t.logo_url : BRANDING_DEFAULTS.LOGO_URL,
       };
     }
@@ -98,103 +100,16 @@ const DEFAULT_SAC_CODE = "999312";
 const PAGE_WIDTH_PX = 794;
 const PAGE_HEIGHT_PX = 1123;
 
-/**
- * Backend PDF payloads arrive in several competing shapes (snake_case,
- * camelCase, and nested `responseObject.data` wrappers) and this file resolves
- * them through long `||` fallback chains. Pinning an exact interface would mean
- * rewriting those chains, so the raw payload roots stay deliberately loose.
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type DynamicPayload = any;
-
-/** Patient summary passed in by the caller. Backend naming varies, so the
- *  alternate spellings are declared optional rather than cast away. */
-interface PDFPatient {
-  id: string;
-  patientName: string;
-  phone?: string;
-  doctorName?: string;
-  treatmentType?: string;
-  patient_code?: string;
-  patientCode?: string;
-  country_code?: string;
-  countryCode?: string;
-  gender?: string;
-  date_of_birth?: string;
-  dob?: string;
-  bloodGroup?: string;
-}
-
-/** One entry of the tooth-chart findings list. */
-interface ToothFinding {
-  tooth_number?: number;
-  condition?: string | number;
-  other_condition?: string;
-}
-
-/** One planned/estimated treatment row. */
-interface TreatmentRow {
-  tooth_number?: string | number;
-  tooth?: string | number;
-  procedure?: string;
-  treatment_type?: string;
-  sessions?: unknown[] | number;
-  est_cost?: string | number;
-  cost?: string | number;
-}
-
-/** One prescription row. */
-interface PrescriptionRow {
-  medicine_id?: string;
-  medicine_name?: string;
-  medicineName?: string;
-  /** Either the medicine name itself or a nested medicine object. */
-  medicine?: DynamicPayload;
-  dosage?: string;
-  timing?: string;
-  frequency?: string;
-  duration?: string | number;
-  durationUnit?: string;
-  duration_type?: string;
-  qty?: string | number;
-}
-
-/** One treatment-session (visit) row. */
-interface SessionRow {
-  visit_number?: string | number;
-  visit_date?: string;
-  session_findings?: string;
-  findings?: string;
-  work_done?: string;
-}
-
-/** One invoice line item. */
-interface InvoiceItem {
-  item_type?: string;
-  description?: string;
-  hsn_code?: string;
-  hsnCode?: string;
-  total_amount?: string | number;
-  amount?: string | number;
-  billed_amount?: string | number;
-  discount_value?: string | number;
-  item_discount?: string | number;
-}
-
-/** A family/corporate member attached to a patient or invoice. */
-interface InvoiceMember {
-  id?: string;
-  member_id?: string;
-  memberId?: string;
-  patient_id?: string;
-  relationship_type?: string;
-  relationshipType?: string;
-}
-
 interface PDFGeneratorParams {
   type: PDFReportType;
-  patient: PDFPatient;
-  consultationData: DynamicPayload;
+  patient: {
+    id: string;
+    patientName: string;
+    phone?: string;
+    doctorName?: string;
+    treatmentType?: string;
+  };
+  consultationData: any;
   toothChartState?: Record<number, string>;
 }
 
@@ -215,9 +130,9 @@ async function waitForAssets(node: HTMLElement) {
       });
     }),
   );
-  if (document.fonts?.ready) {
+  if ((document as any).fonts?.ready) {
     try {
-      await document.fonts.ready;
+      await (document as any).fonts.ready;
     } catch {
       /* no-op */
     }
@@ -478,6 +393,16 @@ function makeOffscreenContainer(): HTMLDivElement {
   return el;
 }
 
+/** Computes a whole-number age from a DOB string, if one is available. */
+function ageFromDOB(dob?: string): string | null {
+  if (!dob) return null;
+  const d = new Date(dob);
+  if (isNaN(d.getTime())) return null;
+  const diff = Date.now() - d.getTime();
+  const age = Math.floor(diff / (365.25 * 24 * 60 * 60 * 1000));
+  return age >= 0 ? String(age) : null;
+}
+
 /** New premium header: large curved brand-color panel top-left (pure CSS,
  *  no SVG/image), large logo sitting on top of the curve, thin vertical
  *  divider, and static doctor info on the right. Old thin top strip +
@@ -494,8 +419,9 @@ function getLetterhead(rightBlock: string, tokens?: ReturnType<typeof getBrandin
     <div style="font-size: 12px; font-weight: 500; color: ${T.INK_MUTED}; margin-top: 4px; letter-spacing: 0.2px; line-height:1.3; text-transform: uppercase;">
       MDS PROSTHODONTIST &amp; IMPLANTOLOGIST
     </div>
+    ${T.REGISTRATION_NO ? `<div style="font-size: 11px; font-weight: 400; color: ${T.INK_MUTED}; margin-top: 2px; letter-spacing: 0.2px; line-height:1.3;">Registered No: ${T.REGISTRATION_NO}</div>` : ""}
   </div>
-  
+
   <!-- Vertical Divider Line -->
   <div style="width:1.5px; height:90px; background:${T.BRAND}; position:relative; z-index:1;"></div>
 
@@ -523,7 +449,7 @@ function getLetterhead(rightBlock: string, tokens?: ReturnType<typeof getBrandin
  *  fill here — the only other place brand color appears besides the top bar.
  *  Marked with `data-footer` so renderContainerToPDF can always pin it to
  *  the bottom of the final page. */
-function getBrandFooter(signatureBlock: string, isInvoice: boolean = false, tokens?: ReturnType<typeof getBrandingTokens>) {
+function getBrandFooter(signatureBlock: string, isInvoice: boolean = false, tokens?: ReturnType<typeof getBrandingTokens>, docLabel?: string) {
   const T = tokens ?? getBrandingTokens();
   // FIX: SVG ko inline-flex banaya aur align-items:center ke saath
   // taaki icon apne parent container ke andar center ho
@@ -568,10 +494,11 @@ style="display:block;width:14px;height:14px;"
     </div>`
     : "<div></div>";
 
-  const computerGeneratedBlock = isInvoice
+  const computerGeneratedLabel = docLabel ?? (isInvoice ? "Invoice" : "");
+  const computerGeneratedBlock = computerGeneratedLabel
     ? `
 <div style="margin-top:10px; border-top:1px solid rgba(255,255,255,0.3); padding-top:8px; text-align:center; font-size:13px; font-weight:600; opacity:0.9; letter-spacing:0.3px;">
-  This is a computer generated Invoice
+  This is a computer generated ${computerGeneratedLabel}
 </div>`
     : "";
 
@@ -840,6 +767,204 @@ function detailsGrid(rows: Array<[string, string, string, string]>, tokens?: Ret
 }
 
 // ---------------------------------------------------------------------------
+// Pure Images-to-PDF generator (for X-Rays / Scans without header & footer)
+// ---------------------------------------------------------------------------
+
+interface LoadedImageData {
+  dataUrl: string;
+  width: number;
+  height: number;
+  format: "JPEG" | "PNG";
+}
+
+async function convertImageToDataUrl(
+  source: string | File | Blob,
+): Promise<LoadedImageData | null> {
+  try {
+    // 1. Direct File or Blob
+    if (source instanceof Blob) {
+      const dataUrl = await new Promise<string | null>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(source);
+      });
+      if (!dataUrl) return null;
+      return getImageDimensions(dataUrl);
+    }
+
+    if (typeof source === "string") {
+      // 2. Already a data URL
+      if (source.startsWith("data:")) {
+        return getImageDimensions(source);
+      }
+
+      // 3. Local blob: URL (fetch blob and read with FileReader)
+      if (source.startsWith("blob:")) {
+        try {
+          const res = await fetch(source);
+          const blob = await res.blob();
+          return convertImageToDataUrl(blob);
+        } catch (blobErr) {
+          console.warn("Could not fetch blob URL:", blobErr);
+        }
+      }
+
+      // 4. Remote HTTP/HTTPS URL
+      try {
+        const res = await fetch(source, { mode: "cors" });
+        if (res.ok) {
+          const blob = await res.blob();
+          return convertImageToDataUrl(blob);
+        }
+      } catch {
+        // Fallback to Image element
+      }
+
+      return await new Promise<LoadedImageData | null>((resolve) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          try {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.naturalWidth || img.width;
+            canvas.height = img.naturalHeight || img.height;
+            const ctx = canvas.getContext("2d");
+            if (ctx) {
+              ctx.drawImage(img, 0, 0);
+              const isPng = source.toLowerCase().endsWith(".png");
+              const format = isPng ? "PNG" : "JPEG";
+              const dataUrl = canvas.toDataURL(isPng ? "image/png" : "image/jpeg", 0.95);
+              resolve({
+                dataUrl,
+                width: canvas.width,
+                height: canvas.height,
+                format,
+              });
+              return;
+            }
+          } catch (e) {
+            console.warn("Canvas toDataURL failed:", e);
+          }
+          resolve(null);
+        };
+        img.onerror = () => {
+          // If crossOrigin anonymous failed, try without crossOrigin as last resort
+          const retryImg = new Image();
+          retryImg.onload = () => {
+            try {
+              const canvas = document.createElement("canvas");
+              canvas.width = retryImg.naturalWidth || retryImg.width;
+              canvas.height = retryImg.naturalHeight || retryImg.height;
+              const ctx = canvas.getContext("2d");
+              if (ctx) {
+                ctx.drawImage(retryImg, 0, 0);
+                resolve({
+                  dataUrl: canvas.toDataURL("image/jpeg", 0.95),
+                  width: canvas.width,
+                  height: canvas.height,
+                  format: "JPEG",
+                });
+                return;
+              }
+            } catch {
+              // Tainted canvas
+            }
+            resolve(null);
+          };
+          retryImg.onerror = () => resolve(null);
+          retryImg.src = source;
+        };
+        img.src = source;
+      });
+    }
+  } catch (err) {
+    console.warn("Error converting image:", err);
+  }
+  return null;
+}
+
+function getImageDimensions(dataUrl: string): Promise<LoadedImageData | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const isPng = dataUrl.startsWith("data:image/png");
+      resolve({
+        dataUrl,
+        width: img.naturalWidth || img.width || 800,
+        height: img.naturalHeight || img.height || 600,
+        format: isPng ? "PNG" : "JPEG",
+      });
+    };
+    img.onerror = () => resolve(null);
+    img.src = dataUrl;
+  });
+}
+
+export const downloadImagesOnlyPDF = async (
+  sources: Array<string | File | Blob>,
+  outputFileName: string,
+) => {
+  const doc = new jsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4",
+  });
+
+  const pageWidth = 210;
+  const pageHeight = 297;
+  const margin = 10;
+  const maxWidth = pageWidth - margin * 2;
+  const maxHeight = pageHeight - margin * 2;
+
+  let pagesAdded = 0;
+
+  for (let i = 0; i < sources.length; i++) {
+    const item = sources[i];
+    const imgData = await convertImageToDataUrl(item);
+    if (!imgData) continue;
+
+    if (pagesAdded > 0) {
+      doc.addPage("a4", "portrait");
+    }
+
+    const imgRatio = imgData.width / imgData.height;
+    const pageRatio = maxWidth / maxHeight;
+    let renderWidth = maxWidth;
+    let renderHeight = maxHeight;
+
+    if (imgRatio > pageRatio) {
+      renderWidth = maxWidth;
+      renderHeight = maxWidth / imgRatio;
+    } else {
+      renderHeight = maxHeight;
+      renderWidth = maxHeight * imgRatio;
+    }
+
+    const posX = margin + (maxWidth - renderWidth) / 2;
+    const posY = margin + (maxHeight - renderHeight) / 2;
+
+    doc.addImage(
+      imgData.dataUrl,
+      imgData.format,
+      posX,
+      posY,
+      renderWidth,
+      renderHeight,
+      undefined,
+      "FAST",
+    );
+    pagesAdded++;
+  }
+
+  if (pagesAdded === 0) {
+    throw new Error("Unable to render images to PDF: No valid images found or loaded.");
+  }
+
+  doc.save(outputFileName);
+};
+
+// ---------------------------------------------------------------------------
 // Consultation / clinical / treatment / prescription report
 // ---------------------------------------------------------------------------
 
@@ -849,45 +974,99 @@ export const downloadConsultationPDF = async ({
   consultationData,
   toothChartState = {},
 }: PDFGeneratorParams) => {
+  if (type === "XRAY") {
+    const rawCandidates: Array<string | File | Blob> = [
+      ...(Array.isArray(consultationData.rawImages) ? consultationData.rawImages : []),
+      ...(Array.isArray(consultationData.rawXrays) ? consultationData.rawXrays : []),
+      ...(Array.isArray(consultationData.images) ? consultationData.images : []),
+      ...(Array.isArray(consultationData.xrayFiles) ? consultationData.xrayFiles : []),
+      ...(Array.isArray(consultationData.data?.xrayFiles) ? consultationData.data.xrayFiles : []),
+      ...(Array.isArray(consultationData.data?.images) ? consultationData.data.images : []),
+      ...(Array.isArray(consultationData.clinical_images) ? consultationData.clinical_images : []),
+      ...(Array.isArray(consultationData.attachments) ? consultationData.attachments : []),
+    ];
+
+    const validSources: Array<string | File | Blob> = [];
+    const seen = new Set<string>();
+
+    for (const item of rawCandidates) {
+      if (!item) continue;
+      if (item instanceof Blob) {
+        validSources.push(item);
+      } else if (typeof item === "string") {
+        if (!seen.has(item)) {
+          seen.add(item);
+          validSources.push(item);
+        }
+      } else if (typeof item === "object") {
+        const url = (item as any).file_url || (item as any).url || (item as any).preview;
+        if (url && typeof url === "string" && !seen.has(url)) {
+          seen.add(url);
+          validSources.push(url);
+        }
+      }
+    }
+
+    if (validSources.length > 0) {
+      const outputFileName = `${patient.patientName || "Patient"}_xray_report_${new Date().toISOString().split("T")[0]}.pdf`;
+      await downloadImagesOnlyPDF(validSources, outputFileName);
+      return;
+    } else {
+      throw new Error("No X-ray or clinical images found to generate report.");
+    }
+  }
+
   const pdfContainer = makeOffscreenContainer();
   // Resolve branding tokens from API (falls back to hardcoded defaults)
   const T = getBrandingTokens();
+
+  // Safely extract doctor details from API payload structure (e.g. responseObject.data or directly)
+  let doctorObj: any = {};
+  if (consultationData.responseObject?.data?.doctor) {
+    doctorObj = consultationData.responseObject.data.doctor;
+  } else if (consultationData.data?.doctor) {
+    doctorObj = consultationData.data.doctor;
+  } else if (consultationData.doctor) {
+    doctorObj = consultationData.doctor;
+  } else if (consultationData.responseObject?.doctor) {
+    doctorObj = consultationData.responseObject.doctor;
+  }
 
   const displayDoctorName = (T.DOCTOR_NAME || "Dr. Rajal Shah").toUpperCase();
   const specialization = T.DOCTOR_TITLE || "MDS PROSTHODONTIST & IMPLANTOLOGIST";
 
   // Safely extract patient details from API payload structure
-  let patientObj: DynamicPayload = {};
-  if (consultationData?.responseObject?.data?.patient) {
+  let patientObj: any = {};
+  if (consultationData.responseObject?.data?.patient) {
     patientObj = consultationData.responseObject.data.patient;
-  } else if (consultationData?.data?.patient) {
+  } else if (consultationData.data?.patient) {
     patientObj = consultationData.data.patient;
-  } else if (consultationData?.patient) {
+  } else if (consultationData.patient) {
     patientObj = consultationData.patient;
-  } else if (consultationData?.responseObject?.patient) {
+  } else if (consultationData.responseObject?.patient) {
     patientObj = consultationData.responseObject.patient;
   }
   const isBlankMode = consultationData?.isBlankMode || false;
 
-  const patientName = isBlankMode ? "" : (patientObj?.name || patient?.patientName || patient?.name || "-");
-  const patientId = isBlankMode ? "" : (patientObj?.id || patient?.id || "-");
+  const patientName = isBlankMode ? "" : (patientObj?.name || patient.patientName || "-");
+  const patientId = isBlankMode ? "" : (patientObj?.id || patient.id || "-");
   const patientCode =
     patientObj?.patient_code ||
     patientObj?.patientCode ||
-    patient.patient_code ||
-    patient.patientCode;
+    (patient as any).patient_code ||
+    (patient as any).patientCode;
   const displayPatientId = isBlankMode
     ? ""
     : (patientCode || (patientId === "-" ? "-" : patientId.split("-")[0]));
   const rawPatientPhone = isBlankMode ? "" : (patientObj?.phone || patient.phone || "");
-  const patientCountryCode = isBlankMode ? "" : (patientObj?.country_code || patientObj?.countryCode || patient.country_code || patient.countryCode || "+91");
+  const patientCountryCode = isBlankMode ? "" : (patientObj?.country_code || patientObj?.countryCode || (patient as any).country_code || (patient as any).countryCode || "+91");
   const patientPhone = isBlankMode ? "" : (rawPatientPhone ? formatPhoneWithCountryCode(rawPatientPhone, patientCountryCode) : "-");
-  const patientGender = isBlankMode ? "" : (patientObj?.gender || patient.gender || "-");
-  const patientDobRaw =
+  const patientGender = isBlankMode ? "" : (patientObj?.gender || (patient as any).gender || "-");
+  let patientDobRaw =
     patientObj?.date_of_birth ||
     patientObj?.dob ||
-    patient.date_of_birth ||
-    patient.dob;
+    (patient as any).date_of_birth ||
+    (patient as any).dob;
   let patientDob = isBlankMode ? "" : "-";
   if (!isBlankMode && patientDobRaw) {
     try {
@@ -901,13 +1080,13 @@ export const downloadConsultationPDF = async ({
       } else {
         patientDob = patientDobRaw;
       }
-    } catch {
+    } catch (e) {
       patientDob = patientDobRaw;
     }
   }
   const patientBloodGroup = isBlankMode ? "" : (
     patientObj?.blood_group ||
-    patient.bloodGroup ||
+    (patient as any).bloodGroup ||
     "-"
   ).replace("_", " ");
 
@@ -983,14 +1162,12 @@ export const downloadConsultationPDF = async ({
     consultationData.data?.data?.tooth_findings ||
     [];
   if (Array.isArray(toothFindingsArray)) {
-    toothFindingsArray.forEach((finding: ToothFinding) => {
-      const toothNumber = finding.tooth_number;
-      const condition = finding.condition;
-      if (toothNumber && condition) {
-        if (condition === 'OTHER' && finding.other_condition) {
-          finalToothChart[toothNumber] = finding.other_condition;
+    toothFindingsArray.forEach((finding: any) => {
+      if (finding.tooth_number && finding.condition) {
+        if (finding.condition === 'OTHER' && finding.other_condition) {
+          finalToothChart[finding.tooth_number] = finding.other_condition;
         } else {
-          finalToothChart[toothNumber] = typeof condition === 'string' ? condition.replace('_', ' ') : String(condition);
+          finalToothChart[finding.tooth_number] = typeof finding.condition === 'string' ? finding.condition.replace('_', ' ') : finding.condition;
         }
       }
     });
@@ -1015,7 +1192,7 @@ export const downloadConsultationPDF = async ({
     consultationData.responseObject?.data?.prescriptions ||
     [];
   const filledPrescriptions = rawPrescriptions.filter(
-    (p: PrescriptionRow) =>
+    (p: any) =>
       p.medicine_id ||
       p.medicine_name ||
       p.medicineName ||
@@ -1030,7 +1207,7 @@ export const downloadConsultationPDF = async ({
   );
   const hasTreatmentData = Boolean(
     consultationData.requiresTreatment || consultationData.requires_treatment,
-  ) || treatmentsArray.some((t: TreatmentRow) =>
+  ) || treatmentsArray.some((t: any) =>
       t && (
         t.procedure ||
         t.treatment_type ||
@@ -1122,19 +1299,48 @@ export const downloadConsultationPDF = async ({
 
   const getXraySection = () => {
     if (isBlankMode) return "";
-    const xrayFiles =
-      consultationData.xrayFiles || consultationData.data?.xrayFiles || [];
+    const rawXrayCandidates =
+      consultationData.xrayFiles ||
+      consultationData.data?.xrayFiles ||
+      consultationData.images ||
+      consultationData.data?.images ||
+      consultationData.clinical_images ||
+      consultationData.attachments ||
+      consultationData.rawImages ||
+      consultationData.rawXrays ||
+      [];
+
+    const xrayFiles = (Array.isArray(rawXrayCandidates) ? rawXrayCandidates : [])
+      .map((item: any) => {
+        if (typeof item === "string") return item;
+        if (item?.file_url) return item.file_url;
+        if (item?.url) return item.url;
+        if (item?.preview) return item.preview;
+        if (typeof window !== "undefined" && item instanceof File) {
+          try {
+            return URL.createObjectURL(item);
+          } catch {
+            return null;
+          }
+        }
+        return null;
+      })
+      .filter(Boolean);
+
     if (!xrayFiles || xrayFiles.length === 0) return "";
+    const cardWidth = xrayFiles.length === 1 ? "100%" : xrayFiles.length === 2 ? "48%" : "30%";
+    const imgHeight = xrayFiles.length === 1 ? "320px" : xrayFiles.length === 2 ? "220px" : "130px";
+
     return `
 <div style="padding: 8px 40px 10px;">
-        ${sectionLabel("Diagnostic Imaging (X-Ray)", !isBlankMode)}
+        ${sectionLabel("Diagnostic Imaging (X-Ray & Radiology)", !isBlankMode)}
 <div style="display:flex; flex-direction:row; flex-wrap:wrap; gap:15px; width:100%;">
           ${xrayFiles
         .map(
           (url: string, i: number) => `
-<div style="width:30%; border:1px solid ${T.LINE}; border-radius:10px; overflow:hidden; background:${T.PANEL}; box-sizing:border-box;" data-avoid-break="true">
-<img src="${url}" style="width:100%; height:130px; object-fit:cover;" />
-<div style="padding:6px; text-align:center; font-size:12px; color:${T.INK_MUTED}; font-weight:400; background:#ffffff;">Image #${i + 1}</div>
+<div style="width:${cardWidth}; border:1px solid ${T.LINE}; border-radius:10px; overflow:hidden; background:${T.PANEL}; box-sizing:border-box;" data-avoid-break="true">
+<img src="${url}" style="width:100%; height:${imgHeight}; object-fit:contain; background:#0b0f14;" />
+<div style="padding:6px; text-align:center; font-size:12px; color:${T.INK_MUTED}; font-weight:400; background:#ffffff;">Scan #${i + 1}</div>
 </div>
           `,
         )
@@ -1163,7 +1369,7 @@ export const downloadConsultationPDF = async ({
 <tbody>
             ${treatmentsArray
           .map(
-            (t: TreatmentRow, i: number) => `
+            (t: any, i: number) => `
 <tr style="border-bottom:1px solid #eef0f1; ${i % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
 <td style="padding:0; vertical-align:middle;">${makeCellContent(`${(t.tooth_number || t.tooth) === "FM" ? "Full Mouth" : `#${t.tooth_number || t.tooth || "General"}`}`, "left", `font-size:12px; font-weight:400; color:${T.INK};`)}</td>
 <td style="padding:0; vertical-align:middle;">${makeCellContent(`${t.procedure || t.treatment_type || "-"}`, "left", `font-size:12px; font-weight:400; color:${T.INK};`)}</td>
@@ -1243,7 +1449,7 @@ ${isBlankMode
 <tbody>
           ${filledPrescriptions
           .map(
-            (p: PrescriptionRow, i: number) => `
+            (p: any, i: number) => `
 <tr style="border-bottom:1px solid #eef0f1; ${i % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
 <td style="padding:0; vertical-align:middle;">${makeCellContent(`${i + 1}`, "left", `font-size:12px; color:#93999e;`)}</td>
 <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.medicine?.name || p.medicine?.medicine_name || p.medicine_name || p.medicineName || (typeof p.medicine === "string" ? p.medicine : "") || "N/A"}`, "left", `font-size:12px; font-weight:400; color:${T.INK};`)}</td>
@@ -1274,14 +1480,23 @@ ${isBlankMode
   `;
   };
 
+  // Prescription swaps the usual "name / specialization / (Signature/Seal)"
+  // text block for the doctor's actual signature image — every other
+  // report type (Clinical/Treatment/X-ray/Full) keeps the text block as-is.
+  const signatureContent =
+    type === "PRESCRIPTION"
+      ? `<img src="/image-removebg-preview.png" style="height:90px; width:auto; display:block; margin:0 auto;" crossorigin="anonymous" />`
+      : `
+<div style="width:200px; border-bottom:1px solid ${T.LINE}; margin-bottom:8px;"></div>
+<div style="font-size:12px; font-weight:400; color:${T.INK};">${displayDoctorName}</div>
+<div style="font-size:12px; color:${T.INK_MUTED}; font-weight:400;">${specialization}</div>
+<div style="font-size:12px; color:#93999e; margin-top:2px;">(Signature/Seal)</div>`;
+
   const getFooter = () =>
     getBrandFooter(
       `
 <div style="text-align:center;">
-<div style="width:200px; border-bottom:1px solid ${T.LINE}; margin-bottom:8px;"></div>
-<div style="font-size:12px; font-weight:400; color:${T.INK};">${displayDoctorName}</div>
-<div style="font-size:12px; color:${T.INK_MUTED}; font-weight:400;">${specialization}</div>
-<div style="font-size:12px; color:#93999e; margin-top:2px;">(Signature/Seal)</div>
+${signatureContent}
 </div>
     ${!isBlankMode && isFollowUp && followUpDate
         ? `
@@ -1294,6 +1509,7 @@ ${isBlankMode
   `,
       false,
       T,
+      type === "PRESCRIPTION" ? "Prescription" : undefined,
     );
 
   let htmlContent = `<div style="width:794px; background:#fff; margin:0; padding:0; font-family: 'Inter', sans-serif; color:${T.INK}; display:flex; flex-direction:column; min-height:auto; box-sizing:border-box;"><div data-header="true"><div style="height:20px; background:${T.BRAND}; width:100%;"></div>${getHeader()}</div>`;
@@ -1314,6 +1530,10 @@ ${isBlankMode
     reportTitle = "Prescription";
     fileNameSuffix = "prescription";
     htmlContent += getPatientInfo(reportTitle) + getPrescriptionSection();
+  } else if (type === "XRAY") {
+    reportTitle = "Dental Radiology & X-Ray Report";
+    fileNameSuffix = "xray_report";
+    htmlContent += getPatientInfo(reportTitle) + getXraySection();
   } else {
     htmlContent +=
       getPatientInfo(reportTitle) +
@@ -1333,13 +1553,15 @@ ${isBlankMode
         ? "Blank_Treatment_Plan.pdf"
         : type === "PRESCRIPTION"
           ? "Blank_Prescription.pdf"
-          : "Blank_Full_Summary.pdf"
+          : type === "XRAY"
+            ? "Blank_Xray_Report.pdf"
+            : "Blank_Full_Summary.pdf"
     : `${patient.patientName}_${fileNameSuffix}_${new Date().toISOString().split("T")[0]}.pdf`;
 
   await renderContainerToPDF(pdfContainer, outputFileName);
 };
 
-export const downloadCompletedTreatmentPDF = async (treatment: DynamicPayload) => {
+export const downloadCompletedTreatmentPDF = async (treatment: any) => {
   const pdfContainer = makeOffscreenContainer();
   // Resolve branding tokens from API (falls back to hardcoded defaults)
   const T = getBrandingTokens();
@@ -1416,7 +1638,7 @@ export const downloadCompletedTreatmentPDF = async (treatment: DynamicPayload) =
     <tbody>
       ${sessions
           .map(
-            (s: SessionRow, idx: number) => `
+            (s: any, idx: number) => `
         <tr style="border-bottom:1px solid ${T.LINE}; ${idx % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
           <td style="padding:0; vertical-align:middle;">${makeCellContent(`Visit #${s.visit_number || idx + 1}`, "left", `font-size:12px; font-weight:400; color:${T.INK};`)}</td>
           <td style="padding:0; vertical-align:middle;">${makeCellContent(`${s.visit_date ? new Date(s.visit_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "-"}`, "left", `font-size:12px; color:${T.INK_MUTED};`)}</td>
@@ -1459,7 +1681,7 @@ export const downloadCompletedTreatmentPDF = async (treatment: DynamicPayload) =
     </thead>
     <tbody>
       ${prescriptions
-          .map((p: PrescriptionRow, idx: number) => `
+          .map((p: any, idx: number) => `
           <tr style="border-bottom:1px solid ${T.LINE}; ${idx % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
             <td style="padding:0; vertical-align:middle;">${makeCellContent(`${idx + 1}`, "left", `font-size:12px; color:#93999e;`)}</td>
             <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.medicine?.name || p.medicine_name || p.medicineName || "N/A"}`, "left", `font-size:12px; font-weight:400; color:${T.INK};`)}</td>
@@ -1527,329 +1749,78 @@ export const downloadCompletedTreatmentPDF = async (treatment: DynamicPayload) =
 };
 
 // ---------------------------------------------------------------------------
-// Medical Record / EMR History PDF
-// ---------------------------------------------------------------------------
-
-export interface MedicalRecordPDFItem {
-  id?: string;
-  title?: string;
-  content?: string;
-  date?: string;
-  category?: string;
-  doctorName?: string;
-  attachments?: DynamicPayload[];
-}
-
-export interface MedicalRecordPDFParams {
-  patientName: string;
-  patient?: {
-    id?: string;
-    patientName?: string;
-    name?: string;
-    phone?: string;
-    gender?: string;
-    date_of_birth?: string;
-    dob?: string;
-    patient_code?: string;
-    patientCode?: string;
-    country_code?: string;
-    countryCode?: string;
-    blood_group?: string;
-    bloodGroup?: string;
-    doctorName?: string;
-  };
-  recordType?: string;
-  timeline: MedicalRecordPDFItem[];
-  logoUrl?: string | null;
-}
-
-export const downloadMedicalRecordPDF = async ({
-  patientName,
-  patient = {},
-  recordType,
-  timeline = [],
-  logoUrl,
-}: MedicalRecordPDFParams) => {
-  const pdfContainer = makeOffscreenContainer();
-  const T = getBrandingTokens();
-  if (logoUrl) {
-    T.LOGO_URL = logoUrl;
-  }
-
-  const displayDoctorName = (T.DOCTOR_NAME || "Dr. Rajal Shah").toUpperCase();
-  const specialization = T.DOCTOR_TITLE || "MDS Prosthodontist & Implantologist";
-
-  const resolvedPatientName = patientName || patient?.name || patient?.patientName || "Patient";
-  const patientId = patient?.id || "—";
-  const patientCode = patient?.patient_code || patient?.patientCode || patient?.code;
-  const displayPatientCode = patientCode || (patientId === "—" ? "—" : patientId.split("-")[0]);
-
-  const rawPhone =
-    patient?.phone ||
-    patient?.mobile ||
-    patient?.patientPhone ||
-    patient?.patient_phone ||
-    "";
-  const countryCode = patient?.country_code || patient?.countryCode || "+91";
-  const displayPhone =
-    rawPhone && rawPhone !== "—" && rawPhone !== "-"
-      ? formatPhoneWithCountryCode(rawPhone, countryCode)
-      : "—";
-
-  const rawGender = patient?.gender || "";
-  let displayGender = "—";
-  if (rawGender && rawGender !== "—" && rawGender !== "-") {
-    displayGender = rawGender.charAt(0).toUpperCase() + rawGender.slice(1).toLowerCase();
-  }
-
-  const rawDob = patient?.date_of_birth || patient?.dateOfBirth || patient?.dob;
-  let displayDob = "—";
-  if (rawDob && rawDob !== "—" && rawDob !== "-") {
-    try {
-      const d = new Date(rawDob);
-      if (!isNaN(d.getTime())) {
-        displayDob = d.toLocaleDateString("en-IN", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        });
-      } else {
-        displayDob = String(rawDob);
-      }
-    } catch {
-      displayDob = String(rawDob);
-    }
-  }
-
-  let dobGenderCombined = "—";
-  if (displayDob !== "—" && displayGender !== "—") {
-    dobGenderCombined = `${displayDob} / ${displayGender}`;
-  } else if (displayDob !== "—") {
-    dobGenderCombined = displayDob;
-  } else if (displayGender !== "—") {
-    dobGenderCombined = displayGender;
-  }
-
-  const now = new Date();
-  const generatedDateStr = now.toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-
-  const formattedRecordType = recordType
-    ? recordType.replace(/[-_]/g, " ").toUpperCase()
-    : "COMPLETE MEDICAL HISTORY";
-
-  const categories = [...new Set(timeline.map((t) => (t.category || "record").replace(/[-_]/g, " ").trim()))].filter(Boolean);
-  const categoriesCount = categories.length;
-
-  const formatDoctorName = (rawDoc?: string | null) => {
-    if (!rawDoc) return "—";
-    const trimmed = rawDoc.trim();
-    if (
-      !trimmed ||
-      trimmed === "-" ||
-      trimmed === "—" ||
-      trimmed === "N/A" ||
-      trimmed === "null" ||
-      trimmed === "undefined" ||
-      /^dr\.?\s*[-—]?$/i.test(trimmed)
-    ) {
-      return "—";
-    }
-    if (/^dr\.?\s+/i.test(trimmed)) {
-      return trimmed.replace(/^dr\.?\s+/i, "Dr. ");
-    }
-    return `Dr. ${trimmed}`;
-  };
-
-  const getHeader = () =>
-    getLetterhead(
-      `
-<div style="font-size: 12px; font-weight: 500; color: ${T.INK}; text-transform: uppercase; letter-spacing: 0.5px;">${resolvedPatientName}</div>
-<div style="font-size: 11px; font-weight: 400; color: ${T.INK_MUTED}; margin-top: 4px;">Patient Code: ${displayPatientCode}</div>
-<div style="font-size: 11px; font-weight: 400; color: ${T.INK_MUTED}; margin-top: 2px;">Phone: ${displayPhone}</div>
-${dobGenderCombined !== "—" ? `<div style="font-size: 11px; font-weight: 400; color: ${T.INK_MUTED}; margin-top: 2px;">DOB / Gender: ${dobGenderCombined}</div>` : ""}
-      `,
-      T,
-    );
-
-  const getPatientSummary = () => `
-<div style="padding: 10px 40px 14px 40px; background:${T.PANEL}; border-bottom: 1px solid ${T.LINE}; display:flex; justify-content:space-between; align-items:center;">
-  <div style="font-size:12px; font-weight:700; color:${T.BRAND}; text-transform:uppercase; letter-spacing:1px; font-family:'Inter', sans-serif;">
-    COMPLETE ELECTRONIC MEDICAL RECORD (EMR)
-  </div>
-  <div style="text-align:right; font-size:11px; color:${T.INK_MUTED}; font-weight:500;">
-    <span>Generated: ${generatedDateStr}</span>
-  </div>
-</div>
-<div style="padding: 0 40px;">
-  ${detailsGrid(
-    [
-      ["Patient Name", resolvedPatientName, "Patient Code", displayPatientCode],
-      ["Contact Phone", displayPhone, "DOB / Gender", dobGenderCombined],
-      ["Total Records", `${timeline.length} Entry(s)`, "Report Scope", formattedRecordType],
-    ],
-    T,
-  )}
-</div>
-  `;
-
-  const rowsHtml =
-    timeline.length > 0
-      ? timeline
-          .map((item, idx) => {
-            let itemDate = "—";
-            let itemTime = "";
-            if (item.date) {
-              try {
-                const d = new Date(item.date);
-                if (!isNaN(d.getTime())) {
-                  itemDate = d.toLocaleDateString("en-IN", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                  });
-                  itemTime = d.toLocaleTimeString("en-IN", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  });
-                }
-              } catch {
-                itemDate = item.date;
-              }
-            }
-
-            const rawCat = (item.category || "record").replace(/[-_]/g, " ").trim();
-            const categoryLabel = rawCat.replace(/\b\w/g, (c) => c.toUpperCase());
-            const rawTitle = (item.title || "").trim();
-
-            const normTitle = rawTitle.toLowerCase().replace(/[-_\s]+/g, "");
-            const normCat = rawCat.toLowerCase().replace(/[-_\s]+/g, "");
-            const isRedundantTitle =
-              !rawTitle ||
-              rawTitle === "—" ||
-              rawTitle === "-" ||
-              normTitle === normCat ||
-              normTitle === "recordentry" ||
-              normTitle === "appointmentvisit";
-
-            let cleanTitle = rawTitle;
-            if (!isRedundantTitle) {
-              cleanTitle = cleanTitle
-                .replace(new RegExp(`^${categoryLabel}\\s*[-–:]?\\s*`, "i"), "")
-                .replace(new RegExp(`^${rawCat.split(" ")[0]}\\s*[-–:]?\\s*`, "i"), "")
-                .trim();
-              if (!cleanTitle) cleanTitle = rawTitle;
-            }
-
-            const doctorName = formatDoctorName(item.doctorName);
-
-            const rawContent = (item.content || "").trim();
-            const hasContent =
-              rawContent &&
-              rawContent !== "—" &&
-              rawContent !== "-" &&
-              rawContent !== "N/A" &&
-              rawContent !== "null";
-            const contentText = hasContent
-              ? rawContent
-              : '<span style="color:#94a3b8; font-style:italic; font-size:10.5px;">No clinical notes recorded</span>';
-
-            const attachmentsCount = Array.isArray(item.attachments) ? item.attachments.length : 0;
-
-            return `
-<tr style="border-bottom:1px solid #eef0f1; ${idx % 2 === 0 ? "background:#ffffff;" : `background:${T.PANEL};`}" data-avoid-break="true">
-  <td style="padding:10px 12px; vertical-align:top; width:16%;">
-    <div style="font-size:11px; font-weight:700; color:${T.INK}; white-space:nowrap;">${itemDate}</div>
-    ${itemTime ? `<div style="font-size:10px; color:${T.INK_MUTED}; margin-top:2px; font-weight:500;">${itemTime}</div>` : ""}
-  </td>
-  <td style="padding:10px 12px; vertical-align:top; width:26%;">
-    <span style="display:inline-flex; align-items:center; justify-content:center; font-size:8.5px; font-weight:700; line-height:1; color:${T.BRAND}; text-transform:uppercase; letter-spacing:0.4px; background:${T.PANEL}; border:1px solid ${T.LINE}; border-radius:4px; padding:3.5px 7px; margin-bottom:${isRedundantTitle ? "0" : "4px"}; vertical-align:middle; box-sizing:border-box;">
-      ${categoryLabel}
-    </span>
-    ${!isRedundantTitle ? `<div style="font-size:11px; font-weight:600; color:${T.INK}; line-height:1.35;">${cleanTitle}</div>` : ""}
-  </td>
-  <td style="padding:10px 12px; vertical-align:top; width:20%;">
-    <div style="font-size:11px; font-weight:500; color:${T.INK_MUTED};">${doctorName}</div>
-  </td>
-  <td style="padding:10px 12px; vertical-align:top; width:38%;">
-    <div style="font-size:11px; line-height:1.55; color:${T.INK}; word-break:break-word; white-space:pre-wrap;">${contentText}</div>
-    ${
-      attachmentsCount > 0
-        ? `<div style="margin-top:4px; font-size:10px; font-weight:600; color:${T.BRAND};">📎 ${attachmentsCount} Attachment(s)</div>`
-        : ""
-    }
-  </td>
-</tr>
-            `;
-          })
-          .join("")
-      : `
-<tr>
-  <td colspan="4" style="padding:24px; text-align:center; color:#94a3b8; font-style:italic;">
-    No medical history records found for this patient.
-  </td>
-</tr>
-      `;
-
-  const getTimelineSection = () => `
-<div style="padding: 16px 40px 12px;">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1.5px solid ${T.LINE}; padding-bottom:6px;">
-    <div style="font-size:11px; font-weight:700; color:${T.BRAND}; text-transform:uppercase; letter-spacing:0.8px;">
-      Medical History Timeline (${timeline.length} Record${timeline.length !== 1 ? "s" : ""})
-    </div>
-    <div style="font-size:10px; font-weight:600; color:${T.INK_MUTED};">
-      ${categoriesCount} Categories
-    </div>
-  </div>
-  <table style="width:100%; border-collapse:collapse; overflow:hidden; border-radius:8px; border:1px solid ${T.LINE};">
-    <thead>
-      <tr style="background:${T.PANEL}; border-bottom:2px solid ${T.LINE};">
-        <th style="padding:8px 12px; text-align:left; font-size:10px; font-weight:700; color:${T.INK}; text-transform:uppercase; letter-spacing:0.4px; width:16%;">Date</th>
-        <th style="padding:8px 12px; text-align:left; font-size:10px; font-weight:700; color:${T.INK}; text-transform:uppercase; letter-spacing:0.4px; width:26%;">Category &amp; Title</th>
-        <th style="padding:8px 12px; text-align:left; font-size:10px; font-weight:700; color:${T.INK}; text-transform:uppercase; letter-spacing:0.4px; width:20%;">Attending Doctor</th>
-        <th style="padding:8px 12px; text-align:left; font-size:10px; font-weight:700; color:${T.INK}; text-transform:uppercase; letter-spacing:0.4px; width:38%;">Clinical Notes / Details</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${rowsHtml}
-    </tbody>
-  </table>
-</div>
-  `;
-
-  const getFooter = () =>
-    getBrandFooter(
-      `
-<div style="text-align:center;">
-  <div style="width:200px; border-bottom:1px solid ${T.LINE}; margin-bottom:8px;"></div>
-  <div style="font-size:12px; font-weight:600; color:${T.INK};">${displayDoctorName}</div>
-  <div style="font-size:11px; color:${T.INK_MUTED}; font-weight:400;">${specialization}</div>
-  <div style="font-size:10px; color:#93999e; margin-top:2px;">Authorized Signatory / Clinic Seal</div>
-</div>
-      `,
-      false,
-      T,
-    );
-
-  let htmlContent = `<div style="width:794px; background:#fff; margin:0; padding:0; font-family: 'Inter', sans-serif; color:${T.INK}; display:flex; flex-direction:column; min-height:auto; box-sizing:border-box;"><div data-header="true"><div style="height:20px; background:${T.BRAND}; width:100%;"></div>${getHeader()}</div>`;
-  htmlContent += getPatientSummary() + getTimelineSection() + getFooter() + "</div>";
-
-  pdfContainer.innerHTML = htmlContent;
-
-  const safePatient = resolvedPatientName.replace(/[^a-z0-9]/gi, "_").toLowerCase();
-  const outputFileName = `Medical_Record_${safePatient}_${now.toISOString().split("T")[0]}.pdf`;
-
-  await renderContainerToPDF(pdfContainer, outputFileName);
-};
-
-// ---------------------------------------------------------------------------
 // Invoice / consolidated statement
 // ---------------------------------------------------------------------------
 
-export const generateInvoicePDF = async (invoice: DynamicPayload, patient: DynamicPayload) => {
+const INK_BORDER = "#2d2d2d";
+const CELL_LINE = "#c8ccd0";
+const PANEL_BG = "#f2f2f2";
+
+function numberToWords(n: number): string {
+  const ONES = [
+    "",
+    "One",
+    "Two",
+    "Three",
+    "Four",
+    "Five",
+    "Six",
+    "Seven",
+    "Eight",
+    "Nine",
+    "Ten",
+    "Eleven",
+    "Twelve",
+    "Thirteen",
+    "Fourteen",
+    "Fifteen",
+    "Sixteen",
+    "Seventeen",
+    "Eighteen",
+    "Nineteen",
+  ];
+  const TENS = [
+    "",
+    "",
+    "Twenty",
+    "Thirty",
+    "Forty",
+    "Fifty",
+    "Sixty",
+    "Seventy",
+    "Eighty",
+    "Ninety",
+  ];
+  if (n === 0) return "Zero";
+  if (n < 20) return ONES[n];
+  if (n < 100)
+    return TENS[Math.floor(n / 10)] + (n % 10 ? " " + ONES[n % 10] : "");
+  if (n < 1000)
+    return (
+      ONES[Math.floor(n / 100)] +
+      " Hundred" +
+      (n % 100 ? " " + numberToWords(n % 100) : "")
+    );
+  if (n < 100000)
+    return (
+      numberToWords(Math.floor(n / 1000)) +
+      " Thousand" +
+      (n % 1000 ? " " + numberToWords(n % 1000) : "")
+    );
+  if (n < 10000000)
+    return (
+      numberToWords(Math.floor(n / 100000)) +
+      " Lakh" +
+      (n % 100000 ? " " + numberToWords(n % 100000) : "")
+    );
+  return (
+    numberToWords(Math.floor(n / 10000000)) +
+    " Crore" +
+    (n % 10000000 ? " " + numberToWords(n % 10000000) : "")
+  );
+}
+
+export const generateInvoicePDF = async (invoice: any, patient: any) => {
   // The history API returns one invoice inside responseObject.data.invoices.
   invoice = invoice?.responseObject?.data?.invoices?.[0] || invoice;
   const pdfContainer = makeOffscreenContainer();
@@ -1861,7 +1832,7 @@ export const generateInvoicePDF = async (invoice: DynamicPayload, patient: Dynam
 
   const targetMemberId = invoice.member_id || invoice.memberId || invoice.member?.id;
   const matchedMember = (Array.isArray(patient?.members) && targetMemberId)
-    ? patient.members.find((m: InvoiceMember) => m.id === targetMemberId || m.member_id === targetMemberId || m.patient_id === targetMemberId)
+    ? patient.members.find((m: any) => m.id === targetMemberId || m.member_id === targetMemberId || m.patient_id === targetMemberId)
     : null;
 
   const findPatientName = () => {
@@ -1886,6 +1857,7 @@ export const generateInvoicePDF = async (invoice: DynamicPayload, patient: Dynam
     patient?.patientCode;
   const displayPatientId = String(patientCode || patientIdValue || "").trim() || "N/A";
 
+  const invoiceNumber = invoice.invoice_number || invoice.id || "—";
   const invoiceDateValue = invoice.date || invoice.invoice_date;
   const invoiceDate = invoiceDateValue
     ? new Date(invoiceDateValue).toLocaleDateString("en-IN", {
@@ -1899,10 +1871,48 @@ export const generateInvoicePDF = async (invoice: DynamicPayload, patient: Dynam
       year: "numeric",
     });
 
+  const rawPayments = invoice.invoice_payments || [];
+  const calculatedPaidAmount = rawPayments.reduce(
+    (sum: number, p: any) => sum + (Number(p.amount) || 0),
+    0,
+  );
+  const paidAmount =
+    invoice.paidAmount !== undefined
+      ? Number(invoice.paidAmount)
+      : calculatedPaidAmount;
   const discountAmount = Number(invoice.discountAmount || 0);
   const discountPct = Number(invoice.discount || 0);
+  const taxAmount = Number(invoice.taxAmount || 0);
+  const taxPct = Number(invoice.tax || 0);
   const grandTotal = Number(invoice.grand_total || 0);
 
+  const isMemberCheck =
+    invoice.isMemberInvoice ||
+    !!(
+      invoice.member_id ||
+      invoice.memberId ||
+      patient?.memberId ||
+      patient?.member_id
+    );
+
+  const gender =
+    matchedMember?.gender ||
+    patient?.gender ||
+    invoice.member?.gender ||
+    invoice.patient?.gender ||
+    "—";
+
+  const dobValue =
+    matchedMember?.dob ||
+    matchedMember?.date_of_birth ||
+    matchedMember?.dateOfBirth ||
+    patient?.dob ||
+    patient?.dateOfBirth ||
+    invoice.member?.dob ||
+    invoice.patient?.dob;
+
+  const age = patient?.age || ageFromDOB(dobValue) || "—";
+  const ageGender = age !== "—" || gender !== "—" ? `${age} / ${gender}` : "—";
 
   const phone =
     invoice.phone ||
@@ -1911,7 +1921,28 @@ export const generateInvoicePDF = async (invoice: DynamicPayload, patient: Dynam
     invoice.patient?.phone ||
     "—";
 
+  const displayDoctorName = (T.DOCTOR_NAME || "Dr. Rajal Shah").toUpperCase();
+
   const statementDateFormatted = invoiceDate;
+
+  let dueDateFormatted = "";
+  if (invoice.dueDate) {
+    dueDateFormatted = new Date(invoice.dueDate).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  } else {
+    const baseDate = invoice.date ? new Date(invoice.date) : new Date();
+    const fallbackDueDate = new Date(
+      baseDate.getTime() + 6 * 24 * 60 * 60 * 1000,
+    );
+    dueDateFormatted = fallbackDueDate.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  }
 
   const formatCurrency = (val: number) => {
     if (val % 1 === 0) {
@@ -1933,7 +1964,7 @@ export const generateInvoicePDF = async (invoice: DynamicPayload, patient: Dynam
     </div>
   `, T);
 
-  const items: InvoiceItem[] = invoice.items || [];
+  const items: any[] = invoice.items || [];
 
   // Extract values for the right column from the single invoice response.
   const firstInvoiceNumber = invoice.invoice_number || "—";
@@ -1949,12 +1980,12 @@ export const generateInvoicePDF = async (invoice: DynamicPayload, patient: Dynam
 
     if (Array.isArray(patient?.members) && patient.members.length > 0) {
       if (targetMemberId) {
-        const found = patient.members.find((m: InvoiceMember) => m.id === targetMemberId || m.member_id === targetMemberId || m.patient_id === targetMemberId);
+        const found = patient.members.find((m: any) => m.id === targetMemberId || m.member_id === targetMemberId || m.patient_id === targetMemberId);
         if (found?.member_id) return found.member_id;
         if (found?.memberId) return found.memberId;
       }
       
-      const selfMember = patient.members.find((m: InvoiceMember) => m?.relationship_type === "SELF" || m?.relationshipType === "SELF");
+      const selfMember = patient.members.find((m: any) => m?.relationship_type === "SELF" || m?.relationshipType === "SELF");
       if (selfMember?.member_id) return selfMember.member_id;
       if (selfMember?.memberId) return selfMember.memberId;
       if (selfMember?.id) return selfMember.id;
@@ -1983,15 +2014,20 @@ export const generateInvoicePDF = async (invoice: DynamicPayload, patient: Dynam
 
   const memberId = String(findMemberId()).trim() || "N/A";
 
+  const rows: Array<[string, string, string, string]> = [
+    ["Name", patientName, "Date", firstItemDate],
+    ["Patient ID", displayPatientId, "Invoice No.", firstInvoiceNumber],
+    ["Member ID", memberId, "Phone", phone],
+  ];
+
   const hasDiscount =
     discountAmount > 0 ||
-    discountPct > 0 ||
     items.some(
-      (it: InvoiceItem) => Number(it.discount_value || it.item_discount || 0) > 0,
+      (it: any) => Number(it.discount_value || it.item_discount || 0) > 0,
     );
 
   const itemsHtml = items
-    .map((item: InvoiceItem, i: number) => {
+    .map((item: any, i: number) => {
       const itemType = item.item_type || "Service";
       const formattedType =
         itemType.charAt(0).toUpperCase() +
@@ -2133,7 +2169,7 @@ export const generateInvoicePDF = async (invoice: DynamicPayload, patient: Dynam
               <tbody>
                 <tr>
                   <td style="padding:5px 0; font-size:12px; font-weight:400; vertical-align:middle;">Total Amount</td>
-                  <td style="padding:5px 0; text-align:right; font-size:12px; font-weight:400; padding-right:10px; vertical-align:middle;">${formatCurrency(items.reduce((s: number, it: InvoiceItem) => s + Number(it.total_amount || it.amount || 0), 0))}</td>
+                  <td style="padding:5px 0; text-align:right; font-size:12px; font-weight:400; padding-right:10px; vertical-align:middle;">${formatCurrency(items.reduce((s: number, it: any) => s + Number(it.total_amount || it.amount || 0), 0))}</td>
                 </tr>
                 ${discountAmount > 0
       ? `

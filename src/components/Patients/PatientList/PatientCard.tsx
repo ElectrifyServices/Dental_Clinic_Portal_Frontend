@@ -1,6 +1,21 @@
-import type { ApiAny } from "../../../types/api";
 import React from "react";
-import { User, UserCheck, UserX, Download, Phone, Mail, MapPin, AlertTriangle, Edit, Calendar, Eye, UserPlus, PowerOff } from "lucide-react";
+import {
+  User,
+  UserCheck,
+  UserX,
+  Download,
+  QrCode,
+  Phone,
+  Mail,
+  MapPin,
+  AlertTriangle,
+  Edit,
+  Trash2,
+  Calendar,
+  Eye,
+  UserPlus,
+  PowerOff,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { formatPhoneWithCountryCode } from "@/utils/phoneUtils";
@@ -38,9 +53,9 @@ export const PatientCard: React.FC<PatientCardProps> = ({
   patient,
   onView,
   onEdit,
-  onDelete: _onDelete,
+  onDelete,
   onExport,
-  onPrintBarcode: _onPrintBarcode,
+  onPrintBarcode,
   onToggleStatus,
   onToggleCategory,
 }) => {
@@ -57,7 +72,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
     }
   };
 
-  const getStatusVariant = (status: string): ApiAny => {
+  const getStatusVariant = (status: string): any => {
     switch (status) {
       case "active":
         return "green";
@@ -104,9 +119,9 @@ export const PatientCard: React.FC<PatientCardProps> = ({
   return (
     <TooltipProvider>
       <Card className={`bg-card shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden h-fit ${isIncompletePatient ? "border-2 border-orange-500/60 shadow-orange-500/10" : "border-border"}`}>
-        <CardContent className="p-3 sm:p-4">
+        <CardContent className="p-4 sm:p-5">
           {/* Header Section - More compact */}
-          <div className="flex flex-col sm:flex-row items-start justify-between gap-3 mb-3 min-w-0 w-full">
+          <div className="flex flex-col sm:flex-row items-start justify-between gap-3 mb-4 min-w-0 w-full">
             <div className="flex gap-3 min-w-0 w-full">
               <SimpleTooltip content="Patient Avatar">
                 <div className="relative shrink-0 cursor-help">
@@ -165,11 +180,11 @@ export const PatientCard: React.FC<PatientCardProps> = ({
           </div>
 
           {/* Contact Info - Compact Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-2 mb-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 mb-4">
             <SimpleTooltip content={`Phone: ${patient.phone || "N/A"}`}>
               <div className="flex items-center gap-2 text-[11px] sm:text-xs text-muted-foreground min-w-0 cursor-help">
                 <Phone className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0" />
-                <span className="font-bold truncate">{formatPhoneWithCountryCode(patient.phone, (patient as ApiAny).country_code)}</span>
+                <span className="font-bold truncate">{formatPhoneWithCountryCode(patient.phone, (patient as any).country_code)}</span>
               </div>
             </SimpleTooltip>
             <SimpleTooltip content={`Email: ${patient.email || "N/A"}`}>
@@ -189,7 +204,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
           </div>
 
         {/* Medical Alerts - Slimmed down */}
-        <div className="mb-3 p-2.5 bg-orange-50/50 border border-orange-100 rounded-xl">
+        <div className="mb-4 p-2.5 bg-orange-50/50 border border-orange-100 rounded-xl">
           <div className="flex items-center gap-1.5 mb-1.5">
             <AlertTriangle className="w-3.5 h-3.5 text-orange-600" />
             <span className="text-[10px] font-black text-orange-900 uppercase">
@@ -199,7 +214,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
           <div className="space-y-1">
             <p className="text-[10px] font-medium text-orange-800 leading-tight">
               <span className="font-black">MEDICAL HISTORY:</span>{" "}
-              {patient.medicalHistoryNames?.join(", ") || patient.medicalHistory?.join(", ") || (patient as ApiAny).medical_history?.join(", ") || "None"}
+              {patient.medicalHistoryNames?.join(", ") || patient.medicalHistory?.join(", ") || (patient as any).medical_history?.join(", ") || "None"}
             </p>
             <p className="text-[10px] font-medium text-orange-800 leading-tight">
               <span className="font-black">ALLERGIES:</span>{" "}
@@ -209,7 +224,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
         </div>
 
         {/* Stats Grid - Compact */}
-        <div className="grid grid-cols-3 gap-2 mb-3">
+        <div className="grid grid-cols-3 gap-2 mb-4">
           <div className="bg-primary/30 border border-primary/10 rounded-xl p-2 text-center">
             <p className="text-sm sm:text-base font-black text-primary leading-none mb-0.5">
               {patient.total_visits !== undefined ? patient.total_visits : (patient.totalVisits || 0)}
@@ -228,7 +243,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
           </div>
           <div className="bg-purple-50/30 border border-purple-50 rounded-xl p-2 text-center">
             <p className="text-sm sm:text-base font-black text-purple-600 leading-none mb-0.5">
-              ₹{(patient.outstandingBalance ?? (patient as ApiAny).total_pending_balance ?? (patient as ApiAny).totalPendingBalance ?? 0).toLocaleString()}
+              ₹{(patient.outstandingBalance ?? (patient as any).total_pending_balance ?? (patient as any).totalPendingBalance ?? 0).toLocaleString()}
             </p>
             <p className="text-[8px] font-black text-purple-800 uppercase tracking-wider">
               Balance
@@ -236,39 +251,39 @@ export const PatientCard: React.FC<PatientCardProps> = ({
           </div>
         </div>
 
-        {/* Timeline Rows - Merged into a single compact row */}
-        <div className="grid grid-cols-2 gap-2 mb-3">
-          <div className="p-2 bg-primary/10 border border-primary/10 rounded-lg min-w-0">
-            <div className="flex items-center gap-1.5 text-primary mb-1">
-              <UserPlus className="w-3.5 h-3.5 shrink-0" />
+        {/* Timeline Rows - Slimmer */}
+        <div className="space-y-1.5 mb-4">
+          <div className="flex items-center justify-between p-2 bg-primary/10 border border-primary/10 rounded-lg">
+            <div className="flex items-center gap-1.5 text-primary">
+              <UserPlus className="w-3.5 h-3.5" />
               <span className="text-[10px] font-bold">Registered</span>
             </div>
-            <span className="text-[10px] font-black text-foreground block truncate">
+            <span className="text-[10px] font-black text-foreground">
               {(() => {
                 const regVal = patient.created_at || patient.createdAt || patient.registeredDate;
                 if (!regVal) return "—";
                 try {
                   const d = new Date(regVal);
                   return !isNaN(d.getTime()) ? d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : regVal;
-                } catch (_e) {
+                } catch (e) {
                   return regVal;
                 }
               })()}
             </span>
           </div>
-          <div className="p-2 bg-muted/50 border border-border rounded-lg min-w-0">
-            <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
-              <Calendar className="w-3.5 h-3.5 shrink-0" />
+          <div className="flex items-center justify-between p-2 bg-muted/50 border border-border rounded-lg">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <Calendar className="w-3.5 h-3.5" />
               <span className="text-[10px] font-bold">Last Visit</span>
             </div>
-            <span className="text-[10px] font-black text-foreground block truncate">
+            <span className="text-[10px] font-black text-foreground truncate ml-2 text-right">
               {(() => {
                 const visitVal = patient.last_visit_date || patient.lastVisit;
                 if (!visitVal) return "No visits yet";
                 try {
                   const d = new Date(visitVal);
                   return !isNaN(d.getTime()) ? d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : visitVal;
-                } catch (_e) {
+                } catch (e) {
                   return visitVal;
                 }
               })()}
@@ -276,7 +291,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
           </div>
         </div>
 
-        <div className="h-px bg-muted mb-3" />
+        <div className="h-px bg-muted mb-4" />
 
         {/* Action Footer - Responsive Wrapping */}
         <div className="flex flex-wrap items-center justify-between gap-2">

@@ -1,10 +1,9 @@
-import type { ApiAny, ApiRecord } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
 export interface ScheduleCountResponse {
   count?: number;
   total?: number;
-  [key: string]: ApiAny;
+  [key: string]: any;
 }
 
 export function useSchedulePendingQuery() {
@@ -16,7 +15,7 @@ export function useSchedulePendingQuery() {
 }
 
 export function useScheduleTeamAvailabilityQuery() {
-  return useApiQuery<ApiRecord>({
+  return useApiQuery<any>({
     queryKey: ["dashboard", "schedule", "team-availability"],
     endpoint: "/dashboard/schedule/team-availability",
     method: "get",
@@ -24,7 +23,7 @@ export function useScheduleTeamAvailabilityQuery() {
 }
 
 export function useScheduleLiveTimelineQuery() {
-  return useApiQuery<ApiRecord>({
+  return useApiQuery<any>({
     queryKey: ["dashboard", "schedule", "live-timeline"],
     endpoint: "/dashboard/schedule/live-timeline",
     method: "get",

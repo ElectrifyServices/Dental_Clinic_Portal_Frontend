@@ -1,5 +1,3 @@
-import type { ApiAny, ApiRecord } from "../../types/api";
-import type { ApiQueryOptions } from "../useApiQuery";
 import { useApiQuery } from "../useApiQuery";
 
 export interface InvoiceListParams {
@@ -12,8 +10,8 @@ export interface InvoiceListParams {
   };
 }
 
-export function useInvoicesQuery(params: InvoiceListParams = {}, options?: ApiQueryOptions<ApiRecord>) {
-  const body: Record<string, ApiAny> = {
+export function useInvoicesQuery(params: InvoiceListParams = {}, options?: any) {
+  const body: Record<string, any> = {
     page: params.page ?? 1,
     limit: params.limit ?? 100,
   };
@@ -26,7 +24,7 @@ export function useInvoicesQuery(params: InvoiceListParams = {}, options?: ApiQu
     body.filters = params.filters;
   }
 
-  return useApiQuery<ApiRecord>({
+  return useApiQuery<any>({
     queryKey: ["invoices", body],
     endpoint: "/invoice/list",
     method: "post",

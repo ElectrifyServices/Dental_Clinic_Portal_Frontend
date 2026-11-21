@@ -96,9 +96,6 @@ export function GlobalSearch() {
     });
 
     return matched.slice(0, 8);
-  // `close` is declared below this memo, so naming it here would read it before
-  // initialisation; the callback only runs after render, where it is defined
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, navigate]);
 
   const close = useCallback(() => {
@@ -159,7 +156,7 @@ export function GlobalSearch() {
               <X className="w-3.5 h-3.5" />
             </button>
           ) : (
-            <kbd className="hidden sm:flex items-center gap-0.5 text-[10px] font-medium text-muted-foreground/50 bg-muted border border-border/50 rounded px-1.5 py-0.5 select-none shrink-0">
+            <kbd className="hidden sm:flex items-center gap-0.5 text-[10px] font-medium text-muted-foreground/50 bg-muted border border-border/50 rounded px-1.5 py-0.5 select-none flex-shrink-0">
               <span className="text-[9px]">⌘</span>K
             </kbd>
           )}
@@ -183,7 +180,7 @@ export function GlobalSearch() {
                 </div>
               )}
               <div className="pb-1.5">
-                {items.map((result, _idx) => {
+                {items.map((result, idx) => {
                   const globalIdx = results.findIndex((r) => r.id === result.id);
                   const Icon = result.icon;
                   return (
@@ -198,7 +195,7 @@ export function GlobalSearch() {
                           : "hover:bg-muted/60 text-foreground",
                       ].join(" ")}
                     >
-                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${activeIdx === globalIdx ? "bg-primary/10" : "bg-muted"}`}>
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${activeIdx === globalIdx ? "bg-primary/10" : "bg-muted"}`}>
                         <Icon className={`w-3.5 h-3.5 ${activeIdx === globalIdx ? "text-primary" : result.color}`} />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -208,7 +205,7 @@ export function GlobalSearch() {
                         )}
                       </div>
                       {activeIdx === globalIdx && (
-                        <kbd className="text-[10px] font-medium text-muted-foreground/50 bg-muted border border-border/50 rounded px-1.5 py-0.5 shrink-0">↵</kbd>
+                        <kbd className="text-[10px] font-medium text-muted-foreground/50 bg-muted border border-border/50 rounded px-1.5 py-0.5 flex-shrink-0">↵</kbd>
                       )}
                     </button>
                   );

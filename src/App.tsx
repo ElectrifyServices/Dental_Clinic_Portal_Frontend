@@ -9,7 +9,7 @@ import { SidebarProvider } from "./contexts/SidebarContext";
 import { MainLayout } from "./components/Layout/MainLayout";
 import { LoginForm } from "./components/Auth/LoginForm";
 import { getParsedPermissions } from "./utils/permission";
- 
+
 import { DashboardPage } from "./pages/DashboardPage";
 import { AppointmentsPage } from "./pages/AppointmentsPage";
 import { PatientsPage } from "./pages/PatientsPage";
@@ -94,8 +94,8 @@ function GuardedRoute({ path, element }: { path: string; element: React.ReactEle
     }
   }
   return element;
-} 
-  
+}
+
 function ProtectedRoutes() {
   const { state } = useAuth();
   if (!state.isAuthenticated) return <Navigate to="/login" replace />;
@@ -153,6 +153,7 @@ export default function App() {
                     <Route path="/login" element={<AuthRouter />} />
                     <Route path="/reset-password" element={<AuthRouter />} />
                     <Route path="/auth/reset-password" element={<AuthRouter />} />
+                    <Route path="/activate-account" element={<AuthRouter />} />
                     <Route path="/*" element={<ProtectedRoutes />} />
                   </Routes>
                 </BrowserRouter>

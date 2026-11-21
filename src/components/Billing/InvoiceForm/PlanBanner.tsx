@@ -1,9 +1,8 @@
-﻿import type { ApiAny } from "../../../types/api";
-import React from 'react';
+﻿import React from 'react';
 import { Building2, Users } from 'lucide-react';
 
 interface PlanBannerProps {
-  plan: ApiAny;
+  plan: any;
   savings: number;
   dependentOf?: string;  // primary member name if this patient is a dependent
 }
@@ -15,7 +14,7 @@ export const PlanBanner: React.FC<PlanBannerProps> = ({ plan, savings, dependent
 
   return (
     <div className={`border rounded-2xl p-5 flex items-start gap-4 shadow-sm ${isIndividual ? 'bg-teal-50 border-teal-200' : 'bg-primary/10 border-primary/30'}`}>
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white shrink-0 shadow-lg ${isIndividual ? 'bg-teal-500 shadow-teal-200' : 'bg-primary shadow-blue-200'}`}>
+      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white flex-shrink-0 shadow-lg ${isIndividual ? 'bg-teal-500 shadow-teal-200' : 'bg-primary shadow-blue-200'}`}>
         {isIndividual ? <Users className="w-6 h-6" /> : <Building2 className="w-6 h-6" />}
       </div>
       <div className="flex-1 min-w-0">
@@ -36,7 +35,7 @@ export const PlanBanner: React.FC<PlanBannerProps> = ({ plan, savings, dependent
           </p>
         )}
         <div className="flex flex-wrap gap-1.5 mt-2.5">
-          {(plan.benefits || []).slice(0, 3).map((b: ApiAny) => (
+          {(plan.benefits || []).slice(0, 3).map((b: any) => (
             <span key={b.id} className={`text-[9px] font-bold bg-card border px-2.5 py-1 rounded-full uppercase tracking-tighter ${isIndividual ? 'text-teal-700 border-teal-200' : 'text-primary border-primary/20'}`}>
               {b.description}
             </span>
@@ -45,7 +44,7 @@ export const PlanBanner: React.FC<PlanBannerProps> = ({ plan, savings, dependent
         </div>
       </div>
       {savings > 0 && (
-        <div className="text-right shrink-0 bg-card/50 p-2 rounded-xl border border-primary/10">
+        <div className="text-right flex-shrink-0 bg-card/50 p-2 rounded-xl border border-primary/10">
           <p className="text-[10px] text-primary font-bold uppercase tracking-widest">Plan Savings</p>
           <p className="text-xl font-black text-primary">₹{savings.toLocaleString()}</p>
         </div>

@@ -112,7 +112,7 @@ function applyThemeToDom(data: ThemeData): void {
     root.style.setProperty("--radius-lg", `${lgRem}rem`);
     root.style.setProperty("--radius-modal", `${modalRem}rem`);
   }
- 
+
   // ── Dark mode ────────────────────────────────────────────────────────────
   if (typeof theme.config?.isDarkMode === "boolean") {
     if (theme.config.isDarkMode) {
@@ -170,7 +170,7 @@ function clearThemeFromDom(): void {
   document.documentElement.classList.remove("dark");
   try {
     document.title = "Opal Smiles Dental Studio";
-    const link = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
+    let link = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
     if (link) {
       link.href = "/favicon.png";
     }
@@ -231,7 +231,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export function useTheme(): ThemeContextValue {
   const ctx = useContext(ThemeContext);
   if (!ctx) throw new Error("useTheme must be used within ThemeProvider");

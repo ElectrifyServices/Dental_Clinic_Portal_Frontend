@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 /**
  * Generic UI primitives — reusable across the entire application.
  * Import from '@/components/ui' in any component.
@@ -47,23 +46,18 @@ interface PageHeaderProps {
   subtitle?: string;
   action?: React.ReactNode;
   children?: React.ReactNode;
-  className?: string;
 }
-export function PageHeader({ title, subtitle, action, children, className }: PageHeaderProps) {
+export function PageHeader({ title, subtitle, action, children }: PageHeaderProps) {
   return (
-    <div className={cn("flex flex-row flex-wrap items-center justify-between gap-y-3 gap-x-2 mb-0", className)}>
+    <div className="flex flex-row items-center justify-between gap-0 mb-0">
       <div className="flex-1 min-w-[120px]">
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground tracking-tight leading-tight line-clamp-1">{title}</h1>
-        {subtitle && <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 sm:mt-2 line-clamp-1">{subtitle}</p>}
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground tracking-tight leading-tight line-clamp-1">{title}</h1>
+        {subtitle && <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-1">{subtitle}</p>}
       </div>
+      {children}
       {action && (
-        <div className="flex flex-row items-center justify-end gap-2 shrink-0 order-2 xl:order-3">
+        <div className="flex flex-row items-center justify-end gap-2 shrink-0">
           {action}
-        </div>
-      )}
-      {children && (
-        <div className="order-3 xl:order-2 w-full xl:w-auto">
-          {children}
         </div>
       )}
     </div>
@@ -93,24 +87,12 @@ export function KpiCard({ label, value, colorClass = "text-foreground", icon, su
           </p>
         )}
       </div>
-      {icon && <div className="text-muted-foreground/30 shrink-0 ml-4 transition-transform duration-300 group-hover:scale-110 group-hover:text-primary/50">{icon}</div>}
+      {icon && <div className="text-muted-foreground/30 flex-shrink-0 ml-4 transition-transform duration-300 group-hover:scale-110 group-hover:text-primary/50">{icon}</div>}
     </div>
   );
 }
 
-type StatusBadgeVariant =
-  | "green"
-  | "blue"
-  | "amber"
-  | "red"
-  | "gray"
-  | "violet"
-  | "indigo"
-  | "orange"
-  | "teal"
-  | "cyan"
-  | "purple"
-  | "rose";
+type StatusBadgeVariant = "green" | "blue" | "amber" | "red" | "gray" | "violet" | "indigo";
 interface StatusBadgeProps {
   variant?: StatusBadgeVariant;
   children: React.ReactNode;
@@ -125,11 +107,6 @@ export function StatusBadge({ variant = "gray", children, className = "" }: Stat
     gray: "bg-muted text-muted-foreground border-transparent dark:bg-slate-900/30 dark:text-slate-700 dark:border-slate-800",
     violet: "bg-violet-50 text-violet-700 border-violet-100 dark:bg-violet-950/30 dark:text-violet-600 dark:border-violet-800/50",
     indigo: "bg-indigo-50 text-indigo-700 border-indigo-100 dark:bg-indigo-950/30 dark:text-indigo-600 dark:border-indigo-800/50",
-    orange: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/30 dark:text-orange-400 dark:border-orange-800/50",
-    teal: "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/30 dark:text-teal-400 dark:border-teal-800/50",
-    cyan: "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950/30 dark:text-cyan-400 dark:border-cyan-800/50",
-    purple: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/30 dark:text-purple-400 dark:border-purple-800/50",
-    rose: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/30 dark:text-rose-400 dark:border-rose-800/50",
   };
   return (
     <span className={cn("inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border", variantClasses[variant], className)}>{children}</span>
@@ -148,7 +125,6 @@ interface ModalProps {
   bodyClassName?: string;
   headerRight?: React.ReactNode;
   hideCloseButton?: boolean;
-  compact?: boolean;
 }
 const MODAL_SIZES: Record<string, string> = {
   sm:  "max-w-sm",
@@ -163,19 +139,7 @@ const MODAL_SIZES: Record<string, string> = {
   "7xl": "max-w-7xl",
 };
 
-export function Modal({
-  title,
-  subtitle,
-  onClose,
-  children,
-  footer,
-  size = "lg",
-  icon,
-  bodyClassName,
-  headerRight,
-  hideCloseButton,
-  compact = false,
-}: ModalProps) {
+export function Modal({ title, subtitle, onClose, children, footer, size = "lg", icon, bodyClassName, headerRight, hideCloseButton }: ModalProps) {
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent
@@ -184,24 +148,15 @@ export function Modal({
           MODAL_SIZES[size],
         )}
       >
-        <DialogHeader className={cn(
-          "sticky top-0 z-20 bg-card border-b border-border flex-row items-center justify-between space-y-0",
-          compact ? "px-4 sm:px-5 py-2.5 sm:py-3" : "px-6 py-4"
-        )}>
+        <DialogHeader className="sticky top-0 z-20 bg-card border-b border-border px-6 py-4 flex-row items-center justify-between space-y-0">
           <div className="flex items-center gap-3">
             {icon && (
-              <div className={cn(
-                "bg-primary/10 rounded-md flex items-center justify-center text-primary shrink-0",
-                compact ? "w-7 h-7 sm:w-8 sm:h-8" : "w-9 h-9"
-              )}>
+              <div className="w-9 h-9 bg-primary/10 rounded-md flex items-center justify-center text-primary flex-shrink-0">
                 {icon}
               </div>
             )}
             <div>
-              <DialogTitle className={cn(
-                "font-semibold text-foreground leading-snug",
-                compact ? "text-base sm:text-lg" : "text-lg"
-              )}>
+              <DialogTitle className="text-lg font-semibold text-foreground leading-snug">
                 {title}
               </DialogTitle>
               {subtitle ? (
@@ -218,23 +173,16 @@ export function Modal({
             {!hideCloseButton && (
               <button
                 onClick={onClose}
-                className="p-1.5 sm:p-2 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                className="p-2 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
               >
                 <X className="w-4 h-4" />
               </button>
             )}
           </div>
         </DialogHeader>
-        <div className={cn(
-          "overflow-y-auto flex-1 custom-scrollbar",
-          compact ? "p-3 sm:p-4 md:p-5" : "p-6",
-          bodyClassName
-        )}>{children}</div>
+        <div className={cn("p-6 overflow-y-auto flex-1 custom-scrollbar", bodyClassName)}>{children}</div>
         {footer && (
-          <DialogFooter className={cn(
-            "border-t border-border bg-muted/40 sticky bottom-0 z-20",
-            compact ? "px-4 sm:px-5 py-2.5 sm:py-3" : "px-6 py-4"
-          )}>
+          <DialogFooter className="px-6 py-4 border-t border-border bg-muted/40 sticky bottom-0 z-20">
             {footer}
           </DialogFooter>
         )}
@@ -243,26 +191,17 @@ export function Modal({
   );
 }
 
+// ─── ConfirmModal ─────────────────────────────────────────────────────────────
 interface ConfirmModalProps {
   title: string;
   message: string;
   confirmLabel?: string;
-  cancelLabel?: string;
   variant?: "danger" | "primary";
   isLoading?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }
-export function ConfirmModal({
-  title,
-  message,
-  confirmLabel = "Confirm",
-  cancelLabel = "Cancel",
-  variant = "danger",
-  isLoading = false,
-  onConfirm,
-  onCancel,
-}: ConfirmModalProps) {
+export function ConfirmModal({ title, message, confirmLabel = "Confirm", variant = "danger", isLoading = false, onConfirm, onCancel }: ConfirmModalProps) {
   return (
     <Modal
       title={title}
@@ -271,14 +210,8 @@ export function ConfirmModal({
       icon={<AlertTriangle className={cn("w-4 h-4 animate-pulse", variant === "danger" ? "text-destructive" : "text-primary")} />}
       footer={
         <>
-          <Button variant="outline" onClick={onCancel} disabled={isLoading}>
-            {cancelLabel}
-          </Button>
-          <Button
-            variant={variant === "danger" ? "destructive" : "default"}
-            onClick={onConfirm}
-            disabled={isLoading}
-          >
+          <Button variant="outline" onClick={onCancel} disabled={isLoading}>Cancel</Button>
+          <Button variant={variant === "danger" ? "destructive" : "default"} onClick={onConfirm} disabled={isLoading}>
             {isLoading ? (
               <span className="flex items-center gap-2">
                 <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
@@ -312,7 +245,7 @@ export function ContentCard({ title, subtitle, children, footer, icon, action, c
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-border mb-0">
           <div className="flex items-center gap-3">
             {icon && (
-              <div className="w-9 h-9 bg-primary/10 rounded-md flex items-center justify-center text-primary shrink-0">
+              <div className="w-9 h-9 bg-primary/10 rounded-md flex items-center justify-center text-primary flex-shrink-0">
                 {icon}
               </div>
             )}
@@ -353,9 +286,8 @@ interface MetricCardProps {
   trend?: string | { value: string; isUp: boolean };
   className?: string;
   interactive?: boolean;
-  compact?: boolean;
 }
-export function MetricCard({ label, value, icon, variant = "gray", trend, className, interactive = true, compact = false }: MetricCardProps) {
+export function MetricCard({ label, value, icon, variant = "gray", trend, className, interactive = true }: MetricCardProps) {
   const variants = {
     primary: "bg-primary/10 text-primary",
     emerald: "bg-emerald-50 text-emerald-600",
@@ -375,50 +307,42 @@ export function MetricCard({ label, value, icon, variant = "gray", trend, classN
 
   return (
     <Card className={cn(
-      compact ? "p-2.5 sm:p-3" : "p-3 sm:p-3.5 lg:p-4",
-      "flex flex-col justify-between transition-all duration-300 ease-out group overflow-hidden h-full min-h-[110px] sm:min-h-[116px]",
+      "p-4 sm:p-5 md:p-6 transition-all duration-300 ease-out group",
       interactive ? "hover:shadow-card-hover hover:-translate-y-1 hover:border-border/80 cursor-pointer" : "cursor-default",
       className
     )}>
-      <div className={cn("flex items-start justify-between gap-1.5 sm:gap-2", compact ? "mb-1" : "mb-2")}>
-        <p className={cn(
-          compact ? "text-[10px] sm:text-xs min-h-[1.75rem]" : "text-[10px] sm:text-[11px] xl:text-xs min-h-[2.4rem] sm:min-h-[2.5rem]",
-          "font-semibold text-muted-foreground uppercase tracking-wide transition-colors duration-200 leading-snug line-clamp-2 flex-1 min-w-0 pr-0.5 flex items-start",
-          interactive ? "group-hover:text-primary/80" : "",
-        )}>
-          {label}
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <p className={cn(
+            "text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 transition-colors duration-200",
+            interactive ? "group-hover:text-primary/80" : "",
+          )}>
+            {label}
+          </p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-[28px] sm:text-[32px] font-bold text-foreground leading-none">{value}</span>
+            {trend && (
+              <span className={cn("text-xs font-semibold",
+                typeof trend === "object"
+                  ? trend.isUp ? "text-emerald-600" : "text-destructive"
+                  : "text-emerald-600",
+              )}>
+                {typeof trend === "object" ? (
+                  <span className="flex items-center gap-0.5">
+                    {trend.isUp ? "↑" : "↓"} {trend.value}
+                  </span>
+                ) : trend}
+              </span>
+            )}
+          </div>
+        </div>
         <div className={cn(
-          compact ? "w-7 h-7 sm:w-8 sm:h-8 rounded-lg" : "w-8 h-8 sm:w-8.5 sm:h-8.5 lg:w-9 lg:h-9 rounded-xl",
-          "flex items-center justify-center shrink-0 transition-colors duration-300 [&_svg]:w-4 [&_svg]:h-4 sm:[&_svg]:w-4.5 sm:[&_svg]:h-4.5",
+          "w-10 h-10 sm:w-11 sm:h-11 rounded-md flex items-center justify-center flex-shrink-0 transition-colors duration-300",
           variants[variant],
           interactive ? hoverVariants[variant] : "",
         )}>
           {icon}
         </div>
-      </div>
-
-      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 min-w-0 mt-auto">
-        <span className={cn(
-          compact ? "text-lg sm:text-xl" : "text-xl sm:text-2xl md:text-[24px] lg:text-[26px] xl:text-[28px]",
-          "font-bold text-foreground leading-none tracking-tight truncate max-w-full"
-        )}>
-          {value}
-        </span>
-        {trend && (
-          <span className={cn(
-            "text-xs font-semibold leading-tight shrink-0",
-            typeof trend === "object"
-              ? trend.isUp ? "text-emerald-600" : "text-destructive"
-              : "text-emerald-600",
-          )}>
-            {typeof trend === "object" ? (
-              <span className="flex items-center gap-0.5">
-                {trend.isUp ? "↑" : "↓"} {trend.value}
-              </span>
-            ) : trend}
-          </span>
-        )}
       </div>
     </Card>
   );
@@ -447,12 +371,11 @@ interface DataTableProps<T> {
   className?: string;
   scrollClassName?: string;
   disableRowAnimation?: boolean;
-  compact?: boolean;
 }
-export function DataTable<T>({ columns, data, emptyIcon, emptyTitle, emptySubtitle, rowKey, footer, renderExpandedRow, expandedRowIds, onRowClick, rowClassName, className, scrollClassName, disableRowAnimation = false, compact = false }: DataTableProps<T>) {
+export function DataTable<T>({ columns, data, emptyIcon, emptyTitle, emptySubtitle, rowKey, footer, renderExpandedRow, expandedRowIds, onRowClick, rowClassName, className, scrollClassName, disableRowAnimation = false }: DataTableProps<T>) {
   return (
     <div className={cn("card overflow-hidden flex flex-col min-h-0", className)}>
-      <div className={cn("overflow-x-auto flex-1 min-h-0", compact && "[&_.data-table_th]:py-2 [&_.data-table_th]:px-3 [&_.data-table_td]:py-2 [&_.data-table_td]:px-3", scrollClassName)}>
+      <div className={cn("overflow-x-auto flex-1 min-h-0", scrollClassName)}>
         <table className="data-table">
           <thead>
             <tr>
@@ -467,15 +390,9 @@ export function DataTable<T>({ columns, data, emptyIcon, emptyTitle, emptySubtit
             {data.length === 0 ? (
               <tr>
                 <td colSpan={columns.length}>
-                  <div className={cn(
-                    "flex flex-col items-center justify-center gap-2 text-center",
-                    compact ? "py-8 sm:py-10" : "py-12 sm:py-16"
-                  )}>
+                  <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
                     {emptyIcon && (
-                      <div className={cn(
-                        "rounded-md bg-muted flex items-center justify-center text-muted-foreground/50",
-                        compact ? "w-9 h-9" : "w-12 h-12"
-                      )}>
+                      <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center text-muted-foreground/50">
                         {emptyIcon}
                       </div>
                     )}
@@ -550,95 +467,24 @@ interface PaginationProps {
   perPage: number;
   onPageChange: (p: number) => void;
   onPerPageChange?: (size: number) => void;
-  className?: string;
-  compact?: boolean;
 }
-export function Pagination({ page, totalPages, totalItems, perPage, onPageChange, onPerPageChange, className, compact = false }: PaginationProps) {
+export function Pagination({ page, totalPages, totalItems, perPage, onPageChange, onPerPageChange }: PaginationProps) {
   if (totalItems === 0) return null;
+  if (totalPages <= 1 && !onPerPageChange) return null;
   const start = (page - 1) * perPage + 1;
   const end = Math.min(page * perPage, totalItems);
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1).filter(
     (p) => p === 1 || p === totalPages || Math.abs(p - page) <= 2,
   );
-
-  if (compact) {
-    return (
-      <div className={cn("flex flex-col gap-1.5 p-2 sm:p-2.5", className)}>
-        <div className="flex items-center justify-between gap-1 text-xs">
-          <p className="text-[11px] text-muted-foreground whitespace-nowrap">
-            Showing <span className="font-semibold text-foreground">{start > totalItems ? totalItems : start}–{end}</span> of <span className="font-semibold text-foreground">{totalItems}</span>
-          </p>
-          {onPerPageChange && (
-            <div className="flex items-center gap-1 shrink-0">
-              <span className="text-[11px] font-semibold text-muted-foreground">Rows:</span>
-              <Select value={String(perPage)} onValueChange={(val) => onPerPageChange(Number(val))}>
-                <SelectTrigger className="h-[26px] text-[11px] px-1.5 w-[58px]">
-                  <SelectValue placeholder={String(perPage)} />
-                </SelectTrigger>
-                <SelectContent>
-                  {[5, 10, 20, 50].map((size) => (
-                    <SelectItem key={size} value={String(size)} className="text-xs">
-                      {size}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-        </div>
-        <div className="flex items-center justify-end gap-1">
-          <button
-            type="button"
-            onClick={() => onPageChange(page - 1)}
-            disabled={page <= 1}
-            className="w-7 h-7 flex items-center justify-center rounded-md border border-border bg-card text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
-          >
-            <ChevronLeft className="w-3.5 h-3.5" />
-          </button>
-          {pages.map((p, i) => {
-            const prev = pages[i - 1];
-            return (
-              <React.Fragment key={p}>
-                {prev && p - prev > 1 && (
-                  <span className="text-xs text-muted-foreground px-0.5">…</span>
-                )}
-                <button
-                  type="button"
-                  onClick={() => onPageChange(p)}
-                  className={cn(
-                    "w-7 h-7 text-xs rounded-md font-medium transition-colors cursor-pointer",
-                    p === page
-                      ? "bg-primary text-primary-foreground shadow-xs font-bold"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                  )}
-                >
-                  {p}
-                </button>
-              </React.Fragment>
-            );
-          })}
-          <button
-            type="button"
-            onClick={() => onPageChange(page + 1)}
-            disabled={page >= totalPages}
-            className="w-7 h-7 flex items-center justify-center rounded-md border border-border bg-card text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
-          >
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className={cn("flex flex-col sm:flex-row items-center justify-between gap-3 w-full px-4 py-3", className)}>
-      <div className="flex items-center gap-4">
+    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
         <p className="text-xs text-muted-foreground whitespace-nowrap">
           Showing <span className="font-semibold text-foreground">{start > totalItems ? totalItems : start}–{end}</span> of <span className="font-semibold text-foreground">{totalItems}</span>
         </p>
         {onPerPageChange && (
-          <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-xs font-semibold text-muted-foreground">Rows:</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">Rows:</span>
             <Select value={String(perPage)} onValueChange={(val) => onPerPageChange(Number(val))}>
               <SelectTrigger className="h-7 text-xs px-2 w-[65px]">
                 <SelectValue placeholder={String(perPage)} />
@@ -654,12 +500,11 @@ export function Pagination({ page, totalPages, totalItems, perPage, onPageChange
           </div>
         )}
       </div>
-      <div className="flex items-center gap-1">
+      <div className="flex flex-wrap items-center gap-1">
         <button
-          type="button"
           onClick={() => onPageChange(page - 1)}
-          disabled={page <= 1}
-          className="w-8 h-8 flex items-center justify-center rounded-md border border-border bg-card text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
+          disabled={page === 1}
+          className="w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-30 transition-colors shrink-0"
         >
           <ChevronLeft className="w-3.5 h-3.5" />
         </button>
@@ -671,10 +516,9 @@ export function Pagination({ page, totalPages, totalItems, perPage, onPageChange
                 <span className="text-xs text-muted-foreground px-1">…</span>
               )}
               <button
-                type="button"
                 onClick={() => onPageChange(p)}
                 className={cn(
-                  "w-8 h-8 text-xs rounded-md font-medium transition-colors cursor-pointer",
+                  "w-8 h-8 text-xs rounded-md font-medium transition-colors shrink-0",
                   p === page
                     ? "bg-primary text-primary-foreground shadow-sm"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -686,10 +530,9 @@ export function Pagination({ page, totalPages, totalItems, perPage, onPageChange
           );
         })}
         <button
-          type="button"
           onClick={() => onPageChange(page + 1)}
-          disabled={page >= totalPages}
-          className="w-8 h-8 flex items-center justify-center rounded-md border border-border bg-card text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
+          disabled={page === totalPages}
+          className="w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-30 transition-colors shrink-0"
         >
           <ChevronRight className="w-3.5 h-3.5" />
         </button>
@@ -702,227 +545,26 @@ export function Pagination({ page, totalPages, totalItems, perPage, onPageChange
 interface SearchInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
   value: string;
   onChange: (v: string) => void;
-  onClear?: () => void;
   placeholder?: string;
   className?: string;
 }
-let searchInputIdCounter = 0;
-export function SearchInput({
-  value,
-  onChange,
-  onClear,
-  placeholder = "Search…",
-  className = "",
-  ...props
-}: SearchInputProps) {
-  const inputIdRef = React.useRef<string>();
-  const inputRef = React.useRef<HTMLInputElement>(null);
-
-  if (!inputIdRef.current) {
-    inputIdRef.current = `search-query-input-${++searchInputIdCounter}`;
-  }
-
-  const handleClear = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onChange("");
-    onClear?.();
-    inputRef.current?.focus();
-  };
-
-  const hasValue = Boolean(value && String(value).length > 0);
-
+export function SearchInput({ value, onChange, placeholder = "Search…", className = "", ...props }: SearchInputProps) {
   return (
-    <div className={cn("relative flex items-center", className)}>
+    <div className={cn("relative", className)}>
       <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
       <input
-        ref={inputRef}
         type="search"
-        name={inputIdRef.current}
-        autoComplete="off"
+        name="search-query-input"
+        autoComplete="new-password"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={cn(
-          "search-input [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden",
-          hasValue && "pr-8 sm:pr-9"
-        )}
+        className="search-input"
         spellCheck="false"
         {...props}
       />
-      {hasValue && (
-        <button
-          type="button"
-          onClick={handleClear}
-          className="absolute right-2.5 top-1/2 -translate-y-1/2 z-10 p-0.5 rounded-full text-muted-foreground/60 hover:text-foreground hover:bg-muted transition-colors cursor-pointer focus:outline-none"
-          title="Clear search"
-          aria-label="Clear search"
-        >
-          <X className="w-3.5 h-3.5" />
-        </button>
-      )}
     </div>
   );
-}
-
-// ─── FilterContainer ──────────────────────────────────────────────────────────
-export interface FilterContainerProps extends React.HTMLAttributes<HTMLDivElement> {
-  isOpen: boolean;
-  onClose: () => void;
-  children: React.ReactNode;
-}
-
-export function FilterContainer({
-  isOpen,
-  onClose,
-  children,
-  className = "",
-  ...rest
-}: FilterContainerProps) {
-  const containerRef = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    if (!isOpen) return;
-
-    const handleMouseDown = (e: MouseEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (!target) return;
-
-      // 1. Direct DOM containment
-      if (containerRef.current && containerRef.current.contains(target)) {
-        return;
-      }
-
-      // 2. Click is inside a Radix UI portal / dropdown / popover / datepicker
-      if (
-        target.closest("[data-radix-portal]") ||
-        target.closest("[data-radix-popper-content-wrapper]") ||
-        target.closest("[role='listbox']") ||
-        target.closest("[role='dialog']") ||
-        target.closest("[role='menu']") ||
-        target.closest("[role='option']") ||
-        target.closest("[data-radix-select-viewport]") ||
-        target.closest("[data-radix-collection-item]") ||
-        target.closest(".rdp") ||
-        target.closest(".popover-content")
-      ) {
-        return;
-      }
-
-      // 3. Geometric check: Even if a portal or backdrop intercepted the event target
-      // (e.g. target is html/body due to pointer-events lock), verify if click coordinates
-      // are physically inside this filter container.
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        if (
-          e.clientX >= rect.left &&
-          e.clientX <= rect.right &&
-          e.clientY >= rect.top &&
-          e.clientY <= rect.bottom
-        ) {
-          return;
-        }
-      }
-
-      // 4. Check if click coordinates fall inside any open dropdown/popover/portal
-      const portals = document.querySelectorAll(
-        "[data-radix-portal], [data-radix-popper-content-wrapper], [role='listbox'], [role='menu'], [role='dialog'], .rdp, .popover-content"
-      );
-      for (let i = 0; i < portals.length; i++) {
-        const pRect = portals[i].getBoundingClientRect();
-        if (
-          pRect.width > 0 &&
-          pRect.height > 0 &&
-          e.clientX >= pRect.left &&
-          e.clientX <= pRect.right &&
-          e.clientY >= pRect.top &&
-          e.clientY <= pRect.bottom
-        ) {
-          return;
-        }
-      }
-
-      // True outside click - collapse filter panel
-      onClose();
-    };
-
-    document.addEventListener("mousedown", handleMouseDown);
-    return () => document.removeEventListener("mousedown", handleMouseDown);
-  }, [isOpen, onClose]);
-
-  return (
-    <div ref={containerRef} className={className} {...rest}>
-      {children}
-    </div>
-  );
-}
-
-export function useFilterClickOutside(isOpen: boolean, onClose: () => void) {
-  const ref = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    if (!isOpen) return;
-
-    const handleMouseDown = (e: MouseEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (!target) return;
-
-      if (ref.current && ref.current.contains(target)) {
-        return;
-      }
-
-      if (
-        target.closest("[data-radix-portal]") ||
-        target.closest("[data-radix-popper-content-wrapper]") ||
-        target.closest("[role='listbox']") ||
-        target.closest("[role='dialog']") ||
-        target.closest("[role='menu']") ||
-        target.closest("[role='option']") ||
-        target.closest("[data-radix-select-viewport]") ||
-        target.closest("[data-radix-collection-item]") ||
-        target.closest(".rdp") ||
-        target.closest(".popover-content")
-      ) {
-        return;
-      }
-
-      if (ref.current) {
-        const rect = ref.current.getBoundingClientRect();
-        if (
-          e.clientX >= rect.left &&
-          e.clientX <= rect.right &&
-          e.clientY >= rect.top &&
-          e.clientY <= rect.bottom
-        ) {
-          return;
-        }
-      }
-
-      const portals = document.querySelectorAll(
-        "[data-radix-portal], [data-radix-popper-content-wrapper], [role='listbox'], [role='menu'], [role='dialog'], .rdp, .popover-content"
-      );
-      for (let i = 0; i < portals.length; i++) {
-        const pRect = portals[i].getBoundingClientRect();
-        if (
-          pRect.width > 0 &&
-          pRect.height > 0 &&
-          e.clientX >= pRect.left &&
-          e.clientX <= pRect.right &&
-          e.clientY >= pRect.top &&
-          e.clientY <= pRect.bottom
-        ) {
-          return;
-        }
-      }
-
-      onClose();
-    };
-
-    document.addEventListener("mousedown", handleMouseDown);
-    return () => document.removeEventListener("mousedown", handleMouseDown);
-  }, [isOpen, onClose]);
-
-  return ref;
 }
 
 // ─── FilterTabs ───────────────────────────────────────────────────────────────
@@ -950,7 +592,7 @@ export function FilterTabs({ tabs, active, onChange }: FilterTabsProps) {
 
 // ─── LabeledField ─────────────────────────────────────────────────────────────
 interface LabeledFieldProps {
-  label: React.ReactNode;
+  label: string;
   required?: boolean;
   error?: string;
   children: React.ReactNode;
@@ -1023,9 +665,9 @@ const PLAN_COLOR_CLASSES: Record<string, string> = {
 };
 export function PlanBadge({ name, code, color = "blue" }: PlanBadgeProps) {
   return (
-    <div className="flex items-center gap-1.5 min-w-0 max-w-full">
-      <span className="text-sm font-medium text-foreground truncate">{name}</span>
-      <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded border shrink-0", PLAN_COLOR_CLASSES[color] ?? PLAN_COLOR_CLASSES.blue)}>
+    <div className="flex items-center gap-1.5">
+      <span className="text-sm font-medium text-foreground">{name}</span>
+      <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded border", PLAN_COLOR_CLASSES[color] ?? PLAN_COLOR_CLASSES.blue)}>
         {code}
       </span>
     </div>
@@ -1050,8 +692,6 @@ export * from "./DropdownMenu";
 export * from "./HourMinPicker";
 export * from "./Popover";
 export * from "./SearchableSelect";
-export * from "./Calendar";
-export * from "./DatePicker";
 export { FormRenderer, SectionRenderer } from "./FormRenderer";
 export type { FormRendererProps, SectionRendererProps } from "./FormRenderer";
 export {

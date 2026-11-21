@@ -1,25 +1,33 @@
-import type { ApiAny } from "../../types/api";
-import React, { useState, useMemo } from "react";
-import { Search, ChevronLeft, ChevronRight, Clock, Calendar as CalendarIcon, Stethoscope, MoreVertical, Filter, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useState } from "react";
+import {
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Calendar as CalendarIcon,
+  Stethoscope,
+  MoreVertical,
+  Info,
+} from "lucide-react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { DatePicker } from "@/components/ui/DatePicker";
 import { Badge } from "@/components/ui/Badge";
-import { DataTable, Label, SearchInput, FilterContainer } from "@/components/ui";
+import { DataTable } from "@/components/ui";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/Tooltip";
 import { AppointmentActionMenu } from "./AppointmentList/AppointmentActionMenu";
 import { useDoctorsListQuery } from "../../hooks/staff/useDoctorsListQuery";
 import { formatPhoneWithCountryCode } from "@/utils/phoneUtils";
 import { useModal } from "../../contexts/ModalContext";
- 
+
 interface AppointmentListProps {
-  appointments?: ApiAny[];
+  appointments?: any[];
+  isNoShowView?: boolean;
   onEditAppointment?: (id: string) => void;
   onDeleteAppointment?: (id: string) => void;
   onUpdateStatus?: (id: string, status: string, cancelledReason?: string) => void;
-  onCheckInPatient?: (appointment: ApiAny) => void;
-  onDirectCheckIn?: (appointment: ApiAny) => void;
+  onCheckInPatient?: (appointment: any) => void;
+  onDirectCheckIn?: (appointment: any) => void;
   selectedDate?: string;
   setSelectedDate?: (date: string) => void;
   searchValue?: string;
@@ -33,62 +41,17 @@ interface AppointmentListProps {
   checkingInApptId?: string | null;
 }
 
-const STATUS_VARIANTS: Record<string, ApiAny> = {
-  // Booked - crisp distinct blue
-  booked: "blue",
-  BOOKED: "blue",
-  Booked: "blue",
-
-  // Rescheduled - distinct vibrant orange
-  rescheduled: "orange",
-  RESCHEDULED: "orange",
-  Rescheduled: "orange",
-
-  // Confirmed - deep indigo
-  confirmed: "indigo",
-  CONFIRMED: "indigo",
-  Confirmed: "indigo",
-
-  // In-Progress - active cyan
-  "in-progress": "cyan",
-  in_progress: "cyan",
-  IN_PROGRESS: "cyan",
-  "in progress": "cyan",
-
-  // Checked-In - calm medical teal
-  "checked-in": "teal",
-  checked_in: "teal",
-  CHECKED_IN: "teal",
-  "checked in": "teal",
-
-  // Completed - emerald green
+const STATUS_VARIANTS: Record<string, any> = {
   completed: "green",
-  COMPLETED: "green",
-  Completed: "green",
-
-  // Scheduled - muted gray
+  "in-progress": "blue",
+  "checked-in": "green",
+  confirmed: "indigo",
   scheduled: "gray",
-  SCHEDULED: "gray",
-  Scheduled: "gray",
-
-  // Cancelled - alert red
   cancelled: "red",
-  CANCELLED: "red",
-  Cancelled: "red",
-  canceled: "red",
-  CANCELED: "red",
-
-  // No-Show - warning amber
   "no-show": "amber",
-  no_show: "amber",
-  NO_SHOW: "amber",
-  "no show": "amber",
-
-  // Follow-Up - distinct violet
   "follow-up": "violet",
   follow_up: "violet",
   FOLLOW_UP: "violet",
-  "follow up": "violet",
 };
 
 const TYPE_FILTERS = [
@@ -104,14 +67,14 @@ const formatTime = (t: string) => {
   const upper = t.toUpperCase();
   if (upper.includes("AM") || upper.includes("PM")) return upper;
   const [h, m] = t.split(":");
-  const hr = parseInt(h);
+  let hr = parseInt(h);
   const ap = hr >= 12 ? "PM" : "AM";
   return `${hr % 12 || 12}:${m} ${ap}`;
 };
 
 export function AppointmentList({
   appointments: propAppointments = [],
-  isNoShowView: _isNoShowView = false,
+  isNoShowView = false,
   onEditAppointment,
   onDeleteAppointment,
   onUpdateStatus,
@@ -138,7 +101,6 @@ export function AppointmentList({
   const filter = apptFilter !== undefined ? apptFilter : localFilter;
   const setFilter = onFilterChange ?? setLocalFilter;
   const [page, setPage] = useState(1);
-  const [showFilters, setShowFilters] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   
@@ -167,7 +129,7 @@ export function AppointmentList({
 
   const { doctors } = useDoctorsListQuery();
 
-  const _today = new Date();
+  const today = new Date();
   const filtered = propAppointments.filter((a) => {
     const ptName =
       a.patientName ||
@@ -199,7 +161,7 @@ export function AppointmentList({
     {
       key: "patient",
       header: "Patient Details",
-      render: (a: ApiAny) => {
+      render: (a: any) => {
         const ptNameRaw =
           a.patientName ||
           (a.patient && a.patient.name) ||
@@ -208,18 +170,29 @@ export function AppointmentList({
           ptNameRaw && ptNameRaw !== "[object Object]" ? ptNameRaw : "?"
         );
         return (
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-secondary rounded-lg flex items-center justify-center text-primary font-bold text-xs shadow-xs uppercase shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-secondary rounded-xl flex items-center justify-center text-primary font-bold shadow-sm uppercase">
               {patientName.charAt(0)}
             </div>
-            <div className="min-w-0">
-              <div 
-                className="font-semibold text-foreground text-xs leading-tight mb-0.5 capitalize truncate max-w-[150px]" 
-                title={patientName}
-              >
-                {patientName}
+            <div>
+              <div className="flex items-center gap-1.5">
+                <div
+                  className="font-semibold text-foreground leading-tight mb-0.5 capitalize truncate max-w-[150px]"
+                  title={patientName}
+                >
+                  {patientName}
+                </div>
+                {a.treatment_session_id && (
+                  <Badge
+                    variant="violet"
+                    className="text-[8px] px-1.5 py-0 font-bold uppercase tracking-wider shrink-0"
+                    title="This appointment is a treatment plan session, not a fresh booking"
+                  >
+                    Session
+                  </Badge>
+                )}
               </div>
-              <div className="text-[9.5px] text-muted-foreground font-medium">
+              <div className="text-[10px] text-muted-foreground font-medium">
                 {formatPhoneWithCountryCode(a.patientPhone || a.phone, a.country_code)}
               </div>
             </div>
@@ -230,24 +203,24 @@ export function AppointmentList({
     {
       key: "doctor",
       header: "Doctor",
-      render: (a: ApiAny) => {
+      render: (a: any) => {
         const doc = doctors?.find(
-          (d: ApiAny) => d.id === a.doctor_id || d.id === a.doctorId
+          (d: any) => d.id === a.doctor_id || d.id === a.doctorId
         );
         let doctorName = doc ? doc.name : a.doctorName || a.doctor || "";
         if (doctorName && typeof doctorName === "string") {
           doctorName = doctorName.replace(/^(Dr\.\s+|Dr\s+)/i, "");
         }
         return (
-          <div className="flex items-center gap-2">
-            <div className="w-6.5 h-6.5 rounded-md bg-muted flex items-center justify-center shrink-0">
-              <Stethoscope className="w-3.5 h-3.5 text-muted-foreground/60" />
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+              <Stethoscope className="w-4 h-4 text-muted-foreground/60" />
             </div>
-            <div className="min-w-0">
+            <div>
               <div className="font-semibold text-foreground text-xs">
                 Dr. {doctorName}
               </div>
-              <div className="text-[9.5px] text-muted-foreground/70 mt-0.5 truncate">
+              <div className="text-[10px] text-muted-foreground/60 mt-0.5">
                 {a.treatmentType || a.type}
               </div>
             </div>
@@ -258,10 +231,10 @@ export function AppointmentList({
     {
       key: "schedule",
       header: "Schedule",
-      render: (a: ApiAny) => (
-        <div className="space-y-0.5">
-          <div className="flex items-center gap-1.5 text-muted-foreground font-medium text-xs">
-            <CalendarIcon className="w-3 h-3 text-muted-foreground/60" />
+      render: (a: any) => (
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-muted-foreground font-medium text-xs">
+            <CalendarIcon className="w-3.5 h-3.5 text-muted-foreground/60" />
             {a.date
               ? new Date(a.date).toLocaleDateString("en-IN", {
                   day: "2-digit",
@@ -269,10 +242,10 @@ export function AppointmentList({
                 })
               : "—"}
           </div>
-          <div className="flex items-center gap-1 text-[9.5px] text-muted-foreground/70">
-            <Clock className="w-3 h-3 text-muted-foreground/40" />
+          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+            <Clock className="w-3.5 h-3.5 text-muted-foreground/40" />
             {formatTime(a.time)}{" "}
-            <span className="text-muted-foreground/40 mx-0.5">•</span>{" "}
+            <span className="text-muted-foreground/40 mx-1">•</span>{" "}
             {a.duration || 15} min
           </div>
         </div>
@@ -282,8 +255,8 @@ export function AppointmentList({
       key: "fee",
       header: "Total Fee",
       align: "right" as const,
-      render: (a: ApiAny) => (
-        <div className="font-semibold text-foreground text-xs sm:text-sm">
+      render: (a: any) => (
+        <div className="font-semibold text-foreground text-sm">
           ₹{(a.fee || 0).toLocaleString()}
         </div>
       ),
@@ -291,33 +264,46 @@ export function AppointmentList({
     {
       key: "status",
       header: "Current Status",
-      render: (a: ApiAny) => {
-        const isConsultationDeleted =
-          a.cancelled_reason &&
-          String(a.cancelled_reason).toLowerCase().includes("consultation");
-        const rawStatus = String(a.status || "");
-        const normStatus = rawStatus.toLowerCase().replace(/[_\s]/g, "-");
-        const statusLabel = isConsultationDeleted
-          ? "Consultation Deleted"
-          : rawStatus
-              ? rawStatus
-                  .toLowerCase()
-                  .replace(/[_-]/g, " ")
-                  .replace(/\b\w/g, (c) => c.toUpperCase())
-              : "—";
-        const variant = isConsultationDeleted
-          ? "red"
-          : STATUS_VARIANTS[a.status] ||
-            STATUS_VARIANTS[rawStatus.toLowerCase()] ||
-            STATUS_VARIANTS[normStatus] ||
-            "gray";
+      render: (a: any) => {
+        const reason = a.cancelled_reason || a.cancelledReason || a.reason;
+        const showReason = isNoShowView && Boolean(reason);
         return (
-          <Badge
-            variant={variant}
-            className="text-[9.5px] px-2.5 py-0.5 font-medium"
-          >
-            {statusLabel}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge
+              variant={
+                STATUS_VARIANTS[a.status] ||
+                STATUS_VARIANTS[(a.status || "").toLowerCase()] ||
+                STATUS_VARIANTS[
+                  (a.status || "").toLowerCase().replace("_", "-")
+                ] ||
+                "gray"
+              }
+              className="text-[10px] px-3 py-0.5 font-medium"
+            >
+              {String(a.status || "")
+                .replace("_", " ")
+                .replace("-", " ")}
+            </Badge>
+            {showReason && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 px-2 py-0.5 rounded-full transition-colors cursor-pointer"
+                    >
+                      <Info className="w-3 h-3" />
+                      <span>Reason</span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs bg-slate-900 text-white p-2.5 text-xs rounded-xl shadow-xl border border-slate-800">
+                    <p className="font-bold text-amber-400 mb-0.5 text-[11px]">No-Show Reason:</p>
+                    <p className="text-slate-200 leading-relaxed break-words">{reason}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
         );
       },
     },
@@ -325,16 +311,16 @@ export function AppointmentList({
       key: "actions",
       header: "Actions",
       align: "left" as const,
-      render: (a: ApiAny) => (
+      render: (a: any) => (
         <div className="flex justify-start">
           <Button
             variant="ghost"
             size="icon"
-            className="h-7.5 w-7.5 text-muted-foreground/60 hover:text-foreground hover:bg-muted rounded-lg transition-all"
+            className="h-9 w-9 text-muted-foreground/60 hover:text-foreground hover:bg-muted rounded-xl transition-all"
             onClick={(e) => {
               e.stopPropagation();
               const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-              const menuHeight = 240;
+              const menuHeight = 190;
               const windowHeight = window.innerHeight;
               let top = rect.bottom + 4;
               if (rect.bottom + menuHeight > windowHeight) {
@@ -344,206 +330,141 @@ export function AppointmentList({
               setOpenMenuId(a.id === openMenuId ? null : a.id);
             }}
           >
-            <MoreVertical className="w-3.5 h-3.5" />
+            <MoreVertical className="w-4 h-4" />
           </Button>
         </div>
       ),
     },
   ];
 
-  const visiblePages = useMemo(() => {
-    return Array.from({ length: totalPages }, (_, i) => i + 1).filter(
-      (p) => p === 1 || p === totalPages || Math.abs(p - page) <= 2
-    );
-  }, [totalPages, page]);
-
   const paginationFooter =
-    filtered.length > 0 ? (
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-4 sm:px-6 py-2.5 bg-muted/20 border-t border-border">
-        <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider shrink-0">
+    totalPages > 1 ? (
+      <div className="flex items-center justify-between px-8 py-5 bg-muted/30 border-t border-border">
+        <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">
           Showing {(page - 1) * PER_PAGE + 1}–
           {Math.min(page * PER_PAGE, filtered.length)} of {filtered.length}{" "}
           entries
         </p>
-        <div className="flex items-center gap-1.5 shrink-0 max-w-full overflow-x-auto">
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="icon"
-            className="h-7 w-7 rounded-lg border-border shrink-0"
+            className="h-8 w-8 rounded-xl border-border"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            aria-label="Previous page"
           >
-            <ChevronLeft className="w-3.5 h-3.5 text-muted-foreground" />
+            <ChevronLeft className="w-4 h-4 text-muted-foreground" />
           </Button>
-          <div className="flex items-center gap-1">
-            {visiblePages.map((p, i) => {
-              const prev = visiblePages[i - 1];
-              return (
-                <React.Fragment key={p}>
-                  {prev && p - prev > 1 && (
-                    <span className="w-5 text-center text-xs text-muted-foreground/60 select-none">
-                      …
-                    </span>
-                  )}
-                  <Button
-                    variant={p === page ? "default" : "ghost"}
-                    size="icon"
-                    onClick={() => setPage(p)}
-                    className={`w-7 h-7 text-xs rounded-lg font-semibold transition-all shrink-0 ${
-                      p === page
-                        ? "bg-primary text-white shadow-xs hover:bg-primary/90"
-                        : "text-muted-foreground/60 hover:bg-muted"
-                    }`}
-                  >
-                    {p}
-                  </Button>
-                </React.Fragment>
-              );
-            })}
+          <div className="flex gap-1">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <Button
+                variant={p === page ? "default" : "ghost"}
+                key={p}
+                onClick={() => setPage(p)}
+                className={`w-8 h-8 text-xs rounded-xl font-semibold transition-all ${
+                  p === page
+                    ? "bg-primary text-white shadow-md hover:bg-primary/90"
+                    : "text-muted-foreground/60 hover:bg-muted"
+                }`}
+              >
+                {p}
+              </Button>
+            ))}
           </div>
           <Button
             variant="outline"
             size="icon"
-            className="h-7 w-7 rounded-lg border-border shrink-0"
+            className="h-8 w-8 rounded-xl border-border"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
-            aria-label="Next page"
           >
-            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
           </Button>
         </div>
       </div>
     ) : undefined;
 
   return (
-    <div className="space-y-2.5 sm:space-y-3">
+    <div className="space-y-6">
       {/* Filters row */}
-      <FilterContainer
-        isOpen={showFilters}
-        onClose={() => setShowFilters(false)}
-        className="space-y-2.5"
-      >
-        <div className="flex items-center gap-2 bg-card/60 p-2 sm:p-2.5 rounded-xl border border-border/60">
-          <SearchInput
-            placeholder="Search patient, treatment or doctor..."
-            value={searchTerm}
-            onChange={(val) => {
-              setSearchTerm(val);
-              setPage(1);
-            }}
-            className="flex-1 min-w-0 [&>input]:h-8.5 [&>input]:sm:h-9 [&>input]:rounded-xl [&>input]:bg-card [&>input]:border-border [&>input]:text-xs"
-          />
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setShowFilters((v) => !v)}
-            className={cn(
-              "h-8.5 sm:h-9 gap-2 shrink-0 text-xs",
-              (filter !== "all" || startDate || endDate) && "border-primary bg-primary/10 text-primary hover:bg-primary/15"
-            )}
-          >
-            <Filter className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Filters</span>
-            {(filter !== "all" || startDate || endDate) && (
-              <span className="bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 text-[9px]">1</span>
-            )}
-          </Button>
-
-          {(filter !== "all" || startDate || endDate) && (
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setFilter("all");
-                setStartDate("");
-                setEndDate("");
+      <div className="flex flex-col lg:flex-row lg:items-center gap-4 bg-card/30 p-3 rounded-2xl border border-border/40">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1">
+          <div className="relative flex-1 min-w-[240px]">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60" />
+            <Input
+              placeholder="Search patient, treatment or doctor..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
                 setPage(1);
               }}
-              className="h-8.5 sm:h-9 gap-1 text-muted-foreground shrink-0 text-xs"
-            >
-              <X className="w-3 h-3" /> <span className="hidden sm:inline">Clear</span>
-            </Button>
-          )}
-        </div>
-
-        {showFilters && (
-          <div className="bg-card p-4 sm:p-5 rounded-2xl border border-border shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
-            <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">Advanced Filters</h3>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              <div className="sm:col-span-2 xl:col-span-2">
-                <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">Quick Range</Label>
-                <div className="flex bg-muted p-0.5 rounded-xl border border-border w-full">
-                  {TYPE_FILTERS.map((f) => (
-                    <Button
-                      variant="ghost"
-                      key={f.id}
-                      onClick={() => {
-                        setFilter(f.id);
-                        setPage(1);
-                        if (f.id === "today") {
-                          setStartDate(todayStr);
-                          setEndDate(todayStr);
-                          setSelectedDate?.(todayStr);
-                        } else if (f.id === "week") {
-                          setStartDate(todayStr);
-                          setEndDate(nextWeekStr);
-                        } else if (f.id === "all") {
-                          setStartDate("");
-                          setEndDate("");
-                        }
-                      }}
-                      className={`flex-1 px-3 sm:px-3.5 py-1 rounded-lg text-[9.5px] font-bold uppercase tracking-wider transition-all h-7 sm:h-7.5 ${
-                        filter === f.id
-                          ? "bg-card text-primary shadow-xs ring-1 ring-black/5 hover:bg-card"
-                          : "text-muted-foreground/60 hover:text-primary hover:bg-transparent"
-                      }`}
-                    >
-                      {f.label}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">From Date</Label>
-                <DatePicker
-                  value={startDate || ""}
-                  onChange={(val) => {
-                    setStartDate(val);
-                    setSelectedDate?.(val);
-                    setFilter("all");
-                    setPage(1);
-                  }}
-                  className="h-10 w-full rounded-xl bg-muted/50 border-border text-xs"
-                />
-              </div>
-
-              <div>
-                <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">To Date</Label>
-                <DatePicker
-                  value={endDate}
-                  min={startDate || ""}
-                  onChange={(val) => {
-                    setEndDate(val);
-                    setFilter("all");
-                    setPage(1);
-                  }}
-                  className="h-10 w-full rounded-xl bg-muted/50 border-border text-xs"
-                />
-              </div>
-            </div>
+              className="pl-10 h-10 rounded-2xl bg-card border-border"
+            />
           </div>
-        )}
-      </FilterContainer>
+          <div className="flex w-full sm:w-auto items-center gap-2">
+            <Input
+              type="date"
+              value={startDate || ""}
+              onChange={(e) => {
+                setStartDate(e.target.value);
+                setSelectedDate?.(e.target.value);
+                setFilter("all");
+                setPage(1);
+              }}
+              className="h-10 rounded-2xl bg-card border-border w-36"
+            />
+            <span className="text-muted-foreground text-sm font-medium">to</span>
+            <Input
+              type="date"
+              value={endDate}
+              min={startDate || ""}
+              onChange={(e) => {
+                setEndDate(e.target.value);
+                setFilter("all");
+                setPage(1);
+              }}
+              className="h-10 rounded-2xl bg-card border-border w-36"
+            />
+          </div>
+        </div>
+        <div className="flex bg-muted p-1 rounded-2xl border border-border self-start lg:self-auto flex-shrink-0">
+          {TYPE_FILTERS.map((f) => (
+            <Button
+              variant="ghost"
+              key={f.id}
+              onClick={() => {
+                setFilter(f.id);
+                setPage(1);
+                if (f.id === "today") {
+                  setStartDate(todayStr);
+                  setEndDate(todayStr);
+                  setSelectedDate?.(todayStr);
+                } else if (f.id === "week") {
+                  setStartDate(todayStr);
+                  setEndDate(nextWeekStr);
+                } else if (f.id === "all") {
+                  setStartDate("");
+                  setEndDate("");
+                }
+              }}
+              className={`px-5 py-2 rounded-xl text-[10px] font-semibold uppercase tracking-widest transition-all h-9 ${
+                filter === f.id
+                  ? "bg-card text-primary shadow-sm ring-1 ring-black/5 hover:bg-card"
+                  : "text-muted-foreground/60 hover:text-primary hover:bg-transparent"
+              }`}
+            >
+              {f.label}
+            </Button>
+          ))}
+        </div>
+      </div>
 
       {/* Table */}
       <DataTable
-        compact
         columns={columns}
         data={paginated}
         rowKey={(a) => a.id}
-        emptyIcon={<Clock className="w-5 h-5" />}
+        emptyIcon={<Clock className="w-6 h-6" />}
         emptyTitle="No records found"
         footer={paginationFooter}
       />

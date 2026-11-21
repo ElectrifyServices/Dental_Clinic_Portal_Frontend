@@ -1,5 +1,3 @@
-import type { ApiAny, ApiRecord } from "../../types/api";
-import type { ApiQueryOptions } from "../useApiQuery";
 import { useApiQuery } from "../useApiQuery";
 
 export interface NotificationListParams {
@@ -12,8 +10,8 @@ export interface NotificationListParams {
   };
 }
 
-export function useNotificationsQuery(params: NotificationListParams = {}, options?: ApiQueryOptions<ApiRecord>) {
-  const body: Record<string, ApiAny> = {
+export function useNotificationsQuery(params: NotificationListParams = {}, options?: any) {
+  const body: Record<string, any> = {
     page: params.page ?? 1,
     limit: params.limit ?? 100,
   };
@@ -26,7 +24,7 @@ export function useNotificationsQuery(params: NotificationListParams = {}, optio
     body.filters = params.filters;
   }
 
-  return useApiQuery<ApiRecord>({
+  return useApiQuery<any>({
     queryKey: ["notifications", body],
     endpoint: "/notifications/list",
     method: "post",
@@ -40,12 +38,12 @@ export function useNotificationsQuery(params: NotificationListParams = {}, optio
   });
 }
 
-export function useTotalSuccessNotificationsQuery(phone?: string, options?: ApiQueryOptions<ApiRecord>) {
-  const params: Record<string, ApiAny> = {};
+export function useTotalSuccessNotificationsQuery(phone?: string, options?: any) {
+  const params: Record<string, any> = {};
   if (phone) {
     params.phone_no = phone;
   }
-  return useApiQuery<ApiRecord>({
+  return useApiQuery<any>({
     queryKey: ["notifications", "total-success", params.phone_no],
     endpoint: "/notifications/total-success",
     method: "get",
@@ -59,12 +57,12 @@ export function useTotalSuccessNotificationsQuery(phone?: string, options?: ApiQ
   });
 }
 
-export function useTotalFailedNotificationsQuery(phone?: string, options?: ApiQueryOptions<ApiRecord>) {
-  const params: Record<string, ApiAny> = {};
+export function useTotalFailedNotificationsQuery(phone?: string, options?: any) {
+  const params: Record<string, any> = {};
   if (phone) {
     params.phone_no = phone;
   }
-  return useApiQuery<ApiRecord>({
+  return useApiQuery<any>({
     queryKey: ["notifications", "total-fail", params.phone_no],
     endpoint: "/notifications/total-fail",
     method: "get",

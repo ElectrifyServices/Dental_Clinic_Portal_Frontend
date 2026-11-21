@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 import apiClient from "../../services/apiClient";
 export interface MembershipAnalyticsFilter {
@@ -12,7 +11,7 @@ export interface MembershipAnalyticsFilter {
  * Endpoint: POST /membershipAnalytics/total-members
  */
 export function useTotalMembersAnalyticsQuery(filter: MembershipAnalyticsFilter = {}) {
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["membershipAnalytics", "total-members", filter],
     endpoint: "/membershipAnalytics/total-members",
     method: "post",
@@ -25,7 +24,7 @@ export function useTotalMembersAnalyticsQuery(filter: MembershipAnalyticsFilter 
  * Endpoint: POST /membershipAnalytics/revenue
  */
 export function useMembershipRevenueAnalyticsQuery(filter: MembershipAnalyticsFilter = {}) {
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["membershipAnalytics", "revenue", filter],
     endpoint: "/membershipAnalytics/revenue",
     method: "post",
@@ -38,7 +37,7 @@ export function useMembershipRevenueAnalyticsQuery(filter: MembershipAnalyticsFi
  * Endpoint: POST /membershipAnalytics/avg-utilization
  */
 export function useAvgUtilizationAnalyticsQuery(filter: MembershipAnalyticsFilter = {}) {
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["membershipAnalytics", "avg-utilization", filter],
     endpoint: "/membershipAnalytics/avg-utilization",
     method: "post",
@@ -51,7 +50,7 @@ export function useAvgUtilizationAnalyticsQuery(filter: MembershipAnalyticsFilte
  * Endpoint: POST /membershipAnalytics/renewal-rate
  */
 export function useRenewalRateAnalyticsQuery(filter: MembershipAnalyticsFilter = {}) {
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["membershipAnalytics", "renewal-rate", filter],
     endpoint: "/membershipAnalytics/renewal-rate",
     method: "post",
@@ -64,7 +63,7 @@ export function useRenewalRateAnalyticsQuery(filter: MembershipAnalyticsFilter =
  * Endpoint: POST /membershipAnalytics/plan-wise-performance
  */
 export function usePlanWisePerformanceAnalyticsQuery(filter: MembershipAnalyticsFilter = {}) {
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["membershipAnalytics", "plan-wise-performance", filter],
     endpoint: "/membershipAnalytics/plan-wise-performance",
     method: "post",
@@ -72,6 +71,6 @@ export function usePlanWisePerformanceAnalyticsQuery(filter: MembershipAnalytics
   });
 }
 
-export const exportMembershipAnalytics = async (filter: ApiAny) => {
+export const exportMembershipAnalytics = async (filter: any) => {
   return apiClient.post("/membershipAnalytics/export", { ...filter, format: "xlsx" }, { responseType: "blob" });
 };

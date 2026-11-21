@@ -1,8 +1,36 @@
-import type { ApiAny } from "../../../types/api";
 import React, { useState, useEffect } from "react";
-import { User, CheckCircle, Trash2 } from "lucide-react";
-import { Modal, Button, ConfirmModal, SectionRenderer, Label, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, ContentCard, Loading } from "../../ui";
-import { CorporateEmployee, CorporatePlan, CoverageType } from "../../../types";
+import {
+  User,
+  CheckCircle,
+  Users,
+  Plus,
+  Trash2,
+  UserPlus,
+  Edit,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
+import {
+  Modal,
+  Button,
+  SectionRenderer,
+  Label,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Card,
+  ContentCard,
+  Loading,
+} from "../../ui";
+import {
+  CorporateEmployee,
+  CorporatePlan,
+  PlanDependent,
+  CoverageType,
+} from "../../../types";
 import { useFormConfig } from "../../../hooks/useFormConfig";
 import { useCreateEmployeeMutation } from "../../../hooks/corporate/useCreateEmployeeMutation";
 import { useUpdateEmployeeMutation } from "../../../hooks/corporate/useUpdateEmployeeMutation";
@@ -80,50 +108,6 @@ export function EmployeeFormModal({
   const [pendingDependents, setPendingDependents] = useState<
     PendingDependent[]
   >([]);
-  const [showExitConfirm, setShowExitConfirm] = useState(false);
-
-  const checkHasUnsavedChanges = (): boolean => {
-    if (pendingDependents.length > 0) return true;
-    if (!editEmp) {
-      const hasEntered = Boolean(
-        form.name?.trim() ||
-        form.phone?.trim() ||
-        form.email?.trim() ||
-        form.employeeId?.trim() ||
-        form.dateOfBirth ||
-        form.designation?.trim() ||
-        form.department?.trim() ||
-        form.companyName?.trim() ||
-        form.corporatePlanId ||
-        (form.coverageType && form.coverageType !== "self")
-      );
-      if (hasEntered) return true;
-    } else {
-      if (
-        form.name !== (editEmp.name || '') ||
-        form.phone !== (editEmp.phone || '') ||
-        form.email !== (editEmp.email || '') ||
-        form.employeeId !== (editEmp.employeeId || '') ||
-        form.designation !== (editEmp.designation || '') ||
-        form.department !== (editEmp.department || '') ||
-        form.companyName !== (editEmp.companyName || '') ||
-        form.corporatePlanId !== (editEmp.corporatePlanId || '') ||
-        form.coverageType !== (editEmp.coverageType || 'self')
-      ) {
-        return true;
-      }
-    }
-    return false;
-  };
-
-  const handleRequestClose = () => {
-    if (showExitConfirm) return;
-    if (checkHasUnsavedChanges()) {
-      setShowExitConfirm(true);
-    } else {
-      setShowForm(false);
-    }
-  };
   const [showAddDepForm, setShowAddDepForm] = useState(false);
   const [addDepForm, setAddDepForm] =
     useState<PendingDependent>(EMPTY_PENDING());
@@ -132,7 +116,7 @@ export function EmployeeFormModal({
     Record<string, boolean>
   >({});
   // Family members from API response — populated when editing
-  const [apiDependents, setApiDependents] = useState<ApiAny[]>([]);
+  const [apiDependents, setApiDependents] = useState<any[]>([]);
 
   const [formCountryCode, setFormCountryCode] = useState("+91");
   const [focusedField, setFocusedField] = useState<"name" | "phone" | null>(null);
@@ -163,14 +147,14 @@ export function EmployeeFormModal({
     page: 1,
     limit: 100,
     search: debouncedSearch || undefined,
-    filters: { isDropdown: [true] as ApiAny },
+    filters: { isDropdown: [true] as any },
   }, {
     enabled: !!debouncedSearch.trim(),
     staleTime: 0,
     refetchOnMount: "always",
   });
 
-  const extractPatients = (data: ApiAny): ApiAny[] => {
+  const extractPatients = (data: any): any[] => {
     if (!data) return [];
     if (Array.isArray(data)) return data;
     const target = data.responseObject !== undefined ? data.responseObject : data;
@@ -187,7 +171,7 @@ export function EmployeeFormModal({
 
   const apiPatients = React.useMemo(() => {
     const rawList = extractPatients(rawPatientsData);
-    return rawList.map((p: ApiAny) => ({
+    return rawList.map((p: any) => ({
       ...p,
       id: p.id || p.patient_id,
       name: p.name || p.full_name || p.patient_name || "",
@@ -205,7 +189,7 @@ export function EmployeeFormModal({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSelectPatient = (p: ApiAny) => {
+  const handleSelectPatient = (p: any) => {
     const pName = p.name || p.full_name || p.patient_name || "";
     const rawPhone = p.phone || p.mobile || p.mobile_number || p.patient_phone || "";
 
@@ -249,7 +233,7 @@ export function EmployeeFormModal({
   const renderPatientDropdown = () => {
     if (!focusedField) return null;
 
-    const _searchTerm = focusedField === "name"
+    const searchTerm = focusedField === "name"
       ? (form.name || "").toLowerCase().trim()
       : (form.phone || "").toLowerCase().trim();
 
@@ -276,7 +260,7 @@ export function EmployeeFormModal({
           </div>
         ) : filteredPatients.length > 0 ? (
           <ul className="max-h-52 overflow-y-auto p-1 divide-y divide-border/20">
-            {filteredPatients.map((p: ApiAny, idx: number) => {
+            {filteredPatients.map((p: any, idx: number) => {
               const pCode = p.country_code || p.countryCode || "+91";
               return (
                 <li
@@ -316,7 +300,7 @@ export function EmployeeFormModal({
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   }, []);
 
-  const _isDateInPast = React.useMemo(() => {
+  const isDateInPast = React.useMemo(() => {
     if (!form.eligible_date) return false;
     return form.eligible_date < todayStr;
   }, [form.eligible_date, todayStr]);
@@ -325,7 +309,7 @@ export function EmployeeFormModal({
   const createEmployeeMutation = useCreateEmployeeMutation();
   const updateEmployeeMutation = useUpdateEmployeeMutation();
   const addDependentMutation = useAddDependentMutation();
-  const _removeDependentMutation = useRemoveDependentMutation();
+  const removeDependentMutation = useRemoveDependentMutation();
   const updateDependentMutation = useUpdateDependentMutation();
   const deleteEmployeeMutation = useDeleteEmployeeMutation();
 
@@ -345,8 +329,8 @@ export function EmployeeFormModal({
   );
 
   const maxDependents = selectedPlan
-    ? Number((selectedPlan as ApiAny).family_coverage_limit) ||
-    Number((selectedPlan as ApiAny).familyCoverageLimit) ||
+    ? Number((selectedPlan as any).family_coverage_limit) ||
+    Number((selectedPlan as any).familyCoverageLimit) ||
     Number(selectedPlan.limit) ||
     Number(selectedPlan.maxDependents) ||
     0
@@ -357,10 +341,10 @@ export function EmployeeFormModal({
     const localDeps = existingDependents || [];
     if (!apiDependents.length) return localDeps;
     // Prefer API data; supplement with any local-only entries not yet in API
-    const apiIds = new Set(apiDependents.map((d: ApiAny) => d.id));
+    const apiIds = new Set(apiDependents.map((d: any) => d.id));
     const localOnly = localDeps.filter((d) => !apiIds.has(d.id));
     return [
-      ...apiDependents.map((d: ApiAny) => {
+      ...apiDependents.map((d: any) => {
         let depPhone = d.phone || "";
         let depCountryCode = "+91";
         if (depPhone.startsWith("+")) {
@@ -391,8 +375,8 @@ export function EmployeeFormModal({
   const totalDependents =
     (mergedDependents?.length ?? 0) + pendingDependents.length;
 
-  const empCfgAny = empCfg as ApiAny;
-  const _personalSection = React.useMemo(() => {
+  const empCfgAny = empCfg as any;
+  const personalSection = React.useMemo(() => {
     const sec = empCfg.sections?.find((s) => s.id === "personal");
     if (!sec) return undefined;
     return {
@@ -403,7 +387,7 @@ export function EmployeeFormModal({
       ),
     };
   }, [empCfg]);
-  const _employmentSection = empCfg.sections?.find((s) => s.id === "employment");
+  const employmentSection = empCfg.sections?.find((s) => s.id === "employment");
   const eligibilitySection = empCfg.sections?.find(
     (s) => s.id === "eligibility",
   );
@@ -422,15 +406,15 @@ export function EmployeeFormModal({
             raw;
 
           const activeEnrollment =
-            empData.enrollments?.find((en: ApiAny) => en.status === "ACTIVE") ||
+            empData.enrollments?.find((en: any) => en.status === "ACTIVE") ||
             empData.enrollments?.[0];
           const planId = activeEnrollment?.plan_id || editEmp.corporatePlanId || "";
           const plan = activePlans.find((p) => p.id === planId);
           const expiryDate = activeEnrollment?.expiry_date || "";
 
           let rawPhone = empData.phone || editEmp.phone || "";
-          let parsedCountryCode = empData.country_code || (editEmp as ApiAny)?.country_code || "+91";
-          if (!empData.country_code && !(editEmp as ApiAny)?.country_code && rawPhone.startsWith("+")) {
+          let parsedCountryCode = empData.country_code || (editEmp as any)?.country_code || "+91";
+          if (!empData.country_code && !(editEmp as any)?.country_code && rawPhone.startsWith("+")) {
             const codes = ["+91", "+1", "+44", "+971"];
             for (const c of codes) {
               if (rawPhone.startsWith(c)) {
@@ -488,8 +472,8 @@ export function EmployeeFormModal({
         } else {
           // Fallback: use the editEmp object directly while API loads
           let rawPhone = editEmp.phone || "";
-          let parsedCountryCode = (editEmp as ApiAny)?.country_code || "+91";
-          if (!(editEmp as ApiAny)?.country_code && rawPhone.startsWith("+")) {
+          let parsedCountryCode = (editEmp as any)?.country_code || "+91";
+          if (!(editEmp as any)?.country_code && rawPhone.startsWith("+")) {
             const codes = ["+91", "+1", "+44", "+971"];
             for (const c of codes) {
               if (rawPhone.startsWith(c)) {
@@ -549,7 +533,7 @@ export function EmployeeFormModal({
   }, [maxDependents, showForm, mergedDependents?.length]);
 
 
-  const handleFormChange = (name: string, value: ApiAny) => {
+  const handleFormChange = (name: string, value: any) => {
     if (name === "name") {
       value = typeof value === 'string' ? value.replace(/[^a-zA-Z\s]/g, "") : value;
       value = typeof value === 'string' ? value.replace(/(^\w|\s\w)/g, (m) => m.toUpperCase()) : value;
@@ -566,11 +550,11 @@ export function EmployeeFormModal({
           plan.family_coverage_limit || plan.familyCoverageLimit || plan.limit;
         const benefitsSummary =
           plan.benefits
-            ?.map((b: ApiAny) => b.description || b.benifit_label)
+            ?.map((b: any) => b.description || b.benifit_label)
             .join(", ") || "No specific benefits listed";
-        const benefitsArray = plan.benefits?.map((b: ApiAny) => b.description || b.benifit_label).filter(Boolean) || [];
+        const benefitsArray = plan.benefits?.map((b: any) => b.description || b.benifit_label).filter(Boolean) || [];
         const planType =
-          (plan as ApiAny).plan_type || plan.planCategory || "Unknown";
+          (plan as any).plan_type || plan.planCategory || "Unknown";
         return {
           label: plan.name,
           value: plan.id,
@@ -605,7 +589,7 @@ export function EmployeeFormModal({
     return !Object.keys(errs).length;
   };
 
-  const _handleEditDependent = (dep: ApiAny, isExisting: boolean) => {
+  const handleEditDependent = (dep: any, isExisting: boolean) => {
     setEditingDepId(isExisting ? dep.id : dep.tempId);
     setAddDepForm({
       tempId: isExisting ? dep.id : dep.tempId,
@@ -652,11 +636,11 @@ export function EmployeeFormModal({
     if (!validateForm()) return;
     const plan = activePlans.find((p) => p.id === form.corporatePlanId);
     const companyNameVal = plan?.companyName || "Individual";
-    const _coverageTypeVal = form.coverageType === "family" ? "FAMILY" : "SELF";
+    const coverageTypeVal = form.coverageType === "family" ? "FAMILY" : "SELF";
 
     if (!editEmp) {
       try {
-        const transformedBody: ApiAny = {
+        const transformedBody: any = {
           plan_id: form.corporatePlanId!,
           name: form.name!,
           phone: form.phone!,
@@ -703,7 +687,7 @@ export function EmployeeFormModal({
           isActive: form.isActive !== false,
           patientId: form.patientId || undefined,
           coverageType: form.coverageType || "self",
-        } as ApiAny;
+        } as any;
         onSave(emp);
         queryClient.invalidateQueries({ queryKey: ["corporatePlans"] });
         queryClient.invalidateQueries({ queryKey: ["member"] });
@@ -722,7 +706,7 @@ export function EmployeeFormModal({
           origin: { x: 0.9, y: 0.6 },
           angle: 120,
         });
-      } catch (err: ApiAny) {
+      } catch (err: any) {
         const apiError =
           err?.response?.data?.responseStatusList?.statusList?.[0]
             ?.statusDesc ||
@@ -736,7 +720,7 @@ export function EmployeeFormModal({
       }
     } else {
       try {
-        const transformedBody: ApiAny = {
+        const transformedBody: any = {
           id: editEmp.id,
           plan_id: form.corporatePlanId!,
           name: form.name!,
@@ -782,7 +766,7 @@ export function EmployeeFormModal({
           isActive: form.isActive !== false,
           patientId: form.patientId || editEmp?.patientId || undefined,
           coverageType: form.coverageType || "self",
-        } as ApiAny;
+        } as any;
         onSave(emp);
         queryClient.invalidateQueries({ queryKey: ["corporatePlans"] });
         queryClient.invalidateQueries({ queryKey: ["member"] });
@@ -801,7 +785,7 @@ export function EmployeeFormModal({
           origin: { x: 0.9, y: 0.6 },
           angle: 120,
         });
-      } catch (err: ApiAny) {
+      } catch (err: any) {
         const apiError =
           err?.response?.data?.responseStatusList?.statusList?.[0]
             ?.statusDesc ||
@@ -822,27 +806,26 @@ export function EmployeeFormModal({
     totalDependents >= maxDependents && maxDependents > 0;
 
   return (
-    <>
-      <Modal
-        title={
-          editEmp
-            ? (empCfgAny.title?.edit ?? "Edit Member")
-            : (empCfgAny.title?.create ?? "Add Member")
-        }
-        onClose={handleRequestClose}
-        size="3xl"
-        icon={<User className="w-4 h-4" />}
-        footer={
-          <div className="flex flex-col gap-3 w-full">
-            {formErrors.submit && (
-              <p className="text-red-500 text-xs font-bold text-left px-4 py-2.5 bg-red-50 rounded-xl border border-red-200">
-                {formErrors.submit}
-              </p>
-            )}
-            <div className="flex justify-end gap-3 w-full">
-              <Button variant="outline" onClick={handleRequestClose}>
-                Cancel
-              </Button>
+    <Modal
+      title={
+        editEmp
+          ? (empCfgAny.title?.edit ?? "Edit Member")
+          : (empCfgAny.title?.create ?? "Add Member")
+      }
+      onClose={() => setShowForm(false)}
+      size="3xl"
+      icon={<User className="w-4 h-4" />}
+      footer={
+        <div className="flex flex-col gap-3 w-full">
+          {formErrors.submit && (
+            <p className="text-red-500 text-xs font-bold text-left px-4 py-2.5 bg-red-50 rounded-xl border border-red-200">
+              {formErrors.submit}
+            </p>
+          )}
+          <div className="flex justify-end gap-3 w-full">
+            <Button variant="outline" onClick={() => setShowForm(false)}>
+              Cancel
+            </Button>
             <Button
               onClick={handleSave}
               className="gap-2 shadow-lg shadow-primary/10"
@@ -867,7 +850,7 @@ export function EmployeeFormModal({
         </div>
       }
     >
-      <div className="space-y-4 relative min-h-[200px]">
+      <div className="space-y-6 relative min-h-[200px]">
         {isFetching && (
           <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] flex items-center justify-center z-50 rounded-2xl transition-all duration-300">
             <Loading type="spinner" text="Loading employee details from API..." />
@@ -875,7 +858,7 @@ export function EmployeeFormModal({
         )}
         {/* Personal Details Card */}
         <ContentCard title="Personal Details" className="bg-card/50 overflow-visible" bodyClassName="overflow-visible">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 relative pb-2" ref={dropdownRef}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative pb-2" ref={dropdownRef}>
             {/* Full Name Input with Search Dropdown */}
             <div className="space-y-1.5 relative text-left">
               <Label className="text-xs font-bold text-primary">
@@ -941,11 +924,11 @@ export function EmployeeFormModal({
           </div>
         </ContentCard>
 
-        {/* Membership & Coverage Details */}
-        <div className="space-y-3">
+        {/* Membership & Coverage Details Side-by-Side */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <ContentCard
             title="Membership Plan"
-            className="bg-card/50 flex flex-col"
+            className="bg-card/50 flex flex-col md:col-span-2"
             bodyClassName="flex-1 flex flex-col justify-center"
           >
             <div className="space-y-3 w-full">
@@ -958,11 +941,11 @@ export function EmployeeFormModal({
                   No active membership plans available.
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-stretch">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
                   {planOptions.map((opt) => {
                     const isSelected = form.corporatePlanId === opt.value;
-                    const _isExpanded = !!expandedBenefits[opt.value];
-                    const _benefits =
+                    const isExpanded = !!expandedBenefits[opt.value];
+                    const benefits =
                       opt.benefitsArray?.length > 0
                         ? opt.benefitsArray
                         : (opt.benefitsSummary && opt.benefitsSummary !== "No specific benefits listed"
@@ -972,9 +955,10 @@ export function EmployeeFormModal({
                       <div
                         key={opt.value}
                         onClick={() =>
+                          !editEmp &&
                           handleFormChange("corporatePlanId", opt.value)
                         }
-                        className={`relative flex flex-col h-full p-3 rounded-xl border-2 text-left cursor-pointer transition-all duration-200 hover:shadow-md ${isSelected
+                        className={`relative flex flex-col h-full p-3 rounded-xl border-2 text-left transition-all duration-200 ${editEmp ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:shadow-md"} ${isSelected
                           ? "border-primary bg-primary/5 shadow-sm shadow-primary/5"
                           : "border-border bg-white hover:border-muted-foreground/30"
                           }`}
@@ -1016,7 +1000,7 @@ export function EmployeeFormModal({
                                 <li key={i} className="flex items-start gap-1.5">
                                   <CheckCircle className="w-3 h-3 text-emerald-500 shrink-0 mt-0.5" />
                                   <span
-                                    className="leading-snug whitespace-normal wrap-break-word sm:break-normal w-full"
+                                    className="leading-snug whitespace-normal break-words sm:break-normal w-full"
                                     title={b}
                                   >
                                     {b}
@@ -1067,7 +1051,7 @@ export function EmployeeFormModal({
           {eligibilitySection && (
             <ContentCard
               title={eligibilitySection.title}
-              className="bg-card/50 flex flex-col"
+              className="bg-card/50 flex flex-col md:col-span-1"
               bodyClassName="flex-1 flex flex-col justify-center"
             >
               <SectionRenderer
@@ -1084,7 +1068,7 @@ export function EmployeeFormModal({
         {/* Dependents — only shown when plan allows dependents */}
         {maxDependents > 0 && (
           <div className="bg-card/50 rounded-2xl border border-border/80 shadow-sm overflow-hidden">
-            <div className="p-4 space-y-3">
+            <div className="p-5 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
                   <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
@@ -1099,7 +1083,7 @@ export function EmployeeFormModal({
               {/* Existing (saved) dependents */}
               {mergedDependents && mergedDependents.length > 0 && (
                 <div className="space-y-2">
-                  {mergedDependents.map((dep: ApiAny) => (
+                  {mergedDependents.map((dep: any) => (
                     <div
                       key={dep.id}
                       className="flex items-center justify-between bg-muted/30 rounded-xl px-4 py-3 border border-border"
@@ -1144,11 +1128,11 @@ export function EmployeeFormModal({
 
               {/* Pending (not yet saved) dependents */}
               {pendingDependents.length > 0 && (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {pendingDependents.map((dep, index) => (
                     <div
                       key={dep.tempId}
-                      className="border border-primary/20 bg-white rounded-2xl p-3 shadow-sm space-y-3"
+                      className="border border-primary/20 bg-white rounded-2xl p-4 shadow-sm space-y-3"
                     >
                       <Label className="text-[10px] font-black text-primary uppercase tracking-widest">
                         Dependent{" "}
@@ -1243,11 +1227,11 @@ export function EmployeeFormModal({
 
               {/* Add dependent inline form */}
               {showAddDepForm && (
-                <div className="border border-primary/20 bg-primary/5 rounded-2xl p-3 space-y-3">
+                <div className="border border-primary/20 bg-primary/5 rounded-2xl p-4 space-y-3">
                   <Label className="text-[10px] font-black text-primary uppercase tracking-widest">
                     {editingDepId ? "Edit Family Member" : "Add Family Member"}
                   </Label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label className="text-[10px] font-semibold text-muted-foreground mb-1 block">
                         Name *
@@ -1285,7 +1269,7 @@ export function EmployeeFormModal({
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="sm:col-span-2 relative text-left">
+                    <div className="relative text-left">
                       <Label className="text-[10px] font-semibold text-muted-foreground mb-1 block">
                         Phone
                       </Label>
@@ -1367,21 +1351,5 @@ export function EmployeeFormModal({
         </div> */}
       </div>
     </Modal>
-
-    {showExitConfirm && (
-      <ConfirmModal
-        title="Unsaved Changes"
-        message="You have unsaved changes in this member form. Are you sure you want to close without saving? All the entered details will be lost."
-        confirmLabel="Discard & Exit"
-        cancelLabel="Keep Editing"
-        variant="danger"
-        onConfirm={() => {
-          setShowExitConfirm(false);
-          setShowForm(false);
-        }}
-        onCancel={() => setShowExitConfirm(false)}
-      />
-    )}
-  </>
   );
 }

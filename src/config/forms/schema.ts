@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 // ─── Form Configuration Schema Types ─────────────────────────────────────────
 // JSON-driven form metadata. Forms read labels, options, validation, and layout
 // from their config file — so changes don't require touching component code.
@@ -23,7 +22,7 @@ export interface SelectOption {
   value: string;
   label: string;
   /** Arbitrary extra data (e.g. fee, color) */
-  [key: string]: ApiAny;
+  [key: string]: any;
 }
 
 export interface FieldValidation {

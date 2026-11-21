@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { AuthStorage } from "../../auth/authStorage";
 
@@ -8,7 +7,7 @@ export interface SendWhatsappSessionVariables {
 }
 
 export function useSendWhatsappSessionMutation() {
-  return useApiMutation<ApiAny, SendWhatsappSessionVariables>({
+  return useApiMutation<any, SendWhatsappSessionVariables>({
     getEndpoint: (variables) => `/treatment/${variables.id}/sessions/${variables.sessionId}/send-whatsapp`,
     method: "post",
     headers: () => {

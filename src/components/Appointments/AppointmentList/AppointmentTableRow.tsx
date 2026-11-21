@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../../types/api";
 import React from "react";
 import {
   Clock,
@@ -11,9 +10,9 @@ import { Button } from "@/components/ui/Button";
 import { formatPhoneWithCountryCode } from "@/utils/phoneUtils";
 
 interface AppointmentTableRowProps {
-  appointment: ApiAny;
-  doctors?: ApiAny[];
-  statusVariants: Record<string, ApiAny>;
+  appointment: any;
+  doctors?: any[];
+  statusVariants: Record<string, any>;
   formatTime: (t: string) => string;
   onOpenMenu: (e: React.MouseEvent, id: string) => void;
 }
@@ -26,7 +25,7 @@ export const AppointmentTableRow: React.FC<AppointmentTableRowProps> = ({
   onOpenMenu,
 }) => {
   const a = appointment;
-  const doc = doctors?.find((d: ApiAny) => d.id === a.doctor_id || d.id === a.doctorId);
+  const doc = doctors?.find((d: any) => d.id === a.doctor_id || d.id === a.doctorId);
   let doctorName = doc ? doc.name : (a.doctorName || a.doctor || "");
   if (doctorName && typeof doctorName === "string") {
     doctorName = doctorName.replace(/^(Dr\.\s+|Dr\s+)/i, "");
@@ -92,29 +91,12 @@ export const AppointmentTableRow: React.FC<AppointmentTableRowProps> = ({
         </div>
       </td>
       <td className="px-6 py-4">
-        {(() => {
-          const rawStatus = String(a.status || "");
-          const normStatus = rawStatus.toLowerCase().replace(/[_\s]/g, "-");
-          const variant =
-            statusVariants[a.status] ||
-            statusVariants[rawStatus.toLowerCase()] ||
-            statusVariants[normStatus] ||
-            "gray";
-          const label = rawStatus
-            ? rawStatus
-                .toLowerCase()
-                .replace(/[_-]/g, " ")
-                .replace(/\b\w/g, (c) => c.toUpperCase())
-            : "—";
-          return (
-            <Badge
-              variant={variant}
-              className="text-[10px] px-3 py-0.5 font-medium"
-            >
-              {label}
-            </Badge>
-          );
-        })()}
+        <Badge
+          variant={statusVariants[a.status] || statusVariants[(a.status || "").toLowerCase()] || statusVariants[(a.status || "").toLowerCase().replace("_", "-")] || "gray"}
+          className="text-[10px] px-3 py-0.5 font-medium"
+        >
+          {String(a.status || "").replace("_", " ").replace("-", " ")}
+        </Badge>
       </td>
       <td className="px-6 py-4 text-center">
         <Button

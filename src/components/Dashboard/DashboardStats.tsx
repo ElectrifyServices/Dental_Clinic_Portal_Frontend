@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import React from 'react';
 import {
   Calendar, TrendingUp, Users, AlertTriangle, CreditCard, Building2,
@@ -20,7 +19,7 @@ import {
   usePatientRetention
 } from '../../hooks/dashboard/useDashboardAnalytics';
 
-const extractValue = (data: ApiAny): string | number => {
+const extractValue = (data: any): string | number => {
   if (data === null || data === undefined) return 0;
   if (typeof data === 'number' || typeof data === 'string') return data;
   if (typeof data === 'object') {
@@ -40,6 +39,7 @@ const extractValue = (data: ApiAny): string | number => {
 export function EnhancedDashboardStats({ period = 'today', customStart, customEnd }: { period?: string, customStart?: string, customEnd?: string }) {
   // Helpers
   const periodLabel = period === 'today' ? "Today's" : period === 'week' ? "This Week's" : period === 'month' ? "This Month's" : period === 'year' ? "This Year's" : "Custom Period";
+  const periodSuffix = period === 'today' ? "(Today)" : period === 'week' ? "(Week)" : period === 'month' ? "(Month)" : period === 'year' ? "(Year)" : "(Custom)";
 
   // API Hooks
   const { data: appointmentsCount = 0 } = useAppointmentsCount(period, customStart, customEnd);
@@ -51,7 +51,7 @@ export function EnhancedDashboardStats({ period = 'today', customStart, customEn
   const { data: revenueTrend = [] } = useRevenueTrend();
 
   const mappedRevenueTrend = React.useMemo(() => {
-    let arr = revenueTrend as ApiAny;
+    let arr = revenueTrend as any;
     if (arr && typeof arr === 'object' && !Array.isArray(arr)) {
       if (Array.isArray(arr.data)) arr = arr.data;
       else if (Array.isArray(arr.items)) arr = arr.items;
@@ -61,7 +61,7 @@ export function EnhancedDashboardStats({ period = 'today', customStart, customEn
 
     if (!Array.isArray(arr)) return [];
 
-    return arr.map((d: ApiAny) => ({
+    return arr.map((d: any) => ({
       date: d.month || d.date || d.name || '',
       revenue: typeof d.invoiced === 'number' ? d.invoiced : (Number(d.revenue) || Number(d.invoiced) || 0),
       collected: typeof d.collected === 'number' ? d.collected : (Number(d.collected) || 0)
@@ -88,7 +88,7 @@ export function EnhancedDashboardStats({ period = 'today', customStart, customEn
       sub: `Total collected`,
     },
     {
-      label: `${periodLabel} New Patients`,
+      label: `New Patients ${periodSuffix}`,
       value: extractValue(patientsCount),
       icon: <Users className="w-5 h-5" />,
       variant: 'primary' as const,
@@ -120,14 +120,13 @@ export function EnhancedDashboardStats({ period = 'today', customStart, customEn
   return (
     <div className="space-y-4">
       {/* KPI Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3">
         {cards.map((c, i) => (
           <motion.div
             key={c.label}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: i * 0.05 }}
-            className="h-full flex flex-col"
           >
             <MetricCard
               label={c.label}
@@ -135,7 +134,6 @@ export function EnhancedDashboardStats({ period = 'today', customStart, customEn
               icon={c.icon}
               variant={c.variant}
               sub={c.sub}
-              className="h-full flex-1"
             />
           </motion.div>
         ))}
@@ -144,8 +142,8 @@ export function EnhancedDashboardStats({ period = 'today', customStart, customEn
       {/* Revenue chart + goal strip */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Area chart */}
-        <Card className="lg:col-span-2 p-4 shadow-card">
-          <div className="flex items-start justify-between mb-3">
+        <Card className="lg:col-span-2 p-5 shadow-card">
+          <div className="flex items-start justify-between mb-4">
             <div>
               <h3 className="text-sm font-bold text-foreground">Revenue Trend</h3>
               <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1.5">

@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 import { AuthStorage } from "../../auth/authStorage";
@@ -19,7 +18,7 @@ export interface CreateAvailabilityOverrideVariables {
 export function useCreateAvailabilityOverrideMutation() {
   const queryClient = useQueryClient();
 
-  return useApiMutation<ApiAny, CreateAvailabilityOverrideVariables>({
+  return useApiMutation<any, CreateAvailabilityOverrideVariables>({
     getEndpoint: (variables) => `/doctorSchedule/${variables.doctorId}/exceptions`,
     method: "post",
     transformRequest: (variables) => variables.payload,

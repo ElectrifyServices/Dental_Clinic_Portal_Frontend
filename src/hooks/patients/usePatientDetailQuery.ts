@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
 const REVERSE_BLOOD_GROUP_MAP: Record<string, string> = {
@@ -12,7 +11,7 @@ const REVERSE_BLOOD_GROUP_MAP: Record<string, string> = {
   "O_NEGATIVE": "O-",
 };
 
-export function normalizePatient(payload: ApiAny) {
+export function normalizePatient(payload: any) {
   if (!payload) return null;
   
   // Unwrap the patient object if the backend wraps it
@@ -35,10 +34,8 @@ export function normalizePatient(payload: ApiAny) {
     avatar: p.profile_picture_url || p.profile_picture || p.avatar || '',
     age: p.age || p.dob || '',
     gender: p.gender ? p.gender.toLowerCase() : '',
-    patient_code: p.patient_code || p.patientCode || '',
-    patientCode: p.patient_code || p.patientCode || '',
-    country_code: p.country_code || p.countryCode || '+91',
-    date_of_birth: p.date_of_birth || p.dateOfBirth || '',
+    
+    // Mapped fields for usePatientForm
     dateOfBirth: p.date_of_birth || p.dateOfBirth || '',
     bloodGroup: REVERSE_BLOOD_GROUP_MAP[p.blood_group] || p.blood_group || p.bloodGroup || '',
     maritalStatus: p.marital_status ? p.marital_status.toLowerCase() : '',
@@ -64,10 +61,10 @@ export function normalizePatient(payload: ApiAny) {
           : (p.outstandingBalance || 0))),
     
     // Medical History
-    medicalHistory: rawMedHistory.map((m: ApiAny) => typeof m === 'object' ? (m.history_id || m.medical_history_id || m.id) : m),
-    allergies: rawAllergies.map((a: ApiAny) => typeof a === 'object' ? (a.allergy_id || a.id) : a),
-    medicalHistoryNames: rawMedHistory.map((m: ApiAny) => typeof m === 'object' ? (m.history?.name || m.name || m.condition || m.history_name || '') : m).filter(Boolean),
-    allergyNames: rawAllergies.map((a: ApiAny) => typeof a === 'object' ? (a.allergy?.name || a.name || a.allergen || '') : a).filter(Boolean),
+    medicalHistory: rawMedHistory.map((m: any) => typeof m === 'object' ? (m.history_id || m.medical_history_id || m.id) : m),
+    allergies: rawAllergies.map((a: any) => typeof a === 'object' ? (a.allergy_id || a.id) : a),
+    medicalHistoryNames: rawMedHistory.map((m: any) => typeof m === 'object' ? (m.history?.name || m.name || m.condition || m.history_name || '') : m).filter(Boolean),
+    allergyNames: rawAllergies.map((a: any) => typeof a === 'object' ? (a.allergy?.name || a.name || a.allergen || '') : a).filter(Boolean),
     pastDentalHistory: p.past_dental_history || p.pastDentalHistory || '',
     
     // Previous Dentist (nested in previous_dental)
@@ -82,7 +79,7 @@ export function normalizePatient(payload: ApiAny) {
     // Consents & Images
     consentFormUrl: p.consent_form_url || p.consentFormUrl || '',
     patientSignature: p.consent_signature_url || p.patientSignature || '',
-    dentalFiles: (p.images || []).map((img: ApiAny) => ({
+    dentalFiles: (p.images || []).map((img: any) => ({
       id: img.id,
       name: img.file_name,
       url: img.image_url,
@@ -96,7 +93,7 @@ export function normalizePatient(payload: ApiAny) {
 }
 
 export function usePatientDetailQuery(id: string, enabled = true) {
-  const query = useApiQuery<ApiAny>({
+  const query = useApiQuery<any>({
     queryKey: ["patients", "detail", id],
     endpoint: `/patient/${id}`,
     method: "get",

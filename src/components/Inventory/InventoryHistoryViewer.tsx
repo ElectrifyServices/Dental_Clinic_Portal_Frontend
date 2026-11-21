@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import React from "react";
 import { Modal, Card, CardContent } from "@/components/ui";
 import { Clock, PlusCircle, MinusCircle, SlidersHorizontal } from "lucide-react";
@@ -14,7 +13,7 @@ export function InventoryHistoryViewer({ itemId, itemName, onClose }: InventoryH
   const { data: movementsResponse, isLoading } = useInventoryMovementsQuery(itemId);
 
   let movements: InventoryMovement[] = [];
-  const res: ApiAny = movementsResponse;
+  const res: any = movementsResponse;
   if (Array.isArray(res)) {
     movements = res;
   } else if (res?.movements && Array.isArray(res.movements)) {

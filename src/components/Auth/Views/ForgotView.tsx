@@ -1,8 +1,7 @@
-import type { ApiAny } from "../../../types/api";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import { Button, Loading, toast } from "@/components/ui";
-import { Mail, ArrowRight, Lock, Key, Eye, EyeOff, Check } from "lucide-react";
+import { Mail, ArrowRight, Lock, Key, ArrowLeft, Eye, EyeOff, Check, X, Loader2 } from "lucide-react";
 const logoImg = "/Portal_logo.png";
 import { useState } from "react";
 import { useVerifyEmailMutation } from "@/hooks/auth/useVerifyEmailMutation";
@@ -66,8 +65,7 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
       await verifyEmail({ email: resetEmail });
       setIsVerified(true);
       toast.success("Email verified successfully!");
-    } catch (caught) {
-      const error = caught as ApiAny;
+    } catch (error: any) {
       const msg = error.message || "Failed to verify email. Backend might be down.";
       setEmailError(msg);
       toast.error(msg);
@@ -85,8 +83,7 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
       await forgotPassword({ email: resetEmail });
       toast.success("Password reset link sent to your email!");
       setView('forgot-sent');
-    } catch (caught) {
-      const error = caught as ApiAny;
+    } catch (error: any) {
       const msg = error.message || "Failed to send reset link";
       setEmailError(msg);
       toast.error(msg);
@@ -122,8 +119,7 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
       toast.success("Password updated successfully!");
       setShowChangeModal(false);
       setView('login');
-    } catch (caught) {
-      const error = caught as ApiAny;
+    } catch (error: any) {
       toast.error(error.message || "Failed to change password");
     } finally {
       setIsLoading(false);
@@ -206,7 +202,7 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <div className={`flex items-center gap-1.5 font-medium transition-colors ${criteria.length ? "text-emerald-600 font-semibold" : "text-rose-500 font-semibold"}`}>
                       {criteria.length ? (
-                        <Check className="w-3.5 h-3.5 stroke-3 text-emerald-600" />
+                        <Check className="w-3.5 h-3.5 stroke-[3] text-emerald-600" />
                       ) : (
                         <div className="w-3.5 h-3.5 rounded-full border-2 border-rose-500" />
                       )}
@@ -214,7 +210,7 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
                     </div>
                     <div className={`flex items-center gap-1.5 font-medium transition-colors ${criteria.uppercase ? "text-emerald-600 font-semibold" : "text-rose-500 font-semibold"}`}>
                       {criteria.uppercase ? (
-                        <Check className="w-3.5 h-3.5 stroke-3 text-emerald-600" />
+                        <Check className="w-3.5 h-3.5 stroke-[3] text-emerald-600" />
                       ) : (
                         <div className="w-3.5 h-3.5 rounded-full border-2 border-rose-500" />
                       )}
@@ -222,7 +218,7 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
                     </div>
                     <div className={`flex items-center gap-1.5 font-medium transition-colors ${criteria.lowercase ? "text-emerald-600 font-semibold" : "text-rose-500 font-semibold"}`}>
                       {criteria.lowercase ? (
-                        <Check className="w-3.5 h-3.5 stroke-3 text-emerald-600" />
+                        <Check className="w-3.5 h-3.5 stroke-[3] text-emerald-600" />
                       ) : (
                         <div className="w-3.5 h-3.5 rounded-full border-2 border-rose-500" />
                       )}
@@ -230,7 +226,7 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
                     </div>
                     <div className={`flex items-center gap-1.5 font-medium transition-colors ${criteria.number ? "text-emerald-600 font-semibold" : "text-rose-500 font-semibold"}`}>
                       {criteria.number ? (
-                        <Check className="w-3.5 h-3.5 stroke-3 text-emerald-600" />
+                        <Check className="w-3.5 h-3.5 stroke-[3] text-emerald-600" />
                       ) : (
                         <div className="w-3.5 h-3.5 rounded-full border-2 border-rose-500" />
                       )}
@@ -271,7 +267,7 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
               )}
               {confirmPassword && passwordsMatch && (
                 <p className="text-xs text-emerald-600 font-medium mt-1 animate-in fade-in slide-in-from-top-1 flex items-center gap-1">
-                  <Check className="w-3 h-3 stroke-3 text-emerald-600" /> Passwords match
+                  <Check className="w-3 h-3 stroke-[3] text-emerald-600" /> Passwords match
                 </p>
               )}
             </div>
@@ -279,7 +275,7 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
             <Button
               type="submit"
               size="lg"
-              className="w-full mt-4 bg-linear-to-r from-blue-600 via-indigo-600 to-rose-600 hover:from-blue-700 hover:via-indigo-700 hover:to-rose-700 text-white font-extrabold shadow-lg shadow-indigo-600/25 transition-all rounded-xl h-11"
+              className="w-full mt-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-rose-600 hover:from-blue-700 hover:via-indigo-700 hover:to-rose-700 text-white font-extrabold shadow-lg shadow-indigo-600/25 transition-all rounded-xl h-11"
               disabled={!isFormValid || isLoading}
               loading={isLoading}
             >
@@ -342,7 +338,7 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
               <Button
                 type="button"
                 size="lg"
-                className="w-full mt-2 bg-linear-to-r from-blue-600 via-indigo-600 to-rose-600 hover:from-blue-700 hover:via-indigo-700 hover:to-rose-700 text-white font-extrabold shadow-lg shadow-indigo-600/25 transition-all rounded-xl h-11"
+                className="w-full mt-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-rose-600 hover:from-blue-700 hover:via-indigo-700 hover:to-rose-700 text-white font-extrabold shadow-lg shadow-indigo-600/25 transition-all rounded-xl h-11"
                 onClick={handleVerifyEmail}
                 loading={isLoading}
               >
@@ -354,7 +350,7 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
                 <Button
                   type="submit"
                   size="lg"
-                  className="w-full bg-linear-to-r from-blue-600 via-indigo-600 to-rose-600 hover:from-blue-700 hover:via-indigo-700 hover:to-rose-700 text-white font-extrabold shadow-lg shadow-indigo-600/25 transition-all rounded-xl h-11"
+                  className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-rose-600 hover:from-blue-700 hover:via-indigo-700 hover:to-rose-700 text-white font-extrabold shadow-lg shadow-indigo-600/25 transition-all rounded-xl h-11"
                   loading={isLoading}
                 >
                   <span>Send Reset Link</span>

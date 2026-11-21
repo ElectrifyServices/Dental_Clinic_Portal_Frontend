@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../../types/api";
 import { Textarea } from "@/components/ui/Textarea";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
@@ -11,10 +10,10 @@ interface PrescriptionPrintModalProps {
   onClose: () => void;
   printLanguage: "en" | "gu";
   setPrintLanguage: (lang: "en" | "gu") => void;
-  previewData: ApiAny;
-  setPreviewData: (data: ApiAny) => void;
-  customSections: ApiAny[];
-  setCustomSections: (sections: ApiAny[]) => void;
+  previewData: any;
+  setPreviewData: (data: any) => void;
+  customSections: any[];
+  setCustomSections: (sections: any[]) => void;
   onPrint: () => void;
 }
 
@@ -50,7 +49,7 @@ export const PrescriptionPrintModal: React.FC<PrescriptionPrintModalProps> = ({
         </div>
       }
     >
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div className="flex bg-muted p-1 rounded-xl w-fit">
           <Button
             onClick={() => setPrintLanguage("en")}
@@ -66,12 +65,12 @@ export const PrescriptionPrintModal: React.FC<PrescriptionPrintModalProps> = ({
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-6">
             <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest border-b border-border pb-2">
               Clinical Vitals
             </h4>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
                   BP (mmHg)
@@ -104,7 +103,7 @@ export const PrescriptionPrintModal: React.FC<PrescriptionPrintModalProps> = ({
                 Clinical Complaints / Observation
               </Label>
               <Textarea
-                rows={2}
+                rows={3}
                 value={previewData.complaints}
                 onChange={(e) =>
                   setPreviewData({ ...previewData, complaints: e.target.value })
@@ -114,7 +113,7 @@ export const PrescriptionPrintModal: React.FC<PrescriptionPrintModalProps> = ({
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest border-b border-border pb-2">
               Diagnosis & Advice
             </h4>
@@ -136,7 +135,7 @@ export const PrescriptionPrintModal: React.FC<PrescriptionPrintModalProps> = ({
                 Advice / Instructions
               </Label>
               <Textarea
-                rows={2}
+                rows={3}
                 value={previewData.advice}
                 onChange={(e) =>
                   setPreviewData({ ...previewData, advice: e.target.value })

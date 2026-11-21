@@ -10,8 +10,6 @@ import { useLabWorkQuery, normalizeLabWork } from "../hooks/labWork/useLabWorkQu
 import type { LabWorkFormSaveData } from "../components/LabWork/LabWorkForm";
 import type { LabWorkStatus } from "../types";
 
-import { errorMessage } from "../utils/errorMessage";
-
 export const LabWorkPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [searchInput, setSearchInput] = useState("");
@@ -140,8 +138,8 @@ export const LabWorkPage: React.FC = () => {
         toast.success("Lab work added successfully");
       }
       closeForm();
-    } catch (err) {
-      toast.error(errorMessage(err) || "Failed to save lab work");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to save lab work");
     }
   };
 
@@ -159,8 +157,8 @@ export const LabWorkPage: React.FC = () => {
         try {
           await handleUpdateLabWorkStatus(id, newStatus);
           toast.success(`Marked as ${statusLabels[newStatus]} successfully`);
-        } catch (err) {
-          toast.error(errorMessage(err) || "Failed to update status");
+        } catch (err: any) {
+          toast.error(err?.message || "Failed to update status");
         }
       },
       "Update Status",
@@ -169,45 +167,44 @@ export const LabWorkPage: React.FC = () => {
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-6 overflow-hidden">
-      <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-        <LabWorkList
-          labWorks={labWorks}
-          groupBy={groupBy}
-          setGroupBy={setGroupBy}
-          isLoading={isLabWorksLoading}
-          onAdd={() => setFormMode("add")}
-          onView={(id) => {
-            queryClient.invalidateQueries({ queryKey: ["labWork", id] });
-            setViewingLabWorkId(id);
-          }}
-          onEdit={(id) => {
-            queryClient.invalidateQueries({ queryKey: ["labWork", id] });
-            setActiveLabWorkId(id);
-            setFormMode("edit");
-          }}
-          onDelete={(id, label) =>
-            confirmDelete("Delete Lab Work", `Delete lab work entry ${label || id}?`, () => handleDeleteLabWork(id))
-          }
-          onUpdateStatus={handleStatusChange}
-          search={searchInput}
-          setSearch={setSearchInput}
-          status={status}
-          setStatus={setStatus}
-          footer={
-            pagination && pagination.total > 0 ? (
-              <Pagination
-                page={page}
-                totalPages={pagination.totalPages}
-                totalItems={pagination.total}
-                perPage={limit}
-                onPageChange={setPage}
-                onPerPageChange={setLimit}
-              />
-            ) : undefined
-          }
-        />
-      </div>
+    <div className="space-y-6">
+      <LabWorkList
+        labWorks={labWorks}
+        groupBy={groupBy}
+        setGroupBy={setGroupBy}
+        isLoading={isLabWorksLoading}
+        onAdd={() => setFormMode("add")}
+        onView={(id) => {
+          queryClient.invalidateQueries({ queryKey: ["labWork", id] });
+          setViewingLabWorkId(id);
+        }}
+        onEdit={(id) => {
+          queryClient.invalidateQueries({ queryKey: ["labWork", id] });
+          setActiveLabWorkId(id);
+          setFormMode("edit");
+        }}
+        onDelete={(id, label) =>
+          confirmDelete("Delete Lab Work", `Delete lab work entry ${label || id}?`, () => handleDeleteLabWork(id))
+        }
+        onUpdateStatus={handleStatusChange}
+        search={searchInput}
+        setSearch={setSearchInput}
+        status={status}
+        setStatus={setStatus}
+      />
+
+      {pagination && pagination.total > 0 && (
+        <div className="mt-4">
+          <Pagination
+            page={page}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.total}
+            perPage={limit}
+            onPageChange={setPage}
+            onPerPageChange={setLimit}
+          />
+        </div>
+      )}
 
       {formMode && (
         <LabWorkForm

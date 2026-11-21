@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
 export interface StaffMember {
@@ -12,7 +11,7 @@ export interface StaffMember {
   qualification?: string;
   status: string;
   permissions?: string[];
-  [key: string]: ApiAny;
+  [key: string]: any;
 }
 
 export interface StaffListParams {
@@ -22,8 +21,8 @@ export interface StaffListParams {
   limit?: number;
 }
 
-export function useStaffQuery(params: StaffListParams = {}, options?: ApiAny) {
-  const body: Record<string, ApiAny> = {};
+export function useStaffQuery(params: StaffListParams = {}, options?: any) {
+  const body: Record<string, any> = {};
   
   if (params.page !== undefined) {
     body.page = params.page;

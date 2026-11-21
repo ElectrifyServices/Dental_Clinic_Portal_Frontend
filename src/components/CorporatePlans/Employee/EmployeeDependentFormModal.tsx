@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../../types/api";
 import React, { useState } from 'react';
 import {
   Modal,
@@ -12,6 +11,7 @@ import {
   SelectValue,
 } from '../../ui';
 import { CorporateEmployee, PlanDependent } from '../../../types';
+import { addDependent, updateDependent, notifyDependentChange } from '../../../hooks/corporate/dependentStorage';
 import { useModal } from '../../../contexts/ModalContext';
 
 interface Props {
@@ -105,8 +105,7 @@ export function EmployeeDependentFormModal({ showForm, setShowForm, employee, ed
       onSave();
       setShowForm(false);
       setFormData({ gender: 'male', isActive: true });
-    } catch (caught) {
-      const err = caught as ApiAny;
+    } catch (err: any) {
       console.error("API Error:", err?.response?.data || err);
       const data = err?.response?.data;
       const msg = data?.message || data?.error || data?.statusDesc || (typeof data === 'string' ? data : err.message) || "Failed to save family member";

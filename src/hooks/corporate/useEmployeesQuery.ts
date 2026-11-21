@@ -1,4 +1,3 @@
-import type { ApiRecord } from "../../types/api";
 import { keepPreviousData } from "@tanstack/react-query";
 import { useApiQuery } from "../useApiQuery";
 
@@ -19,7 +18,7 @@ export interface EmployeeListVariables {
 }
 
 export interface EmployeeListResponse {
-  data: ApiRecord[];
+  data: any[];
   pagination: {
     page: number;
     limit: number;

@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -9,7 +8,7 @@ export interface DeleteConsentFormVariables {
 export function useDeleteConsentFormMutation() {
   const queryClient = useQueryClient();
 
-  return useApiMutation<ApiAny, DeleteConsentFormVariables>({
+  return useApiMutation<any, DeleteConsentFormVariables>({
     getEndpoint: (variables) => `/consent/${variables.id}`,
     method: "delete",
     options: {

@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { AuthStorage } from "../../auth/authStorage";
 
@@ -8,7 +7,7 @@ export interface SendSessionPrescriptionVariables {
 }
 
 export function useSendSessionPrescriptionMutation() {
-  return useApiMutation<ApiAny, SendSessionPrescriptionVariables>({
+  return useApiMutation<any, SendSessionPrescriptionVariables>({
     getEndpoint: (variables) => `/treatment/${variables.id}/sessions/${variables.sessionId}/send-prescription`,
     method: "post",
     headers: () => {

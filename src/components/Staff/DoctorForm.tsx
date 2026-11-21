@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import React, { useState, useRef } from "react";
 import {
   Save,
@@ -12,7 +11,7 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { Modal, Button, Loading, ConfirmModal } from "@/components/ui";
+import { Modal, Button, Loading } from "@/components/ui";
 import { Step1Personal } from "./StaffForm/Step1Personal";
 import { Step2Role } from "./StaffForm/Step2Role";
 import { Step3Documentation, REQUIRED_DOCS } from "./StaffForm/Step3Documentation";
@@ -23,14 +22,13 @@ import {
   useSubmitLabel,
 } from "../../hooks/useFormConfig";
 import {
-  getStaffSchema,
   staffSchema,
+  staffCreateSchema,
   type StaffFormData,
   staffStep1Fields,
   staffStep2Fields,
   staffStep3Fields,
 } from "@/lib/schemas/staff.schema";
-import { parsePhoneAndCountryCode } from "@/utils/phoneUtils";
 import { useCreateStaffMutation } from "../../hooks/staff/useCreateStaffMutation";
 import { useUpdateStaffMutation } from "../../hooks/staff/useUpdateStaffMutation";
 import { useRolesQuery, fetchRolesList } from "@/hooks/roles/useRolesQuery";
@@ -60,8 +58,8 @@ const normalizeCategoryToUiType = (category: string): string => {
 
 interface DoctorFormProps {
   onClose: () => void;
-  onSave: (doctor: ApiAny) => void;
-  doctor?: ApiAny;
+  onSave: (doctor: any) => void;
+  doctor?: any;
 }
 
 export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
@@ -79,45 +77,6 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
 
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [removedFileIds, setRemovedFileIds] = useState<string[]>([]);
-  const [isFormDirty, setIsFormDirty] = useState(false);
-  const [showExitConfirm, setShowExitConfirm] = useState(false);
-
-  const checkHasUnsavedChanges = (): boolean => {
-    if (isFormDirty) return true;
-    if (form.formState.isDirty) return true;
-    if (avatarFile !== null) return true;
-    if (removedFileIds.length > 0) return true;
-    if (currentStep > 1) return true;
-
-    const currentValues = form.getValues();
-    if (!doctor) {
-      const hasEnteredDetails = Boolean(
-        (currentValues.name && currentValues.name.trim() !== "") ||
-        (currentValues.email && currentValues.email.trim() !== "") ||
-        (currentValues.phone && currentValues.phone.trim() !== "") ||
-        (currentValues.password && currentValues.password.trim() !== "") ||
-        (currentValues.confirmPassword && currentValues.confirmPassword.trim() !== "") ||
-        (currentValues.specialization && currentValues.specialization.trim() !== "") ||
-        (currentValues.licenseNumber && currentValues.licenseNumber.trim() !== "") ||
-        (currentValues.education && currentValues.education.trim() !== "") ||
-        (currentValues.department && currentValues.department.trim() !== "") ||
-        (currentValues.designation && currentValues.designation.trim() !== "") ||
-        (currentValues.monthlySalary && currentValues.monthlySalary.trim() !== "") ||
-        (currentValues.documents && currentValues.documents.length > 0)
-      );
-      if (hasEnteredDetails) return true;
-    }
-    return false;
-  };
-
-  const handleRequestClose = () => {
-    if (showExitConfirm) return;
-    if (checkHasUnsavedChanges()) {
-      setShowExitConfirm(true);
-    } else {
-      onClose();
-    }
-  };
 
   // Fetch detailed staff details from API GET /staff/:id when editing
   const { data: singleStaffData, isLoading: isFetching } = useSingleStaffQuery(doctor?.id || undefined, {
@@ -136,21 +95,24 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
     });
   };
 
-  const initialPhoneInfo = parsePhoneAndCountryCode(
-    doctor?.phone,
-    (doctor as ApiAny)?.country_code
-  );
-
-  const isEdit = !!doctor;
-
   const form = useForm<StaffFormData>({
-    resolver: zodResolver(getStaffSchema(isEdit)) as ApiAny,
+    resolver: zodResolver(doctor ? staffSchema : staffCreateSchema) as any,
     defaultValues: {
       name: doctor?.name ?? "",
       email: doctor?.email ?? "",
-      phone: initialPhoneInfo.nationalPhone,
-      country_code: initialPhoneInfo.countryCode,
-      country_iso: (doctor as ApiAny)?.country_iso || (doctor as ApiAny)?.countryCode || (doctor as ApiAny)?.country,
+      phone: doctor?.phone ? doctor.phone.replace(/^\+\d+/, "").slice(-10) : "",
+      country_code: (doctor as any)?.country_code || (() => {
+        let rawPhone = doctor?.phone || "";
+        if (rawPhone.startsWith("+")) {
+          const codes = ["+91", "+1", "+44", "+971"];
+          for (const c of codes) {
+            if (rawPhone.startsWith(c)) {
+              return c;
+            }
+          }
+        }
+        return "+91";
+      })(),
       role: doctor?.role ?? "doctor",
       specialization: doctor?.specialization ?? "",
       password: "",
@@ -167,7 +129,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
       ]),
       uniqueId: doctor?.uniqueId ?? `STAFF${Date.now().toString().slice(-6)}`,
       documents: Array.isArray(doctor?.files)
-        ? doctor.files.map((f: ApiAny) => ({
+        ? doctor.files.map((f: any) => ({
             id: f.id,
             type: normalizeCategoryToUiType(f.category),
             name: f.file_name,
@@ -198,7 +160,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         const s = singleStaffData.data || singleStaffData;
  
         let normalizedRole = 'staff';
-        const rawRole = s.role?.name || s.role_id || s.role || 'staff';
+        let rawRole = s.role?.name || s.role_id || s.role || 'staff';
         if (rawRole.toLowerCase().includes('super')) normalizedRole = 'super_admin';
         else if (rawRole.toLowerCase().includes('admin')) normalizedRole = 'admin';
         else if (rawRole.toLowerCase().includes('doctor')) normalizedRole = 'doctor';
@@ -213,21 +175,29 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
               permissions = normalizePermissions(rawPerms);
             }
           }
-        } catch (_e) {
+        } catch (e) {
           // Failed to parse permissions
         }
  
         const profile = s.personal_profile || {};
         const exp = profile.experience_years !== undefined ? String(profile.experience_years) : '';
         const sal = profile.monthly_salary !== undefined ? String(profile.monthly_salary) : '';
-
-        const staffPhoneInfo = parsePhoneAndCountryCode(
-          s.phone || doctor.phone,
-          s.country_code || (doctor as ApiAny)?.country_code
-        );
+ 
+        let rawPhone = s.phone || doctor.phone || "";
+        let parsedCountryCode = s.country_code || (doctor as any)?.country_code || "+91";
+        if (!s.country_code && !(doctor as any)?.country_code && rawPhone.startsWith("+")) {
+          const codes = ["+91", "+1", "+44", "+971"];
+          for (const c of codes) {
+            if (rawPhone.startsWith(c)) {
+              parsedCountryCode = c;
+              rawPhone = rawPhone.slice(c.length);
+              break;
+            }
+          }
+        }
 
         const mappedDocuments = Array.isArray(s.files)
-          ? s.files.map((f: ApiAny) => ({
+          ? s.files.map((f: any) => ({
               id: f.id,
               type: normalizeCategoryToUiType(f.category),
               name: f.file_name,
@@ -239,10 +209,9 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         form.reset({
           name: s.name || doctor.name || "",
           email: s.email || doctor.email || "",
-          phone: staffPhoneInfo.nationalPhone,
-          country_code: staffPhoneInfo.countryCode,
-          country_iso: (s as ApiAny)?.country_iso || (s as ApiAny)?.countryCode || (doctor as ApiAny)?.country_iso,
-          role: normalizedRole as ApiAny,
+          phone: rawPhone.replace(/^\+\d+/, "").slice(-10),
+          country_code: parsedCountryCode,
+          role: normalizedRole as any,
           specialization: profile.specialization?.name || profile.specialization_id || doctor.specialization || '',
           password: "",
           confirmPassword: "",
@@ -266,13 +235,21 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         });
         setRemovedFileIds([]);
       } else {
-        const docPhoneInfo = parsePhoneAndCountryCode(
-          doctor.phone,
-          (doctor as ApiAny)?.country_code
-        );
+        let rawPhone = doctor.phone || "";
+        let parsedCountryCode = (doctor as any)?.country_code || "+91";
+        if (!(doctor as any)?.country_code && rawPhone.startsWith("+")) {
+          const codes = ["+91", "+1", "+44", "+971"];
+          for (const c of codes) {
+            if (rawPhone.startsWith(c)) {
+              parsedCountryCode = c;
+              rawPhone = rawPhone.slice(c.length);
+              break;
+            }
+          }
+        }
 
         const mappedDoctorDocs = Array.isArray(doctor.files)
-          ? doctor.files.map((f: ApiAny) => ({
+          ? doctor.files.map((f: any) => ({
               id: f.id,
               type: normalizeCategoryToUiType(f.category),
               name: f.file_name,
@@ -284,9 +261,8 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         form.reset({
           name: doctor.name ?? "",
           email: doctor.email ?? "",
-          phone: docPhoneInfo.nationalPhone,
-          country_code: docPhoneInfo.countryCode,
-          country_iso: (doctor as ApiAny)?.country_iso || (doctor as ApiAny)?.countryCode,
+          phone: rawPhone.replace(/^\+\d+/, "").slice(-10),
+          country_code: parsedCountryCode,
           role: doctor.role ?? "doctor",
           specialization: doctor.specialization ?? "",
           password: "",
@@ -322,27 +298,14 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
     }
   }, [doctor, singleStaffData, form]);
 
-  React.useEffect(() => {
-    if (!doctor) {
-      form.setValue("password", "");
-      form.setValue("confirmPassword", "");
-      const timer = setTimeout(() => {
-        form.setValue("password", "");
-        form.setValue("confirmPassword", "");
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [doctor, form]);
-
   const formData = form.watch();
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setIsFormDirty(true);
       setAvatarFile(file);
       const reader = new FileReader();
-      reader.onloadend = () => form.setValue("avatar", reader.result as string, { shouldDirty: true });
+      reader.onloadend = () => form.setValue("avatar", reader.result as string);
       reader.readAsDataURL(file);
     }
   };
@@ -367,7 +330,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
       const requiredList = REQUIRED_DOCS[role] || REQUIRED_DOCS.assistant || [];
 
       const missingDocs = requiredList.filter(
-        reqDoc => !docs.some((uploadedDoc: ApiAny) => uploadedDoc.type === reqDoc)
+        reqDoc => !docs.some((uploadedDoc: any) => uploadedDoc.type === reqDoc)
       );
 
       if (missingDocs.length > 0) {
@@ -409,7 +372,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         const requiredList = REQUIRED_DOCS[role] || REQUIRED_DOCS.assistant || [];
 
         const missingDocs = requiredList.filter(
-          (reqDoc) => !docs.some((uploadedDoc: ApiAny) => uploadedDoc.type === reqDoc)
+          (reqDoc) => !docs.some((uploadedDoc: any) => uploadedDoc.type === reqDoc)
         );
 
         if (missingDocs.length > 0) {
@@ -437,32 +400,32 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         try {
           const fallbackRoles = await fetchRolesList();
           currentApiRoles = fallbackRoles;
-        } catch (_e) {
+        } catch (e) {
           // Fallback role fetch failed
         }
       }
 
-      let rawRoles: ApiAny[] | null = null;
+      let rawRoles: any[] | null = null;
       if (Array.isArray(currentApiRoles)) {
         rawRoles = currentApiRoles;
-      } else if (currentApiRoles && Array.isArray((currentApiRoles as ApiAny).roles)) {
-        rawRoles = (currentApiRoles as ApiAny).roles;
-      } else if (currentApiRoles && (currentApiRoles as ApiAny).data && Array.isArray((currentApiRoles as ApiAny).data.roles)) {
-        rawRoles = (currentApiRoles as ApiAny).data.roles;
-      } else if (currentApiRoles && Array.isArray((currentApiRoles as ApiAny).data)) {
-        rawRoles = (currentApiRoles as ApiAny).data;
+      } else if (currentApiRoles && Array.isArray((currentApiRoles as any).roles)) {
+        rawRoles = (currentApiRoles as any).roles;
+      } else if (currentApiRoles && (currentApiRoles as any).data && Array.isArray((currentApiRoles as any).data.roles)) {
+        rawRoles = (currentApiRoles as any).data.roles;
+      } else if (currentApiRoles && Array.isArray((currentApiRoles as any).data)) {
+        rawRoles = (currentApiRoles as any).data;
       }
 
       // Attempt to map by exact match
-      let roleObj = rawRoles?.find((r: ApiAny) => r.name?.toLowerCase() === data.role.toLowerCase() || r.code?.toLowerCase() === data.role.toLowerCase());
+      let roleObj = rawRoles?.find((r: any) => r.name?.toLowerCase() === data.role.toLowerCase() || r.code?.toLowerCase() === data.role.toLowerCase());
 
       // If exact match fails, maybe it's mapping "super_admin" to "SUPER_ADMIN"
       if (!roleObj && data.role === "super_admin") {
-        roleObj = rawRoles?.find((r: ApiAny) => r.code?.toLowerCase() === "super_admin" || r.name?.toLowerCase().includes("super admin") || r.name?.toLowerCase() === "admin");
+        roleObj = rawRoles?.find((r: any) => r.code?.toLowerCase() === "super_admin" || r.name?.toLowerCase().includes("super admin") || r.name?.toLowerCase() === "admin");
       }
 
       if (!roleObj) {
-        throw new Error(`Role mapping failed. Selected: '${data.role}'. Available from API: ${rawRoles ? rawRoles.map((r: ApiAny) => r.name).join(', ') : 'None fetched'}`);
+        throw new Error(`Role mapping failed. Selected: '${data.role}'. Available from API: ${rawRoles ? rawRoles.map((r: any) => r.name).join(', ') : 'None fetched'}`);
       }
 
       const roleId = roleObj.id || roleObj.role_id || roleObj.uuid;
@@ -471,18 +434,18 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         throw new Error(`Role found but ID is missing! Keys available: ${Object.keys(roleObj).join(', ')}`);
       }
 
-      let rawSpecs: ApiAny[] | null = null;
+      let rawSpecs: any[] | null = null;
       if (Array.isArray(apiSpecs)) {
         rawSpecs = apiSpecs;
-      } else if (apiSpecs && Array.isArray((apiSpecs as ApiAny).specializations)) {
-        rawSpecs = (apiSpecs as ApiAny).specializations;
-      } else if (apiSpecs && (apiSpecs as ApiAny).data && Array.isArray((apiSpecs as ApiAny).data.specializations)) {
-        rawSpecs = (apiSpecs as ApiAny).data.specializations;
-      } else if (apiSpecs && Array.isArray((apiSpecs as ApiAny).data)) {
-        rawSpecs = (apiSpecs as ApiAny).data;
+      } else if (apiSpecs && Array.isArray((apiSpecs as any).specializations)) {
+        rawSpecs = (apiSpecs as any).specializations;
+      } else if (apiSpecs && (apiSpecs as any).data && Array.isArray((apiSpecs as any).data.specializations)) {
+        rawSpecs = (apiSpecs as any).data.specializations;
+      } else if (apiSpecs && Array.isArray((apiSpecs as any).data)) {
+        rawSpecs = (apiSpecs as any).data;
       }
 
-      const specObj = rawSpecs?.find((s: ApiAny) => (typeof s === "string" ? s : s.name || "") === data.specialization);
+      const specObj = rawSpecs?.find((s: any) => (typeof s === "string" ? s : s.name || "") === data.specialization);
       const specId = specObj?.id || data.specialization;
 
       const formDataObj = new FormData();
@@ -490,8 +453,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
       formDataObj.append("email", data.email);
       if (data.password) formDataObj.append("password", data.password);
       if (data.phone) formDataObj.append("phone", data.phone);
-      formDataObj.append("country_code", data.country_code || "+91");
-      if (data.country_iso) formDataObj.append("country_iso", data.country_iso);
+      if (data.country_code) formDataObj.append("country_code", data.country_code);
 
       // Pass the mapped UUID instead of name
       formDataObj.append("role_id", roleId);
@@ -552,7 +514,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         "Medical Fitness Certificate": "medical_fitness_certificate"
       };
 
-      data.documents?.forEach((doc: ApiAny) => {
+      data.documents?.forEach((doc: any) => {
         if (doc.file) {
           const fieldName = docTypeMapping[doc.type];
           // Only append if the backend explicitly supports this field name.
@@ -583,7 +545,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
       // Strip large files/base64 before saving to local state
       const cleanData = { ...data };
       if (cleanData.documents) {
-        cleanData.documents = cleanData.documents.map((d: ApiAny) => ({
+        cleanData.documents = cleanData.documents.map((d: any) => ({
           type: d.type,
           name: d.name,
           size: d.size
@@ -609,7 +571,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         },
         timeSlots: doctor?.timeSlots || { duration: 30, bufferTime: 5 },
       });
-    } catch (error: ApiAny) {
+    } catch (error: any) {
 
       let errMsg = "Failed to save staff. Please check the details.";
 
@@ -639,8 +601,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
     }
   };
 
-  const handleChange = (e: ApiAny) => {
-    setIsFormDirty(true);
+  const handleChange = (e: any) => {
     const { name, value, type, checked } = e.target;
     let finalValue = type === "checkbox" ? checked : value;
     if (name === "profitPercentage") {
@@ -649,44 +610,36 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
     form.setValue(
       name as keyof StaffFormData,
       finalValue,
-      { shouldValidate: name !== "phone", shouldDirty: true, shouldTouch: true },
+      { shouldValidate: true },
     );
-    if (name === "phone") {
-      form.clearErrors("phone");
-    }
   };
 
   const handlePermissionChange = (id: string, checked: boolean) => {
-    setIsFormDirty(true);
     const current = form.getValues("permissions");
     form.setValue(
       "permissions",
       checked ? [...current, id] : current.filter((p) => p !== id),
-      { shouldDirty: true }
     );
   };
 
   const handleDocumentUpload = (docType: string, file: File) => {
-    setIsFormDirty(true);
     const reader = new FileReader();
     reader.onloadend = () => {
       const current = form.getValues("documents") || [];
-      const filtered = current.filter((d: ApiAny) => d.type !== docType);
+      const filtered = current.filter((d: any) => d.type !== docType);
       form.setValue("documents", [
         ...filtered,
         { type: docType, name: file.name, url: reader.result, size: file.size, file },
-      ], { shouldDirty: true });
+      ]);
     };
     reader.readAsDataURL(file);
   };
 
-  const handleDocumentRemove = (fileObj: ApiAny) => {
-    setIsFormDirty(true);
+  const handleDocumentRemove = (fileObj: any) => {
     const current = form.getValues("documents") || [];
     form.setValue(
       "documents",
-      current.filter((d: ApiAny) => d !== fileObj && d.url !== fileObj.url),
-      { shouldDirty: true }
+      current.filter((d: any) => d !== fileObj && d.url !== fileObj.url),
     );
     if (fileObj.id) {
       setRemovedFileIds((prev) => [...prev, fileObj.id]);
@@ -711,8 +664,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
           <Step2Role
             formData={formData}
             onChange={(role) => {
-              setIsFormDirty(true);
-              form.setValue("role", role as ApiAny, { shouldValidate: true, shouldDirty: true });
+              form.setValue("role", role as any, { shouldValidate: true });
               if (role === "super_admin") {
                 form.setValue(
                   "permissions",
@@ -811,132 +763,115 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
   };
 
   return (
-    <>
-      <Modal
-        title={formTitle}
-        onClose={handleRequestClose}
-        size="2xl"
-        icon={<User className="w-4 h-4" />}
-        footer={
-          <div className="flex justify-between items-center w-full">
+    <Modal
+      title={formTitle}
+      onClose={onClose}
+      size="2xl"
+      icon={<User className="w-4 h-4" />}
+      footer={
+        <div className="flex justify-between items-center w-full">
+          <Button
+            variant="outline"
+            onClick={() =>
+              currentStep > 1 ? setCurrentStep(currentStep - 1) : onClose()
+            }
+            className="gap-2"
+          >
+            <ChevronLeft className="w-4 h-4" />{" "}
+            {currentStep === 1 ? "Cancel" : "Previous Step"}
+          </Button>
+          <div className="flex gap-3">
             <Button
-              variant="outline"
-              onClick={() =>
-                currentStep > 1 ? setCurrentStep(currentStep - 1) : handleRequestClose()
+              onClick={
+                currentStep < 4 ? handleNextStep : form.handleSubmit(onSubmit, (errs) => {
+                  const errorMsg = Object.values(errs)
+                    .map((err: any) => err.message)
+                    .filter(Boolean)
+                    .join(", ");
+                  showToast(errorMsg || "Please fill all required fields correctly.", "error");
+                })
               }
+              disabled={isSaving}
               className="gap-2"
             >
-              <ChevronLeft className="w-4 h-4" />{" "}
-              {currentStep === 1 ? "Cancel" : "Previous Step"}
+              {currentStep < 4 ? (
+                <>
+                  <ChevronRight className="w-4 h-4" /> Next Step
+                </>
+              ) : isSaving ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" /> {submitLabel}
+                </>
+              )}
             </Button>
-            <div className="flex gap-3">
-              <Button
-                onClick={
-                  currentStep < 4 ? handleNextStep : form.handleSubmit(onSubmit, (errs) => {
-                    const errorMsg = Object.values(errs)
-                      .map((err: ApiAny) => err.message)
-                      .filter(Boolean)
-                      .join(", ");
-                    showToast(errorMsg || "Please fill all required fields correctly.", "error");
-                  })
-                }
-                disabled={isSaving}
-                className="gap-2"
-              >
-                {currentStep < 4 ? (
-                  <>
-                    <ChevronRight className="w-4 h-4" /> Next Step
-                  </>
-                ) : isSaving ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4" /> {submitLabel}
-                  </>
-                )}
-              </Button>
-            </div>
           </div>
-        }
-      >
-        <div className="space-y-6 relative min-h-[400px]">
-          {isFetching && (
-            <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] flex flex-col items-center justify-center z-50 rounded-2xl transition-all duration-300">
-              <Loading type="spinner" text="Loading staff details from API..." />
-            </div>
-          )}
-          <div className="flex items-center justify-between px-2">
-            {STEPS.map((s, i) => {
-              const Icon = s.icon;
-              const isActive = currentStep === s.number;
-              const isDone = currentStep > s.number;
-              return (
-                <React.Fragment key={s.number}>
-                  <div
-                    onClick={() => handleStepClick(s.number)}
-                    className="flex flex-col items-center gap-1.5 relative group cursor-pointer focus:outline-none"
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        handleStepClick(s.number);
-                      }
-                    }}
-                  >
-                    <div
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${
-                        isDone
-                          ? "bg-emerald-500 text-white hover:bg-emerald-600 hover:scale-105"
-                          : isActive
-                          ? "bg-primary text-white shadow-lg shadow-primary/20 scale-110"
-                          : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground hover:scale-105"
-                      }`}
-                    >
-                      <Icon className="w-4 h-4" />
-                    </div>
-                    <span
-                      className={`text-[9px] font-black uppercase tracking-widest hidden sm:block transition-colors duration-300 ${
-                        isActive
-                          ? "text-primary"
-                          : isDone
-                          ? "text-emerald-600 group-hover:text-emerald-700"
-                          : "text-muted-foreground group-hover:text-foreground"
-                      }`}
-                    >
-                      {s.title}
-                    </span>
-                  </div>
-                  {i < STEPS.length - 1 && (
-                    <div
-                      className={`flex-1 h-[2px] rounded-full mx-2 mt-5 self-start transition-all duration-300 ${isDone ? "bg-emerald-500" : "bg-gray-200"}`}
-                    />
-                  )}
-                </React.Fragment>
-              );
-            })}
-          </div>
-          <div className="min-h-[400px]">{renderCurrentStep()}</div>
         </div>
-      </Modal>
-
-      {showExitConfirm && (
-        <ConfirmModal
-          title="Unsaved Changes"
-          message="You have unsaved changes in this staff form. Are you sure you want to close without saving? All the entered details will be lost."
-          confirmLabel="Discard & Exit"
-          cancelLabel="Keep Editing"
-          variant="danger"
-          onConfirm={() => {
-            setShowExitConfirm(false);
-            onClose();
-          }}
-          onCancel={() => setShowExitConfirm(false)}
-        />
-      )}
-    </>
+      }
+    >
+      <div className="space-y-6 relative min-h-[400px]">
+        {isFetching && (
+          <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] flex flex-col items-center justify-center z-50 rounded-2xl transition-all duration-300">
+            <Loading type="spinner" text="Loading staff details from API..." />
+          </div>
+        )}
+        <div className="flex items-center justify-between px-2">
+          {STEPS.map((s, i) => {
+            const Icon = s.icon;
+            const isActive = currentStep === s.number;
+            const isDone = currentStep > s.number;
+            return (
+              <React.Fragment key={s.number}>
+                <div
+                  onClick={() => handleStepClick(s.number)}
+                  className="flex flex-col items-center gap-1.5 relative group cursor-pointer focus:outline-none"
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleStepClick(s.number);
+                    }
+                  }}
+                >
+                  <div
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                      isDone
+                        ? "bg-emerald-500 text-white hover:bg-emerald-600 hover:scale-105"
+                        : isActive
+                        ? "bg-primary text-white shadow-lg shadow-primary/20 scale-110"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground hover:scale-105"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                  </div>
+                  <span
+                    className={`text-[9px] font-black uppercase tracking-widest hidden sm:block transition-colors duration-300 ${
+                      isActive
+                        ? "text-primary"
+                        : isDone
+                        ? "text-emerald-600 group-hover:text-emerald-700"
+                        : "text-muted-foreground group-hover:text-foreground"
+                    }`}
+                  >
+                    {s.title}
+                  </span>
+                </div>
+                {i < STEPS.length - 1 && (
+                  <div
+                    className={`flex-1 h-[2px] rounded-full mx-2 mt-5 self-start transition-all duration-300 ${isDone ? "bg-emerald-500" : "bg-gray-200"}`}
+                  />
+                )}
+              </React.Fragment>
+            );
+          })}
+        </div>
+        <div className="min-h-[400px]">{renderCurrentStep()}</div>
+      </div>
+    </Modal>
   );
 }

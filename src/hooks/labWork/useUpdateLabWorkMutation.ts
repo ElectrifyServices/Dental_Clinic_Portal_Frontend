@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -21,7 +20,7 @@ export interface UpdateLabWorkVariables {
 export function useUpdateLabWorkMutation() {
   const queryClient = useQueryClient();
 
-  return useApiMutation<ApiAny, UpdateLabWorkVariables>({
+  return useApiMutation<any, UpdateLabWorkVariables>({
     getEndpoint: (variables) => `/labWork/${variables.id}`,
     method: "put",
     transformRequest: (variables) => {
@@ -41,7 +40,7 @@ export function useUpdateLabWorkMutation() {
 
       Object.keys(variables).forEach((key) => {
         if (key === "documents" || key === "removedFileIds" || key === "id") return;
-        const val = (variables as unknown as Record<string, unknown>)[key];
+        const val = (variables as any)[key];
         if (val === undefined || val === null) return;
         if (key === "work_tooth_no" && Array.isArray(val)) {
           val.forEach((item) => {

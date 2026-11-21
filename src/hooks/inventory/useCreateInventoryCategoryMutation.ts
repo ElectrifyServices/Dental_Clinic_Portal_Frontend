@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -10,7 +9,7 @@ export interface CreateInventoryCategoryPayload {
 export function useCreateInventoryCategoryMutation() {
   const queryClient = useQueryClient();
 
-  return useApiMutation<ApiAny, CreateInventoryCategoryPayload>({
+  return useApiMutation<any, CreateInventoryCategoryPayload>({
     endpoint: "/inventory/categories",
     method: "post",
     options: {

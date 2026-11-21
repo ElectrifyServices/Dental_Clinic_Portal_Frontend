@@ -1,6 +1,8 @@
-import type { ApiAny } from "../../types/api";
 import React, { useState } from 'react';
-import { BarChart3, Users, Calendar, Download, Package, Building2, Loader2 } from 'lucide-react';
+import {
+  BarChart3, TrendingUp, Users, Calendar, Download,
+  Package, Building2, Loader2,
+} from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
 import { Button, FilterTabs, toast } from '@/components/ui';
 import { downloadExcelFromBlob } from '@/utils/export/exportHandler';
@@ -43,13 +45,13 @@ const REPORT_TABS = [
   // { id: 'revenue',     label: 'Revenue',     icon: TrendingUp,   color: 'from-emerald-500 to-teal-600'     },
 ];
 
-export function ReportsDashboard({ patients: _patients, appointments: _appointments, treatments: _treatments, invoices: _invoices }: ApiAny) {
+export function ReportsDashboard({ patients, appointments, treatments, invoices }: any) {
   const [period, setPeriod]   = useState('month');
   const [activeTab, setTab]   = useState('patients');
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExport = async () => {
-    const exportFnMap: Record<string, (filter: ApiAny) => Promise<ApiAny>> = {
+    const exportFnMap: Record<string, (filter: any) => Promise<any>> = {
       revenue: exportRevenueAnalytics,
       appointments: exportAppointmentAnalytics,
       patients: exportPatientAnalytics,
@@ -82,7 +84,7 @@ export function ReportsDashboard({ patients: _patients, appointments: _appointme
 
       await downloadExcelFromBlob(response.data, `${activeTab}-analytics-export.xlsx`);
       toast.success("Export successful");
-    } catch (error: ApiAny) {
+    } catch (error: any) {
       console.error("Export failed:", error);
       const errorMessage = error?.response?.data?.message || error?.message || "Failed to export data. Please try again.";
       toast.error(errorMessage);
@@ -95,28 +97,28 @@ export function ReportsDashboard({ patients: _patients, appointments: _appointme
     <div className="space-y-5">
       {/* Header */}
       <div className="bg-white border border-border/60 rounded-2xl shadow-sm overflow-hidden">
-        <div className="px-4 sm:px-6 pt-5 pb-4 flex flex-col lg:flex-row lg:items-center gap-4">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
+        <div className="px-6 pt-5 pb-4 flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex items-center gap-3 flex-1">
             <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary">
               <BarChart3 className="w-5 h-5" />
             </div>
-            <div className="min-w-0">
+            <div>
               <h1 className="text-xl font-extrabold text-slate-800 tracking-tight">Clinic Analytics</h1>
-              <p className="text-xs text-slate-500 mt-0.5 font-medium truncate">
+              <p className="text-xs text-slate-500 mt-0.5 font-medium">
                 Performance insights across revenue, patients, appointments & more
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 overflow-x-auto hide-scrollbar">
+          <div className="flex items-center gap-3">
             <FilterTabs
               tabs={PERIODS}
               active={period}
               onChange={setPeriod}
             />
             {!['revenue', 'appointments'].includes(activeTab) && (
-              <Button
-                variant="outline"
+              <Button 
+                variant="outline" 
                 className="gap-2 flex-shrink-0"
                 onClick={handleExport}
                 disabled={isExporting}

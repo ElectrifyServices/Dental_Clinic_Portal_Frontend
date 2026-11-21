@@ -1,8 +1,7 @@
-import type { ApiRecord } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
 export function useTotalBilledQuery() {
-  return useApiQuery<ApiRecord>({
+  return useApiQuery<any>({
     queryKey: ["invoices", "stats", "total-billed"],
     endpoint: "/invoice/stats/total-billed",
     method: "get",
@@ -10,7 +9,7 @@ export function useTotalBilledQuery() {
 }
 
 export function usePendingInvoicesQuery() {
-  return useApiQuery<ApiRecord>({
+  return useApiQuery<any>({
     queryKey: ["invoices", "stats", "pending-invoices"],
     endpoint: "/invoice/stats/pending-invoices",
     method: "get",
@@ -18,7 +17,7 @@ export function usePendingInvoicesQuery() {
 }
 
 export function usePaidInvoicesQuery() {
-  return useApiQuery<ApiRecord>({
+  return useApiQuery<any>({
     queryKey: ["invoices", "stats", "paid"],
     endpoint: "/invoice/stats/paid",
     method: "get",

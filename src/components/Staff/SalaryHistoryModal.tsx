@@ -1,5 +1,4 @@
-import type { ApiAny } from "../../types/api";
-import { Calendar, IndianRupee, History, Loader2, RotateCw } from "lucide-react";
+import { Calendar, IndianRupee, History, Loader2 } from "lucide-react";
 import { Modal, Button, Badge } from "@/components/ui";
 import { useSalaryHistoryQuery } from "../../hooks/staff/useSalaryHistoryQuery";
 
@@ -14,44 +13,19 @@ export function SalaryHistoryModal({
   staffName,
   onClose,
 }: SalaryHistoryModalProps) {
-  const { data: responseData, isLoading, isFetching, refetch } = useSalaryHistoryQuery(staffId);
+  const { data: responseData, isLoading } = useSalaryHistoryQuery(staffId);
   const historyData = responseData?.responseObject?.data || responseData?.responseObject || responseData?.data || responseData || [];
   const history = Array.isArray(historyData) ? historyData : (Array.isArray(historyData?.data) ? historyData.data : []);
-
-  const staffInfoName = responseData?.staff_info?.name || responseData?.responseObject?.data?.staff_info?.name || responseData?.data?.staff_info?.name;
-  const subtitle = (staffName && staffName !== "NAN" && staffName !== "NaN") ? staffName : (staffInfoName || staffName || "Staff Member");
 
   return (
     <Modal
       title="Salary History"
-      subtitle={subtitle}
+      subtitle={staffName}
       onClose={onClose}
       size="md"
       icon={<History className="w-4 h-4" />}
-      // headerRight={
-      //   <Button
-      //     variant="ghost"
-      //     size="icon-sm"
-      //     onClick={() => refetch()}
-      //     disabled={isLoading || isFetching}
-      //     className="text-muted-foreground hover:text-foreground h-8 w-8"
-      //     title="Refresh History"
-      //   >
-      //     <RotateCw className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-primary" : ""}`} />
-      //   </Button>
-      // }
       footer={
-        <div className="flex justify-between items-center w-full">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => refetch()}
-            disabled={isLoading || isFetching}
-            className="text-muted-foreground hover:text-foreground text-xs gap-1.5"
-          >
-            <RotateCw className={`w-3 h-3 ${isFetching ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
+        <div className="flex justify-end w-full">
           <Button variant="outline" onClick={onClose}>
             Close History
           </Button>
@@ -73,7 +47,7 @@ export function SalaryHistoryModal({
           </div>
         ) : (
           <div className="space-y-3">
-            {history.map((payment: ApiAny, index: number) => {
+            {history.map((payment: any, index: number) => {
               const amount = payment.payment_amount || payment.amount || 0;
               const date = payment.payment_date || payment.date || new Date().toISOString();
               const mode = payment.payment_mode || payment.mode || "Unknown";

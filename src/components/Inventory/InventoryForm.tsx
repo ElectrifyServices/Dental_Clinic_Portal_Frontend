@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import React, { useEffect } from "react";
 import { Save, Package, AlertTriangle } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -32,13 +31,12 @@ import { useInventoryCategoriesQuery } from "../../hooks/inventory/useInventoryC
 import { useCreateInventoryCategoryMutation } from "../../hooks/inventory/useCreateInventoryCategoryMutation";
 import { useDeleteInventoryCategoryMutation } from "../../hooks/inventory/useDeleteInventoryCategoryMutation";
 import { SearchableSelect } from "../ui/SearchableSelect";
-import { DatePicker } from "../ui/DatePicker";
 import { useState } from "react";
 
 interface InventoryFormProps {
   onClose: () => void;
-  onSave: (item: ApiAny) => void;
-  item?: ApiAny;
+  onSave: (item: any) => void;
+  item?: any;
   isLoading?: boolean;
 }
 
@@ -66,20 +64,12 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
 
   const createCategoryMutation = useCreateInventoryCategoryMutation();
 
-  const todayStr = React.useMemo(() => {
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, "0");
-    const d = String(now.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
-  }, []);
-
   const deleteCategoryMutation = useDeleteInventoryCategoryMutation();
   const [isDeletingCategory, setIsDeletingCategory] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteName, setDeleteName] = useState<string | null>(null);
 
-  let dynamicCategories: ApiAny[] = [];
+  let dynamicCategories: any[] = [];
   if (Array.isArray(categoriesData)) dynamicCategories = categoriesData;
   else if (Array.isArray(categoriesData?.data)) dynamicCategories = categoriesData.data;
   else if (Array.isArray(categoriesData?.items)) dynamicCategories = categoriesData.items;
@@ -87,14 +77,14 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
   else if (Array.isArray(categoriesData?.responseObject?.data)) dynamicCategories = categoriesData.responseObject.data;
   else if (categoriesData?.responseObject && Array.isArray(categoriesData?.responseObject?.categories)) dynamicCategories = categoriesData.responseObject.categories;
 
-  const categoryOptions = dynamicCategories.map((c: ApiAny) => ({
+  const categoryOptions = dynamicCategories.map((c: any) => ({
     label: c?.name || c?.value || c?.label || "Unknown",
     value: c?.id || c?._id || c?.categoryId || c?.category_id || "Unknown",
     id: c?.id || c?._id || c?.categoryId || c?.category_id || Math.random().toString()
-  })).filter((c: ApiAny) => c.value !== "Unknown");
+  })).filter((c: any) => c.value !== "Unknown");
 
   const form = useForm<InventoryFormData>({
-    resolver: zodResolver(inventorySchema) as ApiAny,
+    resolver: zodResolver(inventorySchema) as any,
     defaultValues: {
       name: item?.name ?? "",
       category: item?.category ?? "",
@@ -138,7 +128,7 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
     let categoryId = data.category;
     if (categoryId) {
       const matchedOpt = categoryOptions.find(
-        (opt: ApiAny) =>
+        (opt: any) =>
           opt.value === categoryId ||
           opt.label.toLowerCase() === categoryId.toLowerCase() ||
           opt.value.toLowerCase() === categoryId.toLowerCase()
@@ -157,7 +147,7 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
     });
   };
 
-  const _selectCls =
+  const selectCls =
     "form-input w-full h-9 rounded-lg border border-input bg-background px-3 py-1 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary transition-all";
 
   return (
@@ -185,18 +175,18 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
           {/* ── Basic Info ─────────────────────────────────────────── */}
           <Card>
             <CardContent className="pt-6">
-              <p className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground mb-3 flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-border">Basic Information</p>
+              <p className="text-[11px] font-semibold tracking-[0.1em] uppercase text-muted-foreground mb-3 flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-border">Basic Information</p>
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="name"
                   render={({ field }) => (
-                    <FormItem className="space-y-2">
-                      <FormLabel className="text-sm font-semibold text-foreground leading-normal block">
+                    <FormItem>
+                      <FormLabel>
                         Item Name <span className="text-destructive">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="e.g. Dental Mirror" className="h-11 rounded-xl px-4" />
+                        <Input {...field} placeholder="e.g. Dental Mirror" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -206,8 +196,8 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                   control={form.control}
                   name="category"
                   render={({ field }) => (
-                    <FormItem className="space-y-2">
-                      <FormLabel className="text-sm font-semibold text-foreground leading-normal block">
+                    <FormItem>
+                      <FormLabel>
                         Category <span className="text-destructive">*</span>
                       </FormLabel>
                       <FormControl>
@@ -218,7 +208,6 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                           placeholder="Select category..."
                           searchPlaceholder="Search categories..."
                           isLoading={isLoadingCategories}
-                          className="hover:translate-y-0 active:translate-y-0"
                           onCreateOption={async (val) => {
                             try {
                               const res = await createCategoryMutation.mutateAsync({ name: val });
@@ -250,7 +239,7 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                           isCreating={createCategoryMutation.isPending}
                           createLabel="Add new category"
                           onDeleteOption={(val) => {
-                            const cat = categoryOptions.find((c: ApiAny) => c.value === val);
+                            const cat = categoryOptions.find((c: any) => c.value === val);
                             if (cat) {
                               setDeleteId(cat.value);
                               setDeleteName(cat.label);
@@ -267,10 +256,10 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                   control={form.control}
                   name="description"
                   render={({ field }) => (
-                    <FormItem className="col-span-2 space-y-2">
-                      <FormLabel className="text-sm font-semibold text-foreground leading-normal block">Description</FormLabel>
+                    <FormItem className="col-span-2">
+                      <FormLabel>Description</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Optional description" className="h-11 rounded-xl px-4" />
+                        <Input {...field} placeholder="Optional description" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -283,15 +272,15 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
           {/* ── Stock Info ──────────────────────────────────────────── */}
           <Card>
             <CardContent className="pt-6">
-              <p className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground mb-3 flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-border">Stock Information</p>
+              <p className="text-[11px] font-semibold tracking-[0.1em] uppercase text-muted-foreground mb-3 flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-border">Stock Information</p>
               <div className="grid grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
                   name="currentStock"
                   render={({ field }) => (
-                    <FormItem className="space-y-2">
-                      <FormLabel className="text-sm font-semibold text-foreground leading-normal block">
-                        Current Stock
+                    <FormItem>
+                      <FormLabel>
+                        Current Stock <span className="text-destructive">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input 
@@ -301,7 +290,6 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                           value={field.value === 0 ? "" : field.value}
                           onChange={(e) => field.onChange(e.target.value === "" ? "" : Number(e.target.value))}
                           onFocus={(e) => e.target.select()} 
-                          className="h-11 rounded-xl px-4"
                         />
                       </FormControl>
                       <FormMessage />
@@ -312,9 +300,9 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                   control={form.control}
                   name="minStock"
                   render={({ field }) => (
-                    <FormItem className="space-y-2">
-                      <FormLabel className="text-sm font-semibold text-foreground leading-normal block">
-                        Min Stock
+                    <FormItem>
+                      <FormLabel>
+                        Min Stock <span className="text-destructive">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input 
@@ -324,7 +312,6 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                           value={field.value === 0 ? "" : field.value}
                           onChange={(e) => field.onChange(e.target.value === "" ? "" : Number(e.target.value))}
                           onFocus={(e) => e.target.select()} 
-                          className="h-11 rounded-xl px-4"
                         />
                       </FormControl>
                       <FormMessage />
@@ -335,9 +322,9 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                   control={form.control}
                   name="maxStock"
                   render={({ field }) => (
-                    <FormItem className="space-y-2">
-                      <FormLabel className="text-sm font-semibold text-foreground leading-normal block">
-                        Max Stock
+                    <FormItem>
+                      <FormLabel>
+                        Max Stock <span className="text-destructive">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input 
@@ -347,7 +334,6 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                           value={field.value === 0 ? "" : field.value}
                           onChange={(e) => field.onChange(e.target.value === "" ? "" : Number(e.target.value))}
                           onFocus={(e) => e.target.select()} 
-                          className="h-11 rounded-xl px-4"
                         />
                       </FormControl>
                       <FormMessage />
@@ -358,13 +344,13 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                   control={form.control}
                   name="unit"
                   render={({ field }) => (
-                    <FormItem className="space-y-2">
-                      <FormLabel className="text-sm font-semibold text-foreground leading-normal block">
-                        Unit
+                    <FormItem>
+                      <FormLabel>
+                        Unit <span className="text-destructive">*</span>
                       </FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="h-11 rounded-xl px-4">
+                          <SelectTrigger>
                             <SelectValue placeholder="Select unit" />
                           </SelectTrigger>
                         </FormControl>
@@ -384,10 +370,10 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                   control={form.control}
                   name="batchNumber"
                   render={({ field }) => (
-                    <FormItem className="space-y-2">
-                      <FormLabel className="text-sm font-semibold text-foreground leading-normal block">Batch Number</FormLabel>
+                    <FormItem>
+                      <FormLabel>Batch Number</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="e.g. BATCH-001" className="h-11 rounded-xl px-4" />
+                        <Input {...field} placeholder="e.g. BATCH-001" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -397,15 +383,10 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                   control={form.control}
                   name="expiryDate"
                   render={({ field }) => (
-                    <FormItem className="space-y-2">
-                      <FormLabel className="text-sm font-semibold text-foreground leading-normal block">Expiry Date</FormLabel>
+                    <FormItem>
+                      <FormLabel>Expiry Date</FormLabel>
                       <FormControl>
-                        <DatePicker
-                          value={field.value}
-                          onChange={field.onChange}
-                          min={todayStr}
-                          placeholder="Select expiry date"
-                        />
+                        <Input {...field} type="date" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -417,7 +398,7 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
               {Number(currentStock) <= Number(minStock) &&
                 Number(currentStock) > 0 && (
                   <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-center gap-3">
-                    <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
+                    <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
                     <p className="text-xs font-bold text-amber-800 uppercase tracking-tight">
                       Warning: Item will reach critical level soon
                     </p>
@@ -429,14 +410,14 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
           {/* ── Purchase Info ───────────────────────────────────────── */}
           <Card>
             <CardContent className="pt-6">
-              <p className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground mb-3 flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-border">Purchase Information</p>
+              <p className="text-[11px] font-semibold tracking-[0.1em] uppercase text-muted-foreground mb-3 flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-border">Purchase Information</p>
               <div className="grid grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
                   name="cost"
                   render={({ field }) => (
-                    <FormItem className="space-y-2">
-                      <FormLabel className="text-sm font-semibold text-foreground leading-normal block">Unit Cost (₹)</FormLabel>
+                    <FormItem>
+                      <FormLabel>Unit Cost (₹)</FormLabel>
                       <FormControl>
                         <Input 
                           {...field} 
@@ -446,7 +427,6 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                           value={field.value === 0 ? "" : field.value}
                           onChange={(e) => field.onChange(e.target.value === "" ? "" : Number(e.target.value))}
                           onFocus={(e) => e.target.select()} 
-                          className="h-11 rounded-xl px-4"
                         />
                       </FormControl>
                       <FormMessage />
@@ -457,10 +437,10 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                   control={form.control}
                   name="supplier"
                   render={({ field }) => (
-                    <FormItem className="space-y-2">
-                      <FormLabel className="text-sm font-semibold text-foreground leading-normal block">Supplier</FormLabel>
+                    <FormItem>
+                      <FormLabel>Supplier</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Supplier name" className="h-11 rounded-xl px-4" />
+                        <Input {...field} placeholder="Supplier name" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -470,10 +450,10 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                   control={form.control}
                   name="warranty"
                   render={({ field }) => (
-                    <FormItem className="space-y-2">
-                      <FormLabel className="text-sm font-semibold text-foreground leading-normal block">Warranty</FormLabel>
+                    <FormItem>
+                      <FormLabel>Warranty</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="e.g. 1 year" className="h-11 rounded-xl px-4" />
+                        <Input {...field} placeholder="e.g. 1 year" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

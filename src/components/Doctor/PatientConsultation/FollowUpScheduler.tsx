@@ -1,6 +1,5 @@
-import type { ApiAny } from "../../../types/api";
 import { Label } from "@/components/ui/Label";
-import { DatePicker } from "@/components/ui/DatePicker";
+import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import {
   Select,
@@ -10,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/Select";
 import React from "react";
-import { Clock, CheckCircle } from "lucide-react";
+import { Clock, CheckCircle, Calendar as CalendarIcon } from "lucide-react";
 
 interface FollowUpSchedulerProps {
   followUpRequired: boolean;
@@ -20,7 +19,7 @@ interface FollowUpSchedulerProps {
   selectedSlot: string | null;
   initialSelectedSlot?: string | null;
   availableSlots: { time24: string; time12: string; appointmentCount: number; disabled?: boolean }[];
-  doctors: ApiAny[];
+  doctors: any[];
   onFollowUpRequiredChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onDoctorChange: (id: string) => void;
   onDateChange: (date: string) => void;
@@ -38,14 +37,14 @@ export function FollowUpScheduler({
   initialSelectedSlot,
   availableSlots,
   doctors,
-  onFollowUpRequiredChange: _onFollowUpRequiredChange,
+  onFollowUpRequiredChange,
   onDoctorChange,
   onDateChange,
   onSlotSelect,
-  onSchedule: _onSchedule,
+  onSchedule,
   errors = {}
 }: FollowUpSchedulerProps) {
-  const _formatFollowUpDate = (dateStr: string) => {
+  const formatFollowUpDate = (dateStr: string) => {
     try {
       return new Date(dateStr).toLocaleDateString('en-GB', {
         day: 'numeric',
@@ -67,7 +66,7 @@ export function FollowUpScheduler({
 
   const normalizeSlot = (s: string | null | undefined): string => {
     if (!s) return "";
-    const clean = s.trim().toUpperCase();
+    let clean = s.trim().toUpperCase();
     if (clean.includes("AM") || clean.includes("PM")) {
       const match = clean.match(/(\d+):(\d+)\s*(AM|PM)/);
       if (match) {
@@ -134,9 +133,10 @@ export function FollowUpScheduler({
               <Label className="block text-[10px] font-bold text-blue-900 mb-2 uppercase tracking-widest">
                 Preferred Date
               </Label>
-              <DatePicker
+              <Input
+                type="date"
                 value={followUpDate}
-                onChange={(val) => onDateChange(val)}
+                onChange={(e) => onDateChange(e.target.value)}
                 disabled={!!bookedFollowUp}
                 min={(() => {
                   const today = new Date();
@@ -145,7 +145,7 @@ export function FollowUpScheduler({
                   const day = String(today.getDate()).padStart(2, "0");
                   return `${year}-${month}-${day}`;
                 })()}
-                className="rounded-xl border-primary/30 shadow-sm disabled:bg-muted"
+                className="w-full px-4 py-2.5 bg-card border border-primary/30 rounded-xl text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm disabled:bg-muted disabled:cursor-not-allowed"
               />
             </div>
           </div>
@@ -200,7 +200,7 @@ export function FollowUpScheduler({
                           `}
                           title={isApiDisabled ? "This slot is blocked" : isInitiallyBooked ? `Currently Booked: ${slot.time12}` : `Select ${slot.time12}`}
                         >
-                          {isApiDisabled ? "🔒 " : (isSelected && <CheckCircle className="w-3 h-3 shrink-0 text-white" />)}
+                          {isApiDisabled ? "🔒 " : (isSelected && <CheckCircle className="w-3 h-3 flex-shrink-0 text-white" />)}
                           {isApiDisabled ? slot.time12 : `${slot.time12} (${slot.appointmentCount})`}
                         </Button>
                       );

@@ -1,6 +1,5 @@
-import type { ApiAny } from "../types/api";
-import { apiErrorMessage } from "../utils/errorMessage";
 import { useState, useEffect, useMemo } from "react";
+import { Loading } from "@/components/ui/Loading";
 import { useModal } from "../contexts/ModalContext";
 import { ConsentFormList } from "../components/Consent/ConsentFormList";
 import { useConsentFormsQuery } from "../hooks/patients/useConsentFormsQuery";
@@ -34,7 +33,7 @@ export function ConsentPage() {
     setPage(1);
   }, [debouncedSearch]);
 
-  const { data: consentFormsData, isLoading, refetch } = useConsentFormsQuery({
+  const { data: consentFormsData, isLoading } = useConsentFormsQuery({
     page,
     limit,
     search: debouncedSearch || undefined,
@@ -44,16 +43,12 @@ export function ConsentPage() {
       doctor_id: filters.doctor !== "All" ? [filters.doctor] : undefined,
       date_range: filters.date !== "All" ? filters.date : undefined,
     }
-  });
-
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
+  }, { refetchOnMount: 'always' });
 
   const deleteMutation = useDeleteConsentFormMutation();
 
-  let consentFormsList: ApiAny[] = [];
-  const raw = consentFormsData as ApiAny;
+  let consentFormsList: any[] = [];
+  const raw = consentFormsData as any;
   if (raw) {
     if (Array.isArray(raw)) {
       consentFormsList = raw;
@@ -68,7 +63,7 @@ export function ConsentPage() {
     }
   }
 
-  const mappedForms = consentFormsList.map((form: ApiAny) => {
+  const mappedForms = consentFormsList.map((form: any) => {
     const patientIdStr = form.patient?.id || form.patient_id;
     return {
       id: form.id,
@@ -108,13 +103,13 @@ export function ConsentPage() {
     try {
       await deleteMutation.mutateAsync({ id });
       showToast("Consent form deleted successfully");
-    } catch (err) {
-      showToast(apiErrorMessage(err) || "Failed to delete consent form", "error");
+    } catch (err: any) {
+      showToast(err?.response?.data?.message || err?.message || "Failed to delete consent form", "error");
     }
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+    <div className="space-y-3">
       <ConsentFormList
         forms={mappedForms}
         search={search}
@@ -124,14 +119,14 @@ export function ConsentPage() {
         doctorsList={apiDoctors || []}
         onAddForm={() => setActiveModal("consentForm")}
         onViewForm={(id: string) => {
-          const f = mappedForms.find((x) => x.id === id);
+          const f = mappedForms.find((x: any) => x.id === id);
           if (f) {
             setSelectedConsentForm(f);
             setActiveModal("consentViewer");
           }
         }}
         onEditForm={(id: string) => {
-          const f = mappedForms.find((x) => x.id === id);
+          const f = mappedForms.find((x: any) => x.id === id);
           if (f) {
             setSelectedConsentForm(f);
             setActiveModal("consentForm");

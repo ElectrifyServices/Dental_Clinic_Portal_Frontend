@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -9,7 +8,7 @@ export interface CreateLabNameVariables {
 export function useCreateLabNameMutation() {
   const queryClient = useQueryClient();
 
-  return useApiMutation<ApiAny, CreateLabNameVariables>({
+  return useApiMutation<any, CreateLabNameVariables>({
     endpoint: "/labName",
     method: "post",
     options: {

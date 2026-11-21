@@ -1,4 +1,3 @@
-import type { ApiAny } from "../types/api";
 import React from "react";
 import { useModal } from "../contexts/ModalContext";
 import { TreatmentList } from "../components/Treatments/TreatmentList";
@@ -15,20 +14,20 @@ export const TreatmentsPage: React.FC = () => {
 
   const {
     treatments,
-    isLoading: _isLoading,
+    isLoading,
     isInitialLoading,
     isTableFetching,
     isStatsLoading,
     totals,
     handleSaveTreatment,
-    handleMarkCompleted: _handleMarkCompleted,
+    handleMarkCompleted,
     handleStartTreatment,
     handleParamsChange,
     currentPage,
     totalPages,
     totalItems,
     refetch,
-    selectedTreatment: _selectedTreatment,
+    selectedTreatment,
     fetchSingleTreatment,
     clearSelectedTreatment,
     filters,
@@ -61,13 +60,13 @@ export const TreatmentsPage: React.FC = () => {
     previousModalRef.current = activeModal;
   }, [activeModal, refetch]);
 
-  const _wrappedHandleSaveTreatment = async (formData: ApiAny, sessions: ApiAny[]) => {
+  const wrappedHandleSaveTreatment = async (formData: any, sessions: any[]) => {
     try {
       await handleSaveTreatment({ ...formData, sessions });
       setActiveModal(null);
       showToast("Treatment plan saved successfully!");
       refetch();
-    } catch (err: ApiAny) {
+    } catch (err: any) {
       showToast(
         err?.response?.data?.message ?? "Failed to save treatment plan",
         "error",
@@ -82,13 +81,13 @@ export const TreatmentsPage: React.FC = () => {
       await handleStartTreatment(id);
       showToast("Treatment started!");
       refetch();
-    } catch (err: ApiAny) {
+    } catch (err: any) {
       showToast(err?.response?.data?.message ?? "Failed to update", "error");
     }
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+    <div className="flex h-[calc(100vh-10.5rem)] min-h-0 flex-col overflow-hidden md:h-[calc(100vh-5.75rem)]">
       <TreatmentList
         treatments={treatments}
         totals={totals}

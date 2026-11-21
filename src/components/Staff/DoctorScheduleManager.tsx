@@ -1,8 +1,7 @@
-import type { ApiAny } from "../../types/api";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import { useState, useEffect } from "react";
-import { Save, Clock, Calendar, AlertTriangle, Loader2, X } from "lucide-react";
+import { Save, Clock, Calendar, AlertTriangle, Loader2 } from "lucide-react";
 import { Modal, Button, LabeledField, Badge, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, HourMinPicker } from "@/components/ui";
 import {
   useCreateDoctorScheduleMutation,
@@ -31,7 +30,7 @@ interface DoctorScheduleManagerProps {
   doctorId: string;
   doctorName: string;
   onClose: () => void;
-  onSave: (data: ApiAny) => void;
+  onSave: (data: any) => void;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -128,19 +127,17 @@ export function DoctorScheduleManager({
 
   // ── Start time handler ──
   const handleStartTimeChange = (dayKey: string, newStart: string) => {
-    const val = typeof newStart === "string" && (newStart === "empty" || newStart.includes("empty")) ? "" : newStart;
     setSchedule((prev) => ({
       ...prev,
-      [dayKey]: { ...prev[dayKey], startTime: val },
+      [dayKey]: { ...prev[dayKey], startTime: newStart },
     }));
   };
 
   // ── End time handler ──
   const handleEndTimeChange = (dayKey: string, newEnd: string) => {
-    const val = typeof newEnd === "string" && (newEnd === "empty" || newEnd.includes("empty")) ? "" : newEnd;
     setSchedule((prev) => ({
       ...prev,
-      [dayKey]: { ...prev[dayKey], endTime: val },
+      [dayKey]: { ...prev[dayKey], endTime: newEnd },
     }));
   };
 
@@ -150,14 +147,10 @@ export function DoctorScheduleManager({
   };
 
   // ── Generic day field handler (isWorking, breakStart, breakEnd) ───────────
-  const handleDayChange = (dayKey: string, field: string, value: ApiAny) => {
-    let sanitizedVal = value;
-    if (typeof value === "string" && (value === "empty" || value.includes("empty"))) {
-      sanitizedVal = "";
-    }
+  const handleDayChange = (dayKey: string, field: string, value: any) => {
     setSchedule((prev) => ({
       ...prev,
-      [dayKey]: { ...prev[dayKey], [field]: sanitizedVal },
+      [dayKey]: { ...prev[dayKey], [field]: value },
     }));
   };
 
@@ -189,34 +182,18 @@ export function DoctorScheduleManager({
   const handleSave = async () => {
     setSaveError(null);
 
-    const isValidTime = (t?: string | null) =>
-      Boolean(t && typeof t === "string" && /^([01]\d|2[0-3]):([0-5]\d)$/.test(t.trim().slice(0, 5)));
-
     // Validate that all checked working days have start/end times and complete break times if configured
     for (const [dayKey, day] of Object.entries(schedule)) {
       if (day.isWorking) {
         const capitalizedDay = dayKey.charAt(0).toUpperCase() + dayKey.slice(1);
         
-        if (!isValidTime(day.startTime) || !isValidTime(day.endTime)) {
+        if (!day.startTime || !day.endTime) {
           setSaveError(`Please select both Start Time and End Time for ${capitalizedDay}.`);
           return;
         }
-
-        if (timeToMins(day.startTime) >= timeToMins(day.endTime)) {
-          setSaveError(`End Time must be after Start Time for ${capitalizedDay}.`);
-          return;
-        }
-
-        const hasBreakStart = isValidTime(day.breakStart);
-        const hasBreakEnd = isValidTime(day.breakEnd);
-
-        if ((hasBreakStart && !hasBreakEnd) || (!hasBreakStart && hasBreakEnd)) {
+        
+        if ((day.breakStart && !day.breakEnd) || (!day.breakStart && day.breakEnd)) {
           setSaveError(`Please configure both Break Start and Break End times for ${capitalizedDay}, or clear both.`);
-          return;
-        }
-
-        if (hasBreakStart && hasBreakEnd && timeToMins(day.breakStart!) >= timeToMins(day.breakEnd!)) {
-          setSaveError(`Break End must be after Break Start for ${capitalizedDay}.`);
           return;
         }
       }
@@ -226,7 +203,7 @@ export function DoctorScheduleManager({
       const payload = mapScheduleToPayload(schedule, settings);
       await createSchedule({ doctorId, payload });
       onSave({ doctorId, workingHours: schedule, timeSlots: settings });
-    } catch (err: ApiAny) {
+    } catch (err: any) {
       // Extract detailed validation messages from backend responseObject if available
       const backendErr = err?.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc ||
                         err?.response?.data?.message ||
@@ -248,7 +225,7 @@ export function DoctorScheduleManager({
         <div className="flex flex-col gap-3 w-full">
           {saveError && (
             <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive text-sm">
-              <AlertTriangle className="w-4 h-4 shrink-0" />
+              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
               <span className="font-medium">{saveError}</span>
             </div>
           )}
@@ -274,7 +251,7 @@ export function DoctorScheduleManager({
 
       {isScheduleError && !isScheduleLoading && (
         <div className="mb-4 flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-sm">
-          <AlertTriangle className="w-4 h-4 shrink-0" />
+          <AlertTriangle className="w-4 h-4 flex-shrink-0" />
           <span className="font-medium">Could not load existing schedule. You can create a new one below.</span>
         </div>
       )}
@@ -330,27 +307,8 @@ export function DoctorScheduleManager({
             </h3>
             <div className="space-y-3">
               {DAYS.map((day) => {
-                const daySchedule = schedule[day.key];
-                const isWorking   = daySchedule?.isWorking ?? false;
-                const slots       = generateTimeSlots(day.key);
-                const startTime   = daySchedule?.startTime ?? "";
-                const endTime     = daySchedule?.endTime ?? "";
-                const isInvalidTimeRange = Boolean(
-                  startTime &&
-                  endTime &&
-                  timeToMins(startTime) >= timeToMins(endTime)
-                );
-                const isWindowTooShort = Boolean(
-                  startTime &&
-                  endTime &&
-                  !isInvalidTimeRange &&
-                  timeToMins(startTime) + settings.duration > timeToMins(endTime)
-                );
-                const isInvalidBreakRange = Boolean(
-                  daySchedule?.breakStart &&
-                  daySchedule?.breakEnd &&
-                  timeToMins(daySchedule.breakStart) >= timeToMins(daySchedule.breakEnd)
-                );
+                const isWorking = schedule[day.key]?.isWorking ?? false;
+                const slots     = generateTimeSlots(day.key);
 
                 return (
                   <div
@@ -369,12 +327,6 @@ export function DoctorScheduleManager({
                         {isWorking && slots.length > 0 && (
                           <span className="text-[10px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-full">
                             {slots.length} slot{slots.length !== 1 ? "s" : ""}
-                          </span>
-                        )}
-                        {isWorking && isInvalidTimeRange && (
-                          <span className="text-[10px] font-bold text-amber-700 bg-amber-100 dark:bg-amber-950/50 dark:text-amber-400 px-2 py-0.5 rounded-full flex items-center gap-1">
-                            <AlertTriangle className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-                            End time before start time
                           </span>
                         )}
                       </div>
@@ -397,93 +349,42 @@ export function DoctorScheduleManager({
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                           <LabeledField label="Start Time">
                             <HourMinPicker
-                              value={daySchedule?.startTime ?? ""}
+                              value={schedule[day.key]?.startTime ?? ""}
                               onChange={(val) => handleStartTimeChange(day.key, val)}
                             />
                           </LabeledField>
 
                           <LabeledField label="End Time">
                             <HourMinPicker
-                              value={daySchedule?.endTime ?? ""}
+                              value={schedule[day.key]?.endTime ?? ""}
                               onChange={(val) => handleEndTimeChange(day.key, val)}
                             />
                           </LabeledField>
 
                           <LabeledField label="Calculated Slots">
-                            <div className={`w-full text-center px-4 py-1.5 border rounded-xl text-xs font-black h-9 flex items-center justify-center transition-colors ${
-                              isInvalidTimeRange || isWindowTooShort
-                                ? "border-amber-300 bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-400"
-                                : "border-border text-primary bg-primary/5"
-                            }`}>
+                            <div className="w-full text-center px-4 py-1.5 border border-border rounded-xl text-xs font-black text-primary bg-primary/5 h-9 flex items-center justify-center">
                               {slots.length} Slot{slots.length !== 1 ? 's' : ''}
                             </div>
                           </LabeledField>
                         </div>
 
-                        {/* Notice for invalid time range */}
-                        {isInvalidTimeRange && (
-                          <div className="flex items-start sm:items-center gap-2 p-2.5 bg-amber-50/90 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 rounded-xl text-amber-800 dark:text-amber-300 text-xs animate-in fade-in duration-200">
-                            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5 sm:mt-0" />
-                            <span className="font-medium leading-relaxed">
-                              End Time ({formatTo12Hr(endTime)}) is earlier than or equal to Start Time ({formatTo12Hr(startTime)}). Please adjust the operating hours to generate slots.
-                            </span>
-                          </div>
-                        )}
-
-                        {/* Notice for window shorter than duration */}
-                        {isWindowTooShort && (
-                          <div className="flex items-start sm:items-center gap-2 p-2.5 bg-amber-50/90 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 rounded-xl text-amber-800 dark:text-amber-300 text-xs animate-in fade-in duration-200">
-                            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5 sm:mt-0" />
-                            <span className="font-medium leading-relaxed">
-                              Operating window ({timeToMins(endTime) - timeToMins(startTime)} mins) is shorter than slot duration ({settings.duration} mins). No slots can be generated.
-                            </span>
-                          </div>
-                        )}
-
                         {/* Row 2: Break Start / Break End */}
-                        <div className="space-y-1.5">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-muted-foreground">Break Timing (optional)</span>
-                            {(daySchedule?.breakStart || daySchedule?.breakEnd) && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  handleDayChange(day.key, "breakStart", "");
-                                  handleDayChange(day.key, "breakEnd", "");
-                                }}
-                                className="text-[10px] text-muted-foreground hover:text-destructive font-semibold flex items-center gap-1 transition-colors cursor-pointer"
-                              >
-                                <X className="w-3 h-3" /> Clear Break
-                              </button>
-                            )}
-                          </div>
-                          <div className="grid grid-cols-2 gap-3">
-                            <LabeledField label="Break Start">
-                              <HourMinPicker
-                                value={daySchedule?.breakStart ?? ""}
-                                onChange={(val) => handleDayChange(day.key, "breakStart", val)}
-                                optional
-                              />
-                            </LabeledField>
-                            <LabeledField label="Break End">
-                              <HourMinPicker
-                                value={daySchedule?.breakEnd ?? ""}
-                                onChange={(val) => handleDayChange(day.key, "breakEnd", val)}
-                                optional
-                              />
-                            </LabeledField>
-                          </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <LabeledField label="Break Start (optional)">
+                            <HourMinPicker
+                              value={schedule[day.key]?.breakStart ?? ""}
+                              onChange={(val) => handleDayChange(day.key, "breakStart", val)}
+                              optional
+                            />
+                          </LabeledField>
+                          <LabeledField label="Break End (optional)">
+                            <HourMinPicker
+                              value={schedule[day.key]?.breakEnd ?? ""}
+                              onChange={(val) => handleDayChange(day.key, "breakEnd", val)}
+                              optional
+                            />
+                          </LabeledField>
                         </div>
-
-                        {/* Notice for invalid break range */}
-                        {isInvalidBreakRange && (
-                          <div className="flex items-start sm:items-center gap-2 p-2.5 bg-amber-50/90 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 rounded-xl text-amber-800 dark:text-amber-300 text-xs animate-in fade-in duration-200">
-                            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5 sm:mt-0" />
-                            <span className="font-medium leading-relaxed">
-                              Break End Time ({formatTo12Hr(daySchedule?.breakEnd || "")}) is earlier than or equal to Break Start Time ({formatTo12Hr(daySchedule?.breakStart || "")}).
-                            </span>
-                          </div>
-                        )}
 
                         {/* Preview badges */}
                         {slots.length > 0 && (

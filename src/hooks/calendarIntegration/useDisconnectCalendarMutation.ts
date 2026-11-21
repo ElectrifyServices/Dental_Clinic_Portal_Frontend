@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -9,7 +8,7 @@ export interface DisconnectCalendarVariables {
 export function useDisconnectCalendarMutation() {
   const queryClient = useQueryClient();
 
-  return useApiMutation<ApiAny, DisconnectCalendarVariables>({
+  return useApiMutation<any, DisconnectCalendarVariables>({
     getEndpoint: (variables) => `/calendarIntegration/${variables.id}`,
     method: "delete",
     options: {

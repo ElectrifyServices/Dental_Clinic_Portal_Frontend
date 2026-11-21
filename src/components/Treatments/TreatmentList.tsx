@@ -1,9 +1,27 @@
-import type { ApiAny } from "../../types/api";
 import React, { useCallback, useRef, useState } from "react";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
-import { DatePicker } from "@/components/ui/DatePicker";
-import { Search, Plus, Clock, CheckCircle, Calendar, Stethoscope, ChevronDown, ChevronUp, Filter, X, Loader2, FileText, Edit, Play, MoreVertical, Download, MessageCircle } from "lucide-react";
+import {
+  Search,
+  Plus,
+  Clock,
+  CheckCircle,
+  Calendar,
+  Stethoscope,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  Filter,
+  X,
+  Loader2,
+  FileText,
+  Edit,
+  Play,
+  MoreVertical,
+  Download,
+  MessageCircle,
+} from "lucide-react";
 import {
   Button,
   ContentCard,
@@ -21,8 +39,6 @@ import {
   SearchableSelect,
   toast,
   Pagination,
-  SearchInput,
-  FilterContainer,
 } from "@/components/ui";
 import { TreatmentStats } from "./TreatmentList/TreatmentStats";
 import { downloadCompletedTreatmentPDF } from "../../utils/pdfGenerator";
@@ -68,7 +84,7 @@ const UI_TO_API_STATUS: Record<string, string> = {
 };
 
 interface TreatmentListProps {
-  treatments: ApiAny[];
+  treatments: any[];
   totals: { all: number; active: number; completed: number; planned: number; revenue: number };
   isLoading: boolean;
   isTableFetching?: boolean;
@@ -113,7 +129,7 @@ interface ExpandedTreatmentRowProps {
   sendingWhatsappId: string | null;
 }
 
-const _PER_PAGE = 10;
+const PER_PAGE = 10;
 
 function formatDate(value?: string | Date | null, options?: Intl.DateTimeFormatOptions) {
   if (!value) return "-";
@@ -147,7 +163,7 @@ function StatusPill({ status }: { status: string }) {
   );
 }
 
-function extractTreatmentPlans(payload: ApiAny): ApiAny[] {
+function extractTreatmentPlans(payload: any): any[] {
   if (Array.isArray(payload)) return payload;
   if (Array.isArray(payload?.data?.data)) return payload.data.data;
   if (Array.isArray(payload?.data)) return payload.data;
@@ -220,7 +236,7 @@ function ExpandedTreatmentRow({
       key: "index",
       header: "#",
       className: "w-16",
-      render: (_plan: ApiAny, index: number) => (
+      render: (_plan: any, index: number) => (
         <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-xs font-black text-primary">
           {index + 1}
         </span>
@@ -229,7 +245,7 @@ function ExpandedTreatmentRow({
     {
       key: "procedure",
       header: "Procedure",
-      render: (plan: ApiAny) => (
+      render: (plan: any) => (
         <div className="space-y-1">
           <div className="text-sm font-bold text-foreground">{plan.procedure || "Treatment Plan"}</div>
           {plan.notes ? (
@@ -241,7 +257,7 @@ function ExpandedTreatmentRow({
     {
       key: "tooth",
       header: "Tooth",
-      render: (plan: ApiAny) => {
+      render: (plan: any) => {
         const rawTooth = plan.tooth ?? plan.tooth_number;
         if (rawTooth === undefined || rawTooth === null || rawTooth === "" || rawTooth === "-" || rawTooth === "—") {
           return <span className="text-sm font-semibold text-muted-foreground">-</span>;
@@ -273,25 +289,25 @@ function ExpandedTreatmentRow({
     {
       key: "doctor",
       header: "Doctor",
-      render: (plan: ApiAny) => <span className="text-sm font-semibold text-muted-foreground">{plan.doctorName || "-"}</span>,
+      render: (plan: any) => <span className="text-sm font-semibold text-muted-foreground">{plan.doctorName || "-"}</span>,
     },
     {
       key: "date",
       header: "Date",
-      render: (plan: ApiAny) => <span className="text-sm font-medium text-muted-foreground">{formatDate(plan.date)}</span>,
+      render: (plan: any) => <span className="text-sm font-medium text-muted-foreground">{formatDate(plan.date)}</span>,
     },
     {
       key: "cost",
       header: "Cost",
       align: "right" as const,
-      render: (plan: ApiAny) => <span className="text-sm font-black text-foreground">{formatCurrency(plan.cost)}</span>,
+      render: (plan: any) => <span className="text-sm font-black text-foreground">{formatCurrency(plan.cost)}</span>,
     },
     {
       key: "nextSession",
       header: "Next Session",
-      render: (plan: ApiAny) => {
-        const sessions: ApiAny[] = plan.sessions ?? [];
-        const completedSessions = sessions.filter((session: ApiAny) => {
+      render: (plan: any) => {
+        const sessions: any[] = plan.sessions ?? [];
+        const completedSessions = sessions.filter((session: any) => {
           const status = normalizeStatus(session.status);
           return status === "completed" || status === "cancelled";
         }).length;
@@ -318,7 +334,7 @@ function ExpandedTreatmentRow({
             <div className="flex items-center gap-1.5">
               <div className="flex items-center gap-1">
                 {Array.from({ length: dotsToRender }, (_, index) => {
-                  const session = sessions.find((s: ApiAny) => (s.sessionNumber ?? s.visit_number ?? s.visitNumber) === index + 1);
+                  const session = sessions.find((s: any) => (s.sessionNumber ?? s.visit_number ?? s.visitNumber) === index + 1);
                   const status = session ? normalizeStatus(session.status) : "planned";
                   
                   let dotColor = "bg-slate-200";
@@ -350,18 +366,17 @@ function ExpandedTreatmentRow({
     {
       key: "status",
       header: "Status",
-      render: (plan: ApiAny) => <StatusPill status={plan.status} />,
+      render: (plan: any) => <StatusPill status={plan.status} />,
     },
     {
       key: "actions",
       header: "Actions",
       className: "w-24",
-      render: (plan: ApiAny) => {
+      render: (plan: any) => {
         const isCompleted = normalizeStatus(plan.status) === "completed";
         const isPlanned = normalizeStatus(plan.status) === "planned";
 
         return (
-          <div onClick={(e) => e.stopPropagation()}>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 rounded-xl p-0 text-muted-foreground hover:bg-muted">
@@ -414,21 +429,15 @@ function ExpandedTreatmentRow({
                 </DropdownMenuSubTrigger>
                 <DropdownMenuPortal>
                   <DropdownMenuSubContent className="w-44 p-1.5 rounded-2xl bg-white border border-border shadow-lg">
-                    {Array.from({ length: plan.sessions?.length || plan.total_sessions || plan.totalSessions || 1 }).map((_, i) => {
-                      const session = plan.sessions?.[i];
-                      const isSessionCompleted = normalizeStatus(session?.status) === "completed";
-                      return (
-                        <DropdownMenuItem
-                          key={i}
-                          disabled={!isSessionCompleted}
-                          onClick={() => onSendWhatsApp(plan.id, i + 1, session?.id)}
-                          title={!isSessionCompleted ? "Session must be completed before sending via WhatsApp" : undefined}
-                          className="px-3.5 py-2 text-xs font-bold hover:bg-muted rounded-xl cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-                        >
-                          Session {i + 1}
-                        </DropdownMenuItem>
-                      );
-                    })}
+                    {Array.from({ length: plan.sessions?.length || plan.total_sessions || plan.totalSessions || 1 }).map((_, i) => (
+                      <DropdownMenuItem
+                        key={i}
+                        onClick={() => onSendWhatsApp(plan.id, i + 1, plan.sessions?.[i]?.id)}
+                        className="px-3.5 py-2 text-xs font-bold hover:bg-muted rounded-xl cursor-pointer"
+                      >
+                        Session {i + 1}
+                      </DropdownMenuItem>
+                    ))}
                     <div className="h-px bg-muted my-1" />
                     <DropdownMenuItem
                       onClick={() => onSendWhatsApp(plan.id, 'all')}
@@ -479,7 +488,6 @@ function ExpandedTreatmentRow({
               )}
             </DropdownMenuContent>
           </DropdownMenu>
-          </div>
         );
       },
     },
@@ -492,10 +500,8 @@ function ExpandedTreatmentRow({
           columns={expandedColumns}
           data={plans}
           rowKey={(plan) => plan.id}
-          rowClassName={() => "bg-white cursor-pointer"}
-          onRowClick={(plan: ApiAny) => onViewTreatment(plan.id)}
+          rowClassName={() => "bg-white"}
           disableRowAnimation
-          compact
           className="rounded-2xl border border-border bg-card shadow-none transition-none [&_.data-table]:min-w-[980px]"
           scrollClassName="overflow-x-auto overflow-y-visible touch-pan-x [-webkit-overflow-scrolling:touch]"
         />
@@ -517,7 +523,7 @@ export function TreatmentList({
   treatments,
   totals,
   isLoading,
-  isTableFetching: _isTableFetching = false,
+  isTableFetching = false,
   isStatsLoading = false,
   totalItems,
   totalPages,
@@ -554,7 +560,7 @@ export function TreatmentList({
       const data = await downloadTreatment({ id });
       await downloadCompletedTreatmentPDF(data);
       toast.success("PDF downloaded successfully!", { id: "pdf-download" });
-    } catch (err: ApiAny) {
+    } catch (err: any) {
       toast.error("Failed to download PDF: " + (err.message || ""), { id: "pdf-download" });
     } finally {
       setDownloadingId(null);
@@ -576,7 +582,7 @@ export function TreatmentList({
       }
 
       toast.success(isAll ? "Treatment plan sent to WhatsApp successfully" : `Session ${sessionIndex} plan sent to WhatsApp successfully`, { id: "whatsapp-send" });
-    } catch (err: ApiAny) {
+    } catch (err: any) {
       toast.error("Failed to send WhatsApp: " + (err.message || "Unknown error"), { id: "whatsapp-send" });
     } finally {
       setSendingWhatsappId(null);
@@ -606,8 +612,8 @@ export function TreatmentList({
     [search, statusFilter, currentPage, advancedFilters, onParamsChange]
   );
 
-  const handleSearchChange = (valOrEvent: string | React.ChangeEvent<HTMLInputElement>) => {
-    const value = typeof valOrEvent === "string" ? valOrEvent : valOrEvent.target.value;
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
     setSearch(value);
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => notify({ search: value, page: 1 }), 400);
@@ -626,7 +632,7 @@ export function TreatmentList({
     notify({ statusFilter: next, page: 1 });
   };
 
-  const _handlePageChange = (page: number) => notify({ page });
+  const handlePageChange = (page: number) => notify({ page });
 
   const handleAdvancedChange = (patch: Partial<AdvancedFilters>) => {
     const next = { ...advancedFilters, ...patch };
@@ -649,7 +655,7 @@ export function TreatmentList({
     !!advancedFilters.dateFrom || !!advancedFilters.dateTo,
   ].filter(Boolean).length;
 
-  const doctorOptions = doctors.map((doctor: ApiAny) => ({
+  const doctorOptions = doctors.map((doctor: any) => ({
     value: doctor.id,
     label: doctor.name || "Unknown Doctor",
     phone: doctor.phone || "",
@@ -671,7 +677,7 @@ export function TreatmentList({
       key: "expand",
       header: "",
       className: "w-12",
-      render: (treatment: ApiAny) => {
+      render: (treatment: any) => {
         const isExpanded = expandedRowIds.has(treatment.id);
         return (
           <Button
@@ -691,7 +697,7 @@ export function TreatmentList({
     {
       key: "patient",
       header: "Patient",
-      render: (treatment: ApiAny) => (
+      render: (treatment: any) => (
         <div>
           <div className="font-bold text-foreground">{treatment.patientName || treatment.name || "-"}</div>
           <div className="text-[11px] font-bold text-primary mt-0.5 uppercase tracking-wider">
@@ -703,7 +709,7 @@ export function TreatmentList({
     {
       key: "planCount",
       header: "Total Plans",
-      render: (treatment: ApiAny) => (
+      render: (treatment: any) => (
         <div className="flex items-center gap-2">
           <span className="inline-flex min-w-8 items-center justify-center rounded-full border border-border bg-muted px-2 py-1 text-[12px] font-black text-foreground">
             {Number(treatment.treatment_plan_count ?? treatment.treatmentPlanCount ?? 0)}
@@ -717,13 +723,13 @@ export function TreatmentList({
     {
       key: "status",
       header: "Status",
-      render: (treatment: ApiAny) => <StatusPill status={treatment.overall_status || treatment.overallStatus || treatment.status} />,
+      render: (treatment: any) => <StatusPill status={treatment.overall_status || treatment.overallStatus || treatment.status} />,
     },
     {
       key: "cost",
       header: "Total Cost",
       align: "right" as const,
-      render: (treatment: ApiAny) => (
+      render: (treatment: any) => (
         <div className="text-sm font-bold text-foreground">
           {formatCurrency(treatment.total_treatment_cost)}
         </div>
@@ -733,7 +739,7 @@ export function TreatmentList({
       key: "whatsapp",
       header: "",
       className: "w-10",
-      render: (treatment: ApiAny) => (
+      render: (treatment: any) => (
         <Button
           variant="ghost"
           size="icon"
@@ -771,23 +777,18 @@ export function TreatmentList({
         <TreatmentStats totals={totals} isLoading={isStatsLoading && !totals.all && !totals.active && !totals.completed && !totals.planned} />
       </div>
 
-      <FilterContainer
-        isOpen={showAdvancedFilters}
-        onClose={() => setShowAdvancedFilters(false)}
-        className="min-w-0 shrink-0 space-y-3"
-      >
+      <div className="min-w-0 shrink-0 space-y-3">
         <div className="flex min-w-0 flex-col gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm sm:p-4 lg:flex-row lg:items-center">
-          <SearchInput
-            placeholder="Search by patient, procedure, tooth or doctor..."
-            value={search}
-            onChange={handleSearchChange}
-            onClear={() => {
-              setSearch("");
-              clearTimeout(debounceRef.current);
-              notify({ search: "", page: 1 });
-            }}
-            className="min-w-0 flex-1 [&>input]:h-11 [&>input]:rounded-xl [&>input]:bg-muted/50 [&>input]:border-border [&>input]:text-sm font-medium"
-          />
+          <div className="relative min-w-0 flex-1 group">
+            <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/60 group-focus-within:text-primary transition-colors" />
+            <Input
+              type="text"
+              placeholder="Search by patient, procedure, tooth or doctor..."
+              value={search}
+              onChange={handleSearchChange}
+              className="h-11 w-full pl-12 pr-4 text-sm border border-border rounded-xl bg-muted/50 focus:bg-card focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none font-medium"
+            />
+          </div>
 
           <div className="flex min-w-0 flex-col gap-2 md:flex-row md:items-center md:justify-end lg:w-auto lg:min-w-[420px]">
             <div className="flex items-center bg-muted p-1 rounded-xl border border-border/50 overflow-x-auto scrollbar-none max-w-full flex-nowrap md:flex-1">
@@ -846,7 +847,7 @@ export function TreatmentList({
                   onSearchChange={setDoctorSearch}
                   isLoading={isDoctorsLoading}
                   className="h-11 bg-muted/50 hover:bg-card"
-                  renderOption={(doctor: ApiAny) => (
+                  renderOption={(doctor: any) => (
                     <div className="flex items-center gap-3 py-1">
                       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
                         {(doctor.label || "D").charAt(0)}
@@ -876,12 +877,13 @@ export function TreatmentList({
 
               <div>
                 <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">From Date</Label>
-                <DatePicker
-                  className="w-full text-sm bg-muted/50"
+                <Input
+                  type="date"
+                  className="w-full px-3 py-2 text-sm border border-border rounded-xl bg-muted/50 focus:bg-card focus:ring-2 focus:ring-primary/10 outline-none"
                   value={advancedFilters.dateFrom?.toISOString().split("T")[0] ?? ""}
-                  onChange={(val) =>
+                  onChange={(e) =>
                     handleAdvancedChange({
-                      dateFrom: val ? new Date(val) : undefined,
+                      dateFrom: e.target.value ? new Date(e.target.value) : undefined,
                     })
                   }
                 />
@@ -889,12 +891,13 @@ export function TreatmentList({
 
               <div>
                 <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">To Date</Label>
-                <DatePicker
-                  className="w-full text-sm bg-muted/50"
+                <Input
+                  type="date"
+                  className="w-full px-3 py-2 text-sm border border-border rounded-xl bg-muted/50 focus:bg-card focus:ring-2 focus:ring-primary/10 outline-none"
                   value={advancedFilters.dateTo?.toISOString().split("T")[0] ?? ""}
-                  onChange={(val) =>
+                  onChange={(e) =>
                     handleAdvancedChange({
-                      dateTo: val ? new Date(val) : undefined,
+                      dateTo: e.target.value ? new Date(e.target.value) : undefined,
                     })
                   }
                 />
@@ -902,7 +905,7 @@ export function TreatmentList({
             </div>
           </div>
         )}
-      </FilterContainer>
+      </div>
 
       <ContentCard
         bodyClassName="flex-1 p-0 overflow-auto"
@@ -920,14 +923,13 @@ export function TreatmentList({
                 className="rounded-none border-0 shadow-none [&_.data-table]:min-w-[760px] sm:[&_.data-table]:min-w-[880px]"
                 scrollClassName="overflow-visible"
                 disableRowAnimation
-                compact
                 columns={columns}
                 data={treatments}
                 rowKey={(row) => row.id}
                 expandedRowIds={expandedRowIds}
-                onRowClick={(row: ApiAny) => toggleExpandedRow(row.id)}
-                rowClassName={(row: ApiAny) => (expandedRowIds.has(row.id) ? "bg-slate-50" : "")}
-                renderExpandedRow={(row: ApiAny) => (
+                onRowClick={(row: any) => toggleExpandedRow(row.id)}
+                rowClassName={(row: any) => (expandedRowIds.has(row.id) ? "bg-slate-50" : "")}
+                renderExpandedRow={(row: any) => (
                   <ExpandedTreatmentRow
                     patientId={row.patientId}
                     fallbackRowId={row.id}

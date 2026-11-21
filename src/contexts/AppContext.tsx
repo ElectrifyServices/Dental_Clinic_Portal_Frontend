@@ -1,9 +1,8 @@
-import type { ApiAny } from "../types/api";
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 import { Patient, Appointment, Treatment, Invoice, InventoryItem, DashboardStats } from '../types';
 
 interface AppState {
-  currentUser: ApiAny;
+  currentUser: any;
   patients: Patient[];
   appointments: Appointment[];
   treatments: Treatment[];
@@ -92,7 +91,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export function useApp() {
   const context = useContext(AppContext);
   if (!context) {

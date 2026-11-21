@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 import apiClient from "../../services/apiClient";
 
@@ -9,7 +8,7 @@ export interface RevenueAnalyticsFilter {
 }
 
 export function useTotalRevenueQuery(filter: RevenueAnalyticsFilter = {}) {
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["revenueAnalytics", "total-revenue", filter],
     endpoint: "/revenueAnalytics/total-revenue",
     method: "post",
@@ -17,13 +16,13 @@ export function useTotalRevenueQuery(filter: RevenueAnalyticsFilter = {}) {
     options: {
       refetchOnMount: true,
       staleTime: 0,
-      select: (res: ApiAny) => res?.data ?? res
+      select: (res: any) => res?.data ?? res
     }
   });
 }
 
 export function useAvgDailyRevenueQuery(filter: RevenueAnalyticsFilter = {}) {
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["revenueAnalytics", "avg-daily-revenue", filter],
     endpoint: "/revenueAnalytics/avg-daily-revenue",
     method: "post",
@@ -31,13 +30,13 @@ export function useAvgDailyRevenueQuery(filter: RevenueAnalyticsFilter = {}) {
     options: {
       refetchOnMount: true,
       staleTime: 0,
-      select: (res: ApiAny) => res?.data ?? res
+      select: (res: any) => res?.data ?? res
     }
   });
 }
 
 export function useCollectionRateQuery(filter: RevenueAnalyticsFilter = {}) {
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["revenueAnalytics", "collection-rate", filter],
     endpoint: "/revenueAnalytics/collection-rate",
     method: "post",
@@ -45,13 +44,13 @@ export function useCollectionRateQuery(filter: RevenueAnalyticsFilter = {}) {
     options: {
       refetchOnMount: true,
       staleTime: 0,
-      select: (res: ApiAny) => res?.data ?? res
+      select: (res: any) => res?.data ?? res
     }
   });
 }
 
 export function useTopProcedureQuery(filter: RevenueAnalyticsFilter = {}) {
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["revenueAnalytics", "top-procedure", filter],
     endpoint: "/revenueAnalytics/top-procedure",
     method: "post",
@@ -59,13 +58,13 @@ export function useTopProcedureQuery(filter: RevenueAnalyticsFilter = {}) {
     options: {
       refetchOnMount: true,
       staleTime: 0,
-      select: (res: ApiAny) => res?.data ?? res
+      select: (res: any) => res?.data ?? res
     }
   });
 }
 
 export function useRevenueByPaymentModeQuery(filter: RevenueAnalyticsFilter = {}) {
-  return useApiQuery<ApiAny[]>({
+  return useApiQuery<any[]>({
     queryKey: ["revenueAnalytics", "revenue-by-payment-mode", filter],
     endpoint: "/revenueAnalytics/revenue-by-payment-mode",
     method: "post",
@@ -73,13 +72,13 @@ export function useRevenueByPaymentModeQuery(filter: RevenueAnalyticsFilter = {}
     options: {
       refetchOnMount: true,
       staleTime: 0,
-      select: (res: ApiAny) => res?.data ?? res
+      select: (res: any) => res?.data ?? res
     }
   });
 }
 
 export function useDailyRevenueQuery(filter: RevenueAnalyticsFilter = {}) {
-  return useApiQuery<ApiAny[]>({
+  return useApiQuery<any[]>({
     queryKey: ["revenueAnalytics", "daily-revenue", filter],
     endpoint: "/revenueAnalytics/daily-revenue",
     method: "post",
@@ -87,11 +86,11 @@ export function useDailyRevenueQuery(filter: RevenueAnalyticsFilter = {}) {
     options: {
       refetchOnMount: true,
       staleTime: 0,
-      select: (res: ApiAny) => res?.data ?? res
+      select: (res: any) => res?.data ?? res
     }
   });
 }
 
-export const exportRevenueAnalytics = async (filter: ApiAny) => {
+export const exportRevenueAnalytics = async (filter: any) => {
   return apiClient.post("/revenueAnalytics/export", { ...filter, format: "xlsx" }, { responseType: "blob" });
 };

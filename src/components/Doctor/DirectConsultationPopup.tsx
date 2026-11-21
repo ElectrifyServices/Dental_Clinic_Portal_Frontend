@@ -1,12 +1,18 @@
-import type { ApiAny } from "../../types/api";
 import { useState, useEffect, useMemo } from "react";
-import { User, Phone, Search, UserPlus, Stethoscope, Calendar } from "lucide-react";
+import {
+  User,
+  Phone,
+  Search,
+  AlertCircle,
+  UserPlus,
+  Stethoscope,
+  Calendar,
+} from "lucide-react";
 import {
   Modal,
   Button,
   Label,
   Input,
-  DatePicker,
   ErrorState,
   Select,
   SelectContent,
@@ -22,15 +28,15 @@ import { checkPatientPhoneExists } from "../../hooks/patients/usePatientPhoneExi
 interface DirectConsultationPopupProps {
   onClose: () => void;
   onPatientFound: (
-    patient: ApiAny,
+    patient: any,
     doctorId: string,
     doctorName: string,
     time: string,
   ) => void;
   onRegisterNew: (name: string, phone: string) => void;
-  patients: ApiAny[];
-  doctors: ApiAny[];
-  appointments: ApiAny[];
+  patients: any[];
+  doctors: any[];
+  appointments: any[];
   doctorAvailability: { [key: string]: boolean };
 }
 
@@ -38,10 +44,10 @@ export function DirectConsultationPopup({
   onClose,
   onPatientFound,
   onRegisterNew,
-  patients: _patients,
-  doctors: _dummyDoctors, // alias to avoid confusion
-  appointments: _appointments,
-  doctorAvailability: _doctorAvailability,
+  patients,
+  doctors: dummyDoctors, // alias to avoid confusion
+  appointments,
+  doctorAvailability,
 }: DirectConsultationPopupProps) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -78,7 +84,7 @@ export function DirectConsultationPopup({
 
   const allSlots = useMemo(() => {
     const rawSlots = slotsData?.data?.slots || [];
-    return rawSlots.map((slot: ApiAny) => {
+    return rawSlots.map((slot: any) => {
       const time24 = slot.time;
       const [h, m] = time24.split(":");
       const hour = parseInt(h);
@@ -86,7 +92,7 @@ export function DirectConsultationPopup({
       const hour12 = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
       const time12 = `${hour12}:${m} ${ampm}`;
 
-      const isPast = false;
+      let isPast = false;
 
       return {
         time24,
@@ -96,7 +102,7 @@ export function DirectConsultationPopup({
         disabled: slot.disabled === true,
       };
     });
-  }, [slotsData]);
+  }, [slotsData, selectedDate, todayStr]);
 
   useEffect(() => {
     const firstAvailable = allSlots.find((s) => !s.isPast);
@@ -143,7 +149,7 @@ export function DirectConsultationPopup({
       } else {
         setError("Patient not found in records.");
       }
-    } catch (err: ApiAny) {
+    } catch (err: any) {
       setError(
         err.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc ||
         err.message ||
@@ -253,14 +259,19 @@ export function DirectConsultationPopup({
               <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
                 Consultation Date
               </Label>
-              <DatePicker
-                value={selectedDate}
-                min={todayStr}
-                onChange={(val) => {
-                  setSelectedDate(val);
-                  setSelectedTime("");
-                }}
-              />
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 w-4 h-4" />
+                <Input
+                  type="date"
+                  value={selectedDate}
+                  min={todayStr}
+                  onChange={(e) => {
+                    setSelectedDate(e.target.value);
+                    setSelectedTime("");
+                  }}
+                  className="pl-9"
+                />
+              </div>
             </div>
           </div>
 

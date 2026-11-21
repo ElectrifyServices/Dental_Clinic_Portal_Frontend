@@ -1,19 +1,14 @@
-/* eslint-disable react-refresh/only-export-components */
-import type { ApiAny } from "../../../types/api";
 import { Input } from "@/components/ui/Input";
 import React from 'react';
 import { FileText, Upload, Shield, CheckCircle2, Trash2, Eye } from 'lucide-react';
-import { Badge, Button, toast } from '@/components/ui';
+import { Badge, Button } from '@/components/ui';
 import { useModal } from '@/contexts/ModalContext';
-
-const ALLOWED_DOC_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png'];
-const ALLOWED_DOC_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
 
 interface Step3Props {
   role: string;
-  documents: ApiAny[];
+  documents: any[];
   onUpload: (docType: string, file: File) => void;
-  onRemove: (fileObj: ApiAny) => void;
+  onRemove: (fileObj: any) => void;
 }
 
 const DOC_REQUIREMENTS: Record<string, string[]> = {
@@ -55,20 +50,9 @@ export function Step3Documentation({ role, documents, onUpload, onRemove }: Step
 
   const handleFileChange = (docType: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-
-    const extension = `.${file.name.split('.').pop()?.toLowerCase() || ''}`;
-    const isValidExtension = ALLOWED_DOC_EXTENSIONS.includes(extension);
-    const isValidMimeType = !file.type || ALLOWED_DOC_MIME_TYPES.includes(file.type);
-
-    if (!isValidExtension || !isValidMimeType) {
-      toast.error('Only PDF, JPG, JPEG or PNG files are allowed.');
-      e.target.value = '';
-      return;
+    if (file) {
+      onUpload(docType, file);
     }
-
-    onUpload(docType, file);
-    e.target.value = '';
   };
 
   return (
@@ -104,10 +88,10 @@ export function Step3Documentation({ role, documents, onUpload, onRemove }: Step
 
               {hasFiles && (
                 <div className="space-y-2 mb-3 relative z-20">
-                  {uploadedFiles.map((file: ApiAny, fIdx: number) => (
+                  {uploadedFiles.map((file: any, fIdx: number) => (
                     <div key={fIdx} className="flex items-center justify-between bg-card/60 p-2 rounded-xl border border-emerald-100 animate-in zoom-in-95 duration-300">
                       <div className="flex items-center gap-2 overflow-hidden">
-                        <FileText className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <FileText className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
                         <span className="text-[10px] font-bold text-emerald-800 truncate max-w-[120px]" title={file.name}>{file.name}</span>
                       </div>
                       <div className="flex gap-1">
@@ -178,7 +162,7 @@ export function Step3Documentation({ role, documents, onUpload, onRemove }: Step
       </div>
 
       <div className="p-5 bg-primary/50 border border-primary/20 rounded-2xl flex gap-4 shadow-sm">
-        <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-blue-200">
+        <div className="w-12 h-12 bg-primary/100 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-200">
           <Shield className="w-6 h-6 text-white" />
         </div>
         <div className="space-y-1">

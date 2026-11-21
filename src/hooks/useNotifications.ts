@@ -2,7 +2,7 @@ import type { ApiAny } from "../types/api";
 import { useMemo, useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { getParsedPermissions } from "../utils/permission";
-import { useLocalStorage } from "./useLocalStorage";
+import { useSessionState } from "./useSessionState";
 import { usePatientQuery } from "./patients/usePatientQuery";
 import { useAppointmentsListQuery } from "./appointments/useAppointmentsListQuery";
 import { useInventoryListQuery } from "./inventory/useInventoryListQuery";
@@ -95,7 +95,7 @@ export function useNotifications() {
   });
 
   // 4. Local storage queued patients
-  const [queuedPatients] = useLocalStorage<ApiAny[]>('queuedPatients', []);
+  const [queuedPatients] = useSessionState<ApiAny[]>('queuedPatients', []);
 
   // Map/normalize data
   const patientsList = useMemo(() => {

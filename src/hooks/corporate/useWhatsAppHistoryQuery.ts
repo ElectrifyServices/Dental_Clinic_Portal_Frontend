@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
 export interface WhatsAppHistoryFilters {
@@ -27,7 +26,7 @@ export function useWhatsAppHistoryQuery(variables: WhatsAppHistoryVariables, opt
   const enabled = options?.enabled ?? true;
 
   // Build filters payload where each selected filter is wrapped in an array if not already
-  const apiFilters: ApiAny = {};
+  const apiFilters: any = {};
   if (variables.filters) {
     const rawFilters = variables.filters;
     if (rawFilters.status) {
@@ -56,7 +55,7 @@ export function useWhatsAppHistoryQuery(variables: WhatsAppHistoryVariables, opt
     }
   }
 
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["whatsapp-history", variables],
     endpoint: "/notification/whatsapp/message/list",
     method: "post",

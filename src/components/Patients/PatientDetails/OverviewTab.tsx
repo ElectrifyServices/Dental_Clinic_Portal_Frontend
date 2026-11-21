@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../../types/api";
 import React from "react";
 import {
   User,
@@ -13,11 +12,10 @@ import {
 import { Card } from "@/components/ui";
 import { PlanCoverageCard } from "./PlanCoverageCard";
 import { formatPhoneWithCountryCode } from "@/utils/phoneUtils";
-import { formatDisplayDate } from "@/utils/dateUtils";
 
 interface OverviewTabProps {
-  patient: ApiAny;
-  patientAppointments: ApiAny[];
+  patient: any;
+  patientAppointments: any[];
 }
 
 export const OverviewTab: React.FC<OverviewTabProps> = ({
@@ -25,20 +23,30 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
   patientAppointments,
 }) => {
   const formatLastVisitDate = (visitVal?: string | number | Date) => {
-    if (!visitVal || visitVal === "No visits yet" || visitVal === "No visits") return "No visits yet";
-    const formatted = formatDisplayDate(visitVal);
-    return formatted === "—" ? "No visits yet" : formatted;
+    if (!visitVal) return "No visits yet";
+    try {
+      const d = new Date(visitVal);
+      return !isNaN(d.getTime())
+        ? d.toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
+        : String(visitVal);
+    } catch (e) {
+      return String(visitVal);
+    }
   };
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
+    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
       {/* Personal Information */}
-      <Card className="xl:col-span-2 bg-primary/5 rounded-2xl p-3 md:p-4 border border-primary/20 shadow-sm">
-        <h3 className="text-lg font-bold text-foreground mb-3 flex items-center">
+      <Card className="xl:col-span-2 bg-primary/5 rounded-2xl p-6 border border-primary/20 shadow-sm">
+        <h3 className="text-lg font-bold text-foreground mb-6 flex items-center">
           <User className="w-5 h-5 mr-2 text-primary" />
           Personal Information
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div className="flex items-center">
             <Mail className="w-5 h-5 text-muted-foreground/60 mr-3" />
             <div>
@@ -52,7 +60,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
             <Phone className="w-5 h-5 text-muted-foreground/60 mr-3" />
             <div>
               <p className="text-sm text-muted-foreground">Phone</p>
-              <p className="font-medium text-foreground">{formatPhoneWithCountryCode(patient.phone, (patient as ApiAny).country_code)}</p>
+              <p className="font-medium text-foreground">{formatPhoneWithCountryCode(patient.phone, (patient as any).country_code)}</p>
             </div>
           </div>
           <div className="flex items-center">
@@ -60,7 +68,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
             <div>
               <p className="text-sm text-muted-foreground">Date of Birth</p>
               <p className="font-medium text-foreground">
-                {formatDisplayDate(patient.dateOfBirth || patient.dob)}
+                {new Date(patient.dateOfBirth).toLocaleDateString()}
               </p>
             </div>
           </div>
@@ -73,6 +81,28 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
               </p>
             </div>
           </div>
+          {patient.bloodGroup && (
+            <div className="flex items-center">
+              <Heart className="w-5 h-5 text-muted-foreground/60 mr-3" />
+              <div>
+                <p className="text-sm text-muted-foreground">Blood Group</p>
+                <p className="font-medium text-destructive">
+                  {patient.bloodGroup}
+                </p>
+              </div>
+            </div>
+          )}
+          {patient.occupation && (
+            <div className="flex items-center">
+              <User className="w-5 h-5 text-muted-foreground/60 mr-3" />
+              <div>
+                <p className="text-sm text-muted-foreground">Occupation</p>
+                <p className="font-medium text-foreground">
+                  {patient.occupation}
+                </p>
+              </div>
+            </div>
+          )}
           <div className="flex items-start">
             <MapPin className="w-5 h-5 text-muted-foreground/60 mr-3 mt-1" />
             <div>
@@ -89,40 +119,18 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
               </p>
             </div>
           </div>
-          {patient.bloodGroup && (
-            <div className="flex items-center sm:col-span-2">
-              <Heart className="w-5 h-5 text-muted-foreground/60 mr-3" />
-              <div>
-                <p className="text-sm text-muted-foreground">Blood Group</p>
-                <p className="font-medium text-destructive">
-                  {patient.bloodGroup}
-                </p>
-              </div>
-            </div>
-          )}
-          {patient.occupation && (
-            <div className="flex items-center sm:col-span-2">
-              <User className="w-5 h-5 text-muted-foreground/60 mr-3" />
-              <div>
-                <p className="text-sm text-muted-foreground">Occupation</p>
-                <p className="font-medium text-foreground">
-                  {patient.occupation}
-                </p>
-              </div>
-            </div>
-          )}
         </div>
       </Card>
 
       {/* Quick Stats + Plan Coverage */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         <PlanCoverageCard patient={patient} />
-        <Card className="rounded-2xl p-3 md:p-4 border border-border shadow-sm">
-          <h3 className="text-lg font-bold text-foreground mb-3 flex items-center">
+        <Card className="rounded-2xl p-6 border border-border shadow-sm">
+          <h3 className="text-lg font-bold text-foreground mb-4 flex items-center">
             <Activity className="w-5 h-5 mr-2" />
             Patient Statistics
           </h3>
-          <div className="space-y-2">
+          <div className="space-y-4">
             <div className="flex items-center justify-between p-3 bg-primary/10 rounded-xl">
               <div className="flex items-center">
                 <Calendar className="w-5 h-5 text-primary mr-3" />
@@ -143,7 +151,11 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
               </div>
               <span className="text-sm font-bold text-primary">
                 {patient.created_at || patient.createdAt
-                  ? formatDisplayDate(patient.created_at || patient.createdAt)
+                  ? new Date(patient.created_at || patient.createdAt).toLocaleDateString("en-IN", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })
                   : "New Registration"}
               </span>
             </div>

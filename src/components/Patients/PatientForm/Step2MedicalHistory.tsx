@@ -1,14 +1,12 @@
-/* eslint-disable react-refresh/only-export-components */
-import type { ApiAny } from "../../../types/api";
 import { Textarea } from "@/components/ui/Textarea";
 import { Label } from "@/components/ui/Label";
 import React from 'react';
+import { CorporatePlanSelector } from '../../CorporatePlans/CorporatePlanSelector';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { Card, CardContent } from '@/components/ui/Card';
 import { SearchableSelect, Button } from '@/components/ui';
-import { DatePicker } from "@/components/ui/DatePicker";
-import { X, Eye, AlertTriangle, FileText, Upload, Heart, ShieldCheck, User, History } from "lucide-react";
+import { X, Eye, AlertTriangle, FileText, Pill, Stethoscope, Scissors, Syringe, Zap, Upload, Calendar, Heart, ShieldCheck, User, History } from "lucide-react";
 import { useStep2MedicalHistory } from './useStep2MedicalHistory';
 
 export const openImageInNewTab = (src: string, title?: string) => {
@@ -39,12 +37,12 @@ export const openImageInNewTab = (src: string, title?: string) => {
 };
 
 interface Step2Props {
-  formData: ApiAny;
-  setFormData: React.Dispatch<React.SetStateAction<ApiAny>>;
+  formData: any;
+  setFormData: React.Dispatch<React.SetStateAction<any>>;
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
   validationErrors?: { [key: string]: string };
-  matchedCorporateEmp: ApiAny;
-  corporatePlans: ApiAny[];
+  matchedCorporateEmp: any;
+  corporatePlans: any[];
   medicalSearch: string;
   setMedicalSearch: (val: string) => void;
   selectedMedicalHistory: string[];
@@ -62,7 +60,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
   handleChange,
   validationErrors = {},
   matchedCorporateEmp,
-  corporatePlans: _corporatePlans,
+  corporatePlans,
   selectedMedicalHistory,
   setSelectedMedicalHistory,
   selectedAllergies,
@@ -86,43 +84,28 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
 
   return (
     <div className="space-y-3">
-      <div className="text-center mb-1">
-        <div className="w-10 h-10 bg-linear-to-r from-red-100 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-1.5">
-          <Heart className="w-5 h-5 text-destructive" />
+      <div className="text-center mb-2">
+        <div className="w-12 h-12 bg-gradient-to-r from-red-100 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
+          <Heart className="w-6 h-6 text-destructive" />
         </div>
         <h3 className="text-base font-bold text-foreground leading-none">Medical Information</h3>
         <p className="text-[10px] text-primary/60 mt-1 uppercase font-bold tracking-widest">Allergies</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
-        <div>
-          <Label className="block text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1 px-1">
-            Referred By
-          </Label>
-          <Input
-            type="text"
-            name="referredBy"
-            value={formData.referredBy}
-            onChange={handleChange}
-            placeholder="Doctor name or referral source"
-          />
-        </div>
-        <div>
-          <Label className="block text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1 px-1">
-            Habits
-          </Label>
-          <Textarea
-            name="habit"
-            value={formData.habit}
-            onChange={handleChange}
-            rows={1}
-            className="w-full px-4 py-2 text-sm border rounded-md focus:ring-2 focus:ring-primary border-input bg-card resize-y min-h-10"
-            placeholder="E.g. Smoking, Tobacco chewing, Alcohol consumption, etc."
-          />
-        </div>
+      <div>
+        <Label className="block text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1 px-1">
+          Referred By
+        </Label>
+        <Input
+          type="text"
+          name="referredBy"
+          value={formData.referredBy}
+          onChange={handleChange}
+          placeholder="Doctor name or referral source"
+        />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
         <div>
           <Label className="block text-sm font-semibold text-muted-foreground mb-1">
             <Heart className="w-4 h-4 inline mr-2 text-red-500" />
@@ -132,11 +115,12 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
             <SearchableSelect
               isMulti
               value={selectedMedicalHistory}
+              popoverClassName="w-[320px] sm:w-[400px] md:w-[480px] max-w-[90vw]"
               onChange={(values: string[]) => {
                 setSelectedMedicalHistory(values);
-                setFormData((prev: ApiAny) => ({ ...prev, medicalHistory: values.join('\n') }));
+                setFormData((prev: any) => ({ ...prev, medicalHistory: values.join('\n') }));
               }}
-              options={medicalHistories.filter((h: ApiAny) => h && h.name).map((h: ApiAny) => {
+              options={medicalHistories.filter((h: any) => h && h.name).map((h: any) => {
                 return { label: h.name, value: h.id || h.name };
               })}
               placeholder="Select medical conditions..."
@@ -148,7 +132,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
             {selectedMedicalHistory.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
                 {selectedMedicalHistory.map((item) => {
-                  const history = medicalHistories.find((h: ApiAny) => (h.id || h.name) === item);
+                  const history = medicalHistories.find((h: any) => (h.id || h.name) === item);
                   const displayName = history ? history.name : item;
                   return (
                     <Badge key={item} variant="secondary" className="pl-3 pr-2 py-1 gap-1 border-primary/20 bg-primary/5 text-primary">
@@ -160,7 +144,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                         onClick={() => {
                           const updated = selectedMedicalHistory.filter((i) => i !== item);
                           setSelectedMedicalHistory(updated);
-                          setFormData((prev: ApiAny) => ({ ...prev, medicalHistory: updated.join('\n') }));
+                          setFormData((prev: any) => ({ ...prev, medicalHistory: updated.join('\n') }));
                         }}
                         className="ml-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full p-0.5"
                       >
@@ -183,11 +167,12 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
             <SearchableSelect
               isMulti
               value={selectedAllergies}
+              popoverClassName="w-[320px] sm:w-[400px] md:w-[480px] max-w-[90vw]"
               onChange={(values: string[]) => {
                 setSelectedAllergies(values);
-                setFormData((prev: ApiAny) => ({ ...prev, allergies: values.join('\n') }));
+                setFormData((prev: any) => ({ ...prev, allergies: values.join('\n') }));
               }}
-              options={allergies.filter((a: ApiAny) => a && (a.allergy_name || a.name)).map((a: ApiAny) => {
+              options={allergies.filter((a: any) => a && (a.allergy_name || a.name)).map((a: any) => {
                 const name = a.allergy_name || a.name;
                 return { label: name, value: a.id || name };
               })}
@@ -200,7 +185,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
             {selectedAllergies.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
                 {selectedAllergies.map((item) => {
-                  const allergy = allergies.find((a: ApiAny) => (a.id || a.allergy_name || a.name) === item);
+                  const allergy = allergies.find((a: any) => (a.id || a.allergy_name || a.name) === item);
                   const displayName = allergy ? (allergy.allergy_name || allergy.name) : item;
                   return (
                     <Badge key={item} variant="secondary" className="pl-3 pr-2 py-1 gap-1 border-destructive/20 bg-destructive/5 text-destructive">
@@ -212,7 +197,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                         onClick={() => {
                           const updated = selectedAllergies.filter((i) => i !== item);
                           setSelectedAllergies(updated);
-                          setFormData((prev: ApiAny) => ({ ...prev, allergies: updated.join('\n') }));
+                          setFormData((prev: any) => ({ ...prev, allergies: updated.join('\n') }));
                         }}
                         className="ml-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full p-0.5"
                       >
@@ -225,6 +210,20 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
             )}
           </div>
         </div>
+      </div>
+
+      <div className="bg-card border border-border rounded-2xl p-4 shadow-sm space-y-3 mt-4">
+        <Label className="block text-sm font-semibold text-muted-foreground mb-1">
+          Habits
+        </Label>
+        <Textarea
+          name="habit"
+          value={formData.habit}
+          onChange={handleChange}
+          rows={2}
+          className="w-full px-4 py-2 text-sm border rounded-md focus:ring-2 focus:ring-primary border-input bg-card"
+          placeholder="E.g. Smoking, Tobacco chewing, Alcohol consumption, etc."
+        />
       </div>
 
       {matchedCorporateEmp && (
@@ -244,14 +243,14 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
         </Card>
       )}
 
-      <div className="bg-card border border-border rounded-2xl p-3 shadow-sm space-y-2">
+      <div className="bg-card border border-border rounded-2xl p-4 shadow-sm space-y-3">
         <div className="flex items-center justify-between mb-1">
-          <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-            <User className="w-4 h-4 text-primary" />
+          <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+            <User className="w-5 h-5 text-primary" />
             Previous Dentist / Doctor Details
           </h3>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label className="block text-sm font-semibold text-muted-foreground mb-1">Previous Doctor Name</Label>
             <Input
@@ -304,19 +303,24 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
               value={formData.previousDoctorPhone}
               onChange={(e) => {
                 const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
-                setFormData((prev: ApiAny) => ({ ...prev, previousDoctorPhone: digits }));
+                setFormData((prev: any) => ({ ...prev, previousDoctorPhone: digits }));
               }}
               placeholder="10-digit phone number"
             />
           </div>
           <div>
             <Label className="block text-sm font-semibold text-muted-foreground mb-1">Last Visit Date</Label>
-            <DatePicker
-              value={formData.previousLastVisitDate}
-              onChange={(val) => handleChange({ target: { name: "previousLastVisitDate", value: val } } as ApiAny)}
-              max={new Date().toISOString().split("T")[0]}
-              className={validationErrors.previousLastVisitDate ? "border-destructive bg-destructive/5" : undefined}
-            />
+            <div className="relative">
+              <Input
+                type="date"
+                name="previousLastVisitDate"
+                value={formData.previousLastVisitDate}
+                onChange={handleChange}
+                className={`w-full h-10 px-4 border rounded-md focus:ring-2 focus:ring-primary bg-card text-sm pr-10 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:z-10 ${validationErrors.previousLastVisitDate ? "border-destructive bg-destructive/5" : "border-input"}`}
+                max={new Date().toISOString().split("T")[0]}
+              />
+              <Calendar className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 pointer-events-none" />
+            </div>
             {validationErrors.previousLastVisitDate && (
               <p className="text-destructive text-[10px] mt-1 flex items-center">
                 <AlertTriangle className="w-3 h-3 mr-1" />
@@ -370,7 +374,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                   const updated = formData.previousTreatments.includes(treatment)
                     ? formData.previousTreatments.filter((t: string) => t !== treatment)
                     : [...formData.previousTreatments, treatment];
-                  setFormData((prev: ApiAny) => ({ ...prev, previousTreatments: updated }));
+                  setFormData((prev: any) => ({ ...prev, previousTreatments: updated }));
                 }}
                 variant={formData.previousTreatments.includes(treatment) ? "default" : "outline"}
                 className="cursor-pointer text-xs"
@@ -382,7 +386,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
         </div>
       </div>
 
-      <div className="bg-card border border-border rounded-2xl p-3 shadow-sm space-y-2">
+      <div className="bg-card border border-border rounded-2xl p-4 shadow-sm space-y-3">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
@@ -395,12 +399,12 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
           name="pastDentalHistory"
           value={formData.pastDentalHistory}
           onChange={handleChange}
-          rows={2}
+          rows={3}
           className="w-full px-4 py-2 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
           placeholder="Previous dental treatments, issues, or positive/negative experiences"
         />
-        <Label className="border-2 border-dashed border-input rounded-md p-4 text-center cursor-pointer hover:border-primary/50 hover:bg-secondary/20 transition-all block group">
-          <Upload className="w-6 h-6 text-muted-foreground/60 mx-auto mb-1.5 group-hover:text-primary transition-colors" />
+        <Label className="border-2 border-dashed border-input rounded-md p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-secondary/20 transition-all block group">
+          <Upload className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2 group-hover:text-primary transition-colors" />
           <p className="text-xs font-bold text-muted-foreground group-hover:text-primary transition-colors uppercase tracking-widest">Upload Clinical Images / X-rays</p>
           <p className="text-[10px] text-muted-foreground/60 mt-1">Select multiple files (JPEG, PNG, DICOM) - Max 5MB per file</p>
           <Input
@@ -413,14 +417,14 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
         </Label>
         {formData.dentalFiles?.length > 0 && (
           <div className="flex flex-wrap gap-4 mt-2">
-            {formData.dentalFiles.map((file: ApiAny, index: number) => {
+            {formData.dentalFiles.map((file: any, index: number) => {
               const fileUrl = file.data || file.url || (file.file ? URL.createObjectURL(file.file) : null);
               const isImage = file.type?.startsWith("image/") || file.name?.match(/\.(jpeg|jpg|png|gif|webp)$/i) || (typeof fileUrl === 'string' && fileUrl.startsWith('data:image/'));
               
               return (
                 <div
                   key={index}
-                  className="relative group w-24 h-24 border rounded-xl overflow-hidden bg-muted/30 shrink-0 flex items-center justify-center cursor-pointer shadow-sm hover:shadow-md transition-shadow"
+                  className="relative group w-24 h-24 border rounded-xl overflow-hidden bg-muted/30 flex-shrink-0 flex items-center justify-center cursor-pointer shadow-sm hover:shadow-md transition-shadow"
                   onClick={() => fileUrl && openImageInNewTab(fileUrl, file.name)}
                 >
                   {isImage && fileUrl ? (
@@ -459,10 +463,10 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                           if (fileToRemove && fileToRemove.id) {
                             removeIds.push(fileToRemove.id);
                           }
-                          setFormData((prev: ApiAny) => ({
+                          setFormData((prev: any) => ({
                             ...prev,
-                            dentalFiles: prev.dentalFiles.filter((_: ApiAny, i: number) => i !== index),
-                            rawDentalFiles: prev.rawDentalFiles ? prev.rawDentalFiles.filter((_: ApiAny, i: number) => i !== index) : [],
+                            dentalFiles: prev.dentalFiles.filter((_: any, i: number) => i !== index),
+                            rawDentalFiles: prev.rawDentalFiles ? prev.rawDentalFiles.filter((_: any, i: number) => i !== index) : [],
                             remove_image_ids: removeIds
                           }));
                         }}
@@ -480,8 +484,8 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
         )}
       </div>
 
-      <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl flex gap-3">
-        <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
+      <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex gap-3">
+        <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
         <div>
           <h4 className="text-sm font-bold text-amber-900 mb-1">Important Medical Notice</h4>
           <p className="text-xs text-amber-800 leading-relaxed">

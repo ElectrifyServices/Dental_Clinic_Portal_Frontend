@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
 export interface PatientListParams {
@@ -18,12 +17,12 @@ export interface Patient {
   phone?: string;
   status?: string;
   is_active?: boolean;
-  [key: string]: ApiAny;
+  [key: string]: any;
 }
 
-export function usePatientQuery(params: PatientListParams = {}, options?: ApiAny) {
+export function usePatientQuery(params: PatientListParams = {}, options?: any) {
   // Build body — only include fields that are explicitly provided
-  const body: Record<string, ApiAny> = {
+  const body: Record<string, any> = {
     page: params.page ?? 1,
     limit: params.limit ?? 100,
   };

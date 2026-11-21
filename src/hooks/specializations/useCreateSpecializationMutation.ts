@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 
 export interface CreateSpecializationVariables {
@@ -10,7 +9,7 @@ export interface Specialization {
   id: string;
   name: string;
   description: string;
-  [key: string]: ApiAny;
+  [key: string]: any;
 }
 
 export function useCreateSpecializationMutation() {

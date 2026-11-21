@@ -1,14 +1,3 @@
-/** A tooth-chart finding, treatment row or prescription row as the backend
- *  sends it. These lists are passed straight through between the UI and the
- *  API without this module inspecting their fields. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type PassThroughRow = any;
-
-/** The `appointment_info` blob, which the API owns and this module only
- *  forwards. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AppointmentInfo = any;
-
 export interface UiConsultation {
   id: string;
   patientId: string;
@@ -24,9 +13,9 @@ export interface UiConsultation {
   treatmentCost?: number;
   followUpRequired?: boolean;
   consultationNotes?: string;
-  toothFindings?: PassThroughRow[];
-  treatments?: PassThroughRow[];
-  prescriptions?: PassThroughRow[];
+  toothFindings?: any[];
+  treatments?: any[];
+  prescriptions?: any[];
   createdAt: string;
   updatedAt: string;
   appointmentTime?: string;
@@ -53,9 +42,9 @@ export interface ApiConsultation {
   total_estimated_cost?: number;
   is_follow_up?: boolean;
   additional_notes?: string;
-  tooth_findings?: PassThroughRow[];
-  treatments?: PassThroughRow[];
-  prescriptions?: PassThroughRow[];
+  tooth_findings?: any[];
+  treatments?: any[];
+  prescriptions?: any[];
   created_at: string;
   updated_at: string;
   patient?: {
@@ -67,9 +56,7 @@ export interface ApiConsultation {
     id?: string;
     name?: string;
   };
-  treatment_plans?: PassThroughRow[];
-  follow_up_appointments?: PassThroughRow[];
-  follow_up_date?: string;
+  treatment_plans?: any[];
   appointment?: {
     id?: string;
     date?: string;
@@ -119,15 +106,7 @@ export function toUiConsultation(apiConsultation: ApiConsultation): UiConsultati
   };
 }
 
-export function toApiCreateConsultation(
-  uiConsultation: Partial<UiConsultation> & {
-    appointment_info?: AppointmentInfo;
-    patient_name?: string;
-    country_code?: string;
-    patient_phone?: string;
-    attachments?: File[];
-  },
-) {
+export function toApiCreateConsultation(uiConsultation: Partial<UiConsultation> & { appointment_info?: any, patient_name?: string, country_code?: string, patient_phone?: string, attachments?: File[] }): any {
   return {
     patient_id: uiConsultation.patientId || undefined,
     patient_name: uiConsultation.patient_name,
@@ -150,13 +129,7 @@ export function toApiCreateConsultation(
   };
 }
 
-export function toApiUpdateConsultation(
-  uiConsultation: Partial<UiConsultation> & {
-    appointment_info?: AppointmentInfo;
-    attachments?: File[];
-    removedAttachmentIds?: string[];
-  },
-) {
+export function toApiUpdateConsultation(uiConsultation: Partial<UiConsultation> & { appointment_info?: any, attachments?: File[], removedAttachmentIds?: string[] }): any {
   return {
     id: uiConsultation.id,
     patient_id: uiConsultation.patientId,

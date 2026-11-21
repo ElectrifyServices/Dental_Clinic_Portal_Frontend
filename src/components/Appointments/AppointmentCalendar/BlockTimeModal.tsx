@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../../types/api";
 import { useState } from "react";
 import { Ban, Trash2, Loader2, AlertTriangle, CalendarOff } from "lucide-react";
 import { Modal, Button, LabeledField, Input, HourMinPicker } from "@/components/ui";
@@ -63,8 +62,7 @@ export function BlockTimeModal({ doctorId, doctorName, date, onClose }: BlockTim
       setStartTime("");
       setEndTime("");
       setReason("");
-    } catch (caught) {
-      const err = caught as ApiAny;
+    } catch (err: any) {
       setError(err?.message || "Failed to add block");
     }
   };
@@ -72,8 +70,7 @@ export function BlockTimeModal({ doctorId, doctorName, date, onClose }: BlockTim
   const handleRemove = async (overrideId: string) => {
     try {
       await deleteOverride.mutateAsync({ doctorId, overrideId });
-    } catch (caught) {
-      const err = caught as ApiAny;
+    } catch (err: any) {
       setError(err?.message || "Failed to remove block");
     }
   };
@@ -83,18 +80,17 @@ export function BlockTimeModal({ doctorId, doctorName, date, onClose }: BlockTim
       title="Block Time"
       subtitle={`${doctorName ? `${doctorName} — ` : ""}${formatDisplayDate(date)}`}
       onClose={onClose}
-      icon={<Ban className="w-4 h-4 text-red-600" />}
+      icon={<Ban className="w-5 h-5 text-red-600" />}
       size="lg"
-      compact={true}
       footer={
         <div className="flex justify-end w-full">
-          <Button variant="outline" size="sm" onClick={onClose}>Done</Button>
+          <Button variant="outline" onClick={onClose}>Done</Button>
         </div>
       }
     >
-      <div className="space-y-3">
-        <div className="bg-primary/5 rounded-xl border border-border p-3 space-y-3">
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+      <div className="space-y-5">
+        <div className="bg-primary/5 rounded-2xl border border-border p-4 space-y-4">
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
             Block a time range for this date only
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

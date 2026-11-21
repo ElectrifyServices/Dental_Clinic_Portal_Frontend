@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../../types/api";
 import React, { useState } from "react";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
@@ -63,29 +62,29 @@ export function PrescriptionForm({
 
   const medicinesList = React.useMemo(() => {
     if (!rawMedicines) return [];
-    let list: ApiAny[] = [];
+    let list: any[] = [];
     if (Array.isArray(rawMedicines)) {
       list = rawMedicines;
-    } else if (rawMedicines && Array.isArray((rawMedicines as ApiAny).responseObject?.data?.data)) {
-      list = (rawMedicines as ApiAny).responseObject.data.data;
-    } else if (rawMedicines && Array.isArray((rawMedicines as ApiAny).responseObject?.data)) {
-      list = (rawMedicines as ApiAny).responseObject.data;
-    } else if (rawMedicines && Array.isArray((rawMedicines as ApiAny).responseObject)) {
-      list = (rawMedicines as ApiAny).responseObject;
-    } else if (rawMedicines && Array.isArray((rawMedicines as ApiAny).data?.data)) {
-      list = (rawMedicines as ApiAny).data.data;
-    } else if (rawMedicines && Array.isArray((rawMedicines as ApiAny).data)) {
-      list = (rawMedicines as ApiAny).data;
-    } else if (rawMedicines && Array.isArray((rawMedicines as ApiAny).list)) {
-      list = (rawMedicines as ApiAny).list;
-    } else if (rawMedicines && Array.isArray((rawMedicines as ApiAny).medicines)) {
-      list = (rawMedicines as ApiAny).medicines;
+    } else if (rawMedicines && Array.isArray((rawMedicines as any).responseObject?.data?.data)) {
+      list = (rawMedicines as any).responseObject.data.data;
+    } else if (rawMedicines && Array.isArray((rawMedicines as any).responseObject?.data)) {
+      list = (rawMedicines as any).responseObject.data;
+    } else if (rawMedicines && Array.isArray((rawMedicines as any).responseObject)) {
+      list = (rawMedicines as any).responseObject;
+    } else if (rawMedicines && Array.isArray((rawMedicines as any).data?.data)) {
+      list = (rawMedicines as any).data.data;
+    } else if (rawMedicines && Array.isArray((rawMedicines as any).data)) {
+      list = (rawMedicines as any).data;
+    } else if (rawMedicines && Array.isArray((rawMedicines as any).list)) {
+      list = (rawMedicines as any).list;
+    } else if (rawMedicines && Array.isArray((rawMedicines as any).medicines)) {
+      list = (rawMedicines as any).medicines;
     }
     return list;
   }, [rawMedicines]);
 
   const selectOptions = React.useMemo(() => {
-    return medicinesList.map((m: ApiAny) => ({
+    return medicinesList.map((m: any) => ({
       label: m.name || m.label || m,
       value: m.id || m._id || m.value || m.name || m,
     }));

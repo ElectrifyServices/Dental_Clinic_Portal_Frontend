@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { Textarea } from "@/components/ui/Textarea";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
@@ -6,7 +5,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import React from "react";
 import { Save, Stethoscope, CheckCircle, Loader2, Paperclip, Upload, FileText, X } from "lucide-react";
 import { Modal, Button, toast } from "@/components/ui";
-import { DatePicker } from "@/components/ui/DatePicker";
 import { teeth } from "@/constants/treatment.constants";
 import { useCompleteTreatmentSessionMutation, useAddTreatmentSessionMutation } from "@/hooks/treatment/useTreatmentSessionHooks";
 import type { TreatmentFormProps } from "@/types/treatment.types";
@@ -36,7 +34,7 @@ export function TreatmentForm({
   const [patientSearch, setPatientSearch] = React.useState("");
   const debouncedPatientSearch = useDebounce(patientSearch, 300);
 
-  const { data: apiPatientsData } = useApiQuery<ApiAny[]>({
+  const { data: apiPatientsData } = useApiQuery<any[]>({
     queryKey: ["treatment-form-patients", debouncedPatientSearch],
     endpoint: "/patient/list",
     method: "post",
@@ -48,8 +46,8 @@ export function TreatmentForm({
   });
 
   const apiPatients = React.useMemo(() => {
-    let rawList: ApiAny[] = [];
-    const dataObj: ApiAny = apiPatientsData;
+    let rawList: any[] = [];
+    const dataObj: any = apiPatientsData;
     if (Array.isArray(dataObj)) {
       rawList = dataObj;
     } else if (dataObj && Array.isArray(dataObj.patients)) {
@@ -62,7 +60,7 @@ export function TreatmentForm({
       rawList = dataObj.data;
     }
 
-    const mapped = rawList.map((p: ApiAny) => ({
+    const mapped = rawList.map((p: any) => ({
       ...p,
       id: p.id,
       name: p.name || p.full_name || '',
@@ -83,7 +81,7 @@ export function TreatmentForm({
   const [doctorSearch, setDoctorSearch] = React.useState("");
   const debouncedDoctorSearch = useDebounce(doctorSearch, 300);
 
-  const { data: apiStaffData } = useApiQuery<ApiAny[]>({
+  const { data: apiStaffData } = useApiQuery<any[]>({
     queryKey: ["treatment-form-doctors", debouncedDoctorSearch],
     endpoint: "/staff/list",
     method: "post",
@@ -94,8 +92,8 @@ export function TreatmentForm({
   });
 
   const apiDoctors = React.useMemo(() => {
-    let rawList: ApiAny[] = [];
-    const dataObj: ApiAny = apiStaffData;
+    let rawList: any[] = [];
+    const dataObj: any = apiStaffData;
     if (Array.isArray(dataObj)) {
       rawList = dataObj;
     } else if (dataObj && Array.isArray(dataObj.staffs)) {
@@ -110,7 +108,7 @@ export function TreatmentForm({
       rawList = dataObj.data;
     }
 
-    const mapped = rawList.map((s: ApiAny) => {
+    const mapped = rawList.map((s: any) => {
       let normalizedRole = 'staff';
       let rawRole = s.role?.name || s.role_id || s.role || 'staff';
       if (typeof rawRole !== 'string') rawRole = String(rawRole);
@@ -137,7 +135,7 @@ export function TreatmentForm({
     });
 
     const filtered = mapped.filter(
-      (s: ApiAny) => s.role === "doctor" || s.role === "admin"
+      (s: any) => s.role === "doctor" || s.role === "admin"
     );
 
     if (filtered.length === 0 && !debouncedDoctorSearch) {
@@ -151,7 +149,7 @@ export function TreatmentForm({
   const updateProcedureMutation = useUpdateProcedureMutation();
   const deleteProcedureMutation = useDeleteProcedureMutation();
 
-  const getRawProceduresList = (raw: ApiAny): ApiAny[] => {
+  const getRawProceduresList = (raw: any): any[] => {
     if (!raw) return [];
     const target = raw.responseObject !== undefined ? raw.responseObject : raw;
     if (Array.isArray(target)) return target;
@@ -167,7 +165,7 @@ export function TreatmentForm({
     try {
       const created = await createProcedureMutation.mutateAsync({ name: newProcedureName });
       return created?.name || newProcedureName;
-    } catch (_error) {
+    } catch (error) {
       // handled
     }
   };
@@ -175,11 +173,11 @@ export function TreatmentForm({
   const handleUpdateProcedure = async (oldName: string, newName: string) => {
     try {
       const rawList = getRawProceduresList(rawProceduresData);
-      const matched = rawList.find((p: ApiAny) => p.name === oldName);
+      const matched = rawList.find((p: any) => p.name === oldName);
       if (matched?.id) {
         await updateProcedureMutation.mutateAsync({ id: matched.id, name: newName });
       }
-    } catch (_error) {
+    } catch (error) {
       // handled
     }
   };
@@ -191,11 +189,11 @@ export function TreatmentForm({
       async () => {
         try {
           const rawList = getRawProceduresList(rawProceduresData);
-          const matched = rawList.find((p: ApiAny) => p.name === name);
+          const matched = rawList.find((p: any) => p.name === name);
           if (matched?.id) {
             await deleteProcedureMutation.mutateAsync({ id: matched.id });
           }
-        } catch (_error) {
+        } catch (error) {
           // handled
         }
       }
@@ -216,7 +214,7 @@ export function TreatmentForm({
     updatePrescription,
     addPrescription,
     removePrescription,
-    handleSubmit: _handleSubmit,
+    handleSubmit,
   } = useTreatmentForm(treatment, allPatients, allTreatments);
 
   const [procedureSearch, setProcedureSearch] = React.useState("");
@@ -239,7 +237,7 @@ export function TreatmentForm({
     }
 
     const rawList = getRawProceduresList(rawProceduresData);
-    return rawList.map((proc: ApiAny) => ({
+    return rawList.map((proc: any) => ({
       label: proc.name,
       value: proc.name,
       is_free: proc.is_free,
@@ -250,9 +248,9 @@ export function TreatmentForm({
 
   // Complete Session Modal states
   const completeSessionMutation = useCompleteTreatmentSessionMutation();
-  const _addSessionMutation = useAddTreatmentSessionMutation();
+  const addSessionMutation = useAddTreatmentSessionMutation();
 
-  const [completingSession, setCompletingSession] = React.useState<ApiAny | null>(null);
+  const [completingSession, setCompletingSession] = React.useState<any | null>(null);
   const [completeForm, setCompleteForm] = React.useState({
     work_done: "",
     session_findings: "",
@@ -271,19 +269,19 @@ export function TreatmentForm({
   });
   const [sessionAttachments, setSessionAttachments] = React.useState<File[]>([]);
 
-  const handleOpenCompleteSession = (session: ApiAny) => {
+  const handleOpenCompleteSession = (session: any) => {
     // Find previous completed sessions in treatmentSessions
     const completedList = treatmentSessions.filter(s => s.status === "completed" || s.status === "COMPLETED");
     const lastCompleted = completedList.length > 0 ? completedList[completedList.length - 1] : null;
 
     const fallbackFee = lastCompleted ? (Number(lastCompleted.session_fee || lastCompleted.cost) || 0) : 0;
-    const fallbackDiscount = lastCompleted ? (Number((lastCompleted as ApiAny).discount_percentage || (lastCompleted as ApiAny).discount) || 0) : 0;
-    const _fallbackPaid = lastCompleted ? (Number(lastCompleted.paid_amount) || 0) : 0;
+    const fallbackDiscount = lastCompleted ? (Number((lastCompleted as any).discount_percentage || (lastCompleted as any).discount) || 0) : 0;
+    const fallbackPaid = lastCompleted ? (Number(lastCompleted.paid_amount) || 0) : 0;
 
     const currentFee = Number(session.session_fee || session.cost) || fallbackFee;
     const planDiscount = Number(formData.discount_value) || 0;
     const currentDiscount = planDiscount || fallbackDiscount || 0;
-    const currentPaid = Number(session.paid_amount || (session as ApiAny).paidAmount) || (currentFee - (currentFee * currentDiscount) / 100);
+    const currentPaid = Number(session.paid_amount || (session as any).paidAmount) || (currentFee - (currentFee * currentDiscount) / 100);
 
     setCompleteForm({
       work_done: session.work_done || session.workDone || "",
@@ -337,7 +335,7 @@ export function TreatmentForm({
           ...nextSessionPayload,
           attachments: sessionAttachments.length > 0 ? sessionAttachments : undefined,
         });
-      } catch (err: ApiAny) {
+      } catch (err: any) {
         // Catch backend API errors & display user-friendly UI error toast without console logs
         const msg = err?.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc ||
                     err?.response?.data?.message ||
@@ -380,7 +378,7 @@ export function TreatmentForm({
       };
       
       // Update form sessions value
-      form.setValue("sessions", [...treatmentSessions, newSess] as ApiAny);
+      form.setValue("sessions", [...treatmentSessions, newSess] as any);
     }
 
     setCompletingSession(null);
@@ -403,20 +401,20 @@ export function TreatmentForm({
     >,
   ) => {
     const { name, value } = e.target;
-    let val: ApiAny = value;
+    let val: any = value;
     if (name === "cost" || name === "discount_value") {
       val = value === "" ? "" : Number(value);
       if (typeof val === "number" && isNaN(val)) {
         val = 0;
       }
     }
-    form.setValue(name as keyof typeof formData, val as ApiAny, {
+    form.setValue(name as keyof typeof formData, val as any, {
       shouldValidate: true,
     });
 
     if (name === "patientName") {
       const patient = apiPatients.find(
-        (p: ApiAny) => (p.name || p.full_name || p) === value
+        (p: any) => (p.name || p.full_name || p) === value
       );
       if (patient && typeof patient === "object") {
         form.setValue("patientId", patient.id);
@@ -435,7 +433,7 @@ export function TreatmentForm({
 
   const [isSaving, setIsSaving] = React.useState(false);
 
-  const handleSaveForm = async (formDataVal: ApiAny) => {
+  const handleSaveForm = async (formDataVal: any) => {
     const submitData = {
       ...formDataVal,
       id: treatment?.id,
@@ -461,7 +459,7 @@ export function TreatmentForm({
     setIsSaving(true);
     try {
       await onSave(submitData);
-    } catch (error: ApiAny) {
+    } catch (error: any) {
       const msg = error?.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc ||
                   error?.responseStatusList?.statusList?.[0]?.statusDesc ||
                   error?.response?.data?.message ||
@@ -499,8 +497,8 @@ export function TreatmentForm({
         </div>
       }
     >
-      <form className="space-y-4 py-2">
-        <div className="bg-muted/30 p-3 md:p-4 rounded-2xl border border-border">
+      <form className="space-y-8 py-2">
+        <div className="bg-muted/30 p-6 rounded-2xl border border-border">
           <BasicInfoSection
             formData={formData}
             handleChange={handleChange}
@@ -524,7 +522,7 @@ export function TreatmentForm({
 
         <div className="h-px bg-border/50" />
 
-        <div className="bg-muted/30 p-3 md:p-4 rounded-2xl border border-border">
+        <div className="bg-muted/30 p-6 rounded-2xl border border-border">
           <SessionPlannerSection
             sessions={treatmentSessions}
             onAddSession={addSession}
@@ -532,11 +530,12 @@ export function TreatmentForm({
             onUpdateSession={updateSession}
             baseDate={formData.date}
             onCompleteSessionTrigger={handleOpenCompleteSession}
+            readOnly={!!treatment}
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
-          <div className="bg-muted/30 p-3 md:p-4 rounded-2xl border border-border h-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+          <div className="bg-muted/30 p-6 rounded-2xl border border-border h-full">
             <PrescriptionSection
               prescriptions={prescriptions}
               onAddPrescription={addPrescription}
@@ -544,16 +543,16 @@ export function TreatmentForm({
               onUpdatePrescription={updatePrescription}
             />
           </div>
-          <div className="bg-muted/30 p-3 md:p-4 rounded-2xl border border-border h-full flex flex-col">
-            <Label className="text-xs font-black text-foreground uppercase tracking-widest mb-2 flex items-center gap-2">
+          <div className="bg-muted/30 p-6 rounded-2xl border border-border h-full">
+            <Label className="text-xs font-black text-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
               Clinical Case Notes
             </Label>
             <Textarea
               name="notes"
               value={formData.notes}
               onChange={handleChange}
-              rows={5}
-              className="w-full flex-1 px-4 py-3 border border-border rounded-xl bg-background focus:ring-2 focus:ring-primary/20 outline-none text-sm font-medium resize-none"
+              rows={6}
+              className="w-full px-4 py-3 border border-border rounded-xl bg-background focus:ring-2 focus:ring-primary/20 outline-none text-sm font-medium resize-none"
               placeholder="Enter detailed treatment observations, history, and special instructions..."
             />
           </div>
@@ -588,7 +587,7 @@ export function TreatmentForm({
               form.setValue("existingImages", currentExisting.filter((url) => url !== urlToRemove));
 
               const matchedAttachment = treatment?.attachments?.find(
-                (a: ApiAny) => (a.file_url || a.url || a.path) === urlToRemove
+                (a: any) => (a.file_url || a.url || a.path) === urlToRemove
               );
               if (matchedAttachment?.id) {
                 const currentRemoved = form.getValues("removedAttachmentIds") || [];
@@ -634,26 +633,26 @@ export function TreatmentForm({
             </div>
           }
         >
-          <div className="space-y-3 text-left">
+          <div className="space-y-4 text-left">
             <div>
-              <Label className="text-sm font-semibold block mb-1.5">Work Done <span className="text-red-500">*</span></Label>
-              <Textarea rows={2} placeholder="Describe the procedures performed..." value={completeForm.work_done}
+              <Label className="text-sm font-semibold block mb-2">Work Done <span className="text-red-500">*</span></Label>
+              <Textarea rows={3} placeholder="Describe the procedures performed..." value={completeForm.work_done}
                 onChange={(e) => setCompleteForm(p => ({ ...p, work_done: e.target.value }))}
                 className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none resize-none" />
             </div>
             <div>
-              <Label className="text-sm font-semibold block mb-1.5">Clinical Findings <span className="text-red-500">*</span></Label>
-              <Textarea rows={2} placeholder="Observations, measurements, patient response..." value={completeForm.session_findings}
+              <Label className="text-sm font-semibold block mb-2">Clinical Findings <span className="text-red-500">*</span></Label>
+              <Textarea rows={3} placeholder="Observations, measurements, patient response..." value={completeForm.session_findings}
                 onChange={(e) => setCompleteForm(p => ({ ...p, session_findings: e.target.value }))}
                 className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none resize-none" />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 border-t pt-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4">
               <div>
                 <Label className="text-sm font-semibold block mb-2">Discount Type</Label>
                 <select
                   value={completeForm.discount_type || ""}
-                  onChange={(e) => setCompleteForm(p => ({ ...p, discount_type: e.target.value as ApiAny, discount_value: 0 }))}
+                  onChange={(e) => setCompleteForm(p => ({ ...p, discount_type: e.target.value as any, discount_value: 0 }))}
                   className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none font-semibold bg-white text-sm h-10"
                 >
                   <option value="">No Discount</option>
@@ -690,8 +689,8 @@ export function TreatmentForm({
               </div>
             </div>
 
-            <div className="border-t pt-3 space-y-3">
-              <div className="flex items-center gap-2 mb-2">
+            <div className="border-t pt-4 space-y-4">
+              <div className="flex items-center gap-2 mb-3">
                 <input
                   type="checkbox"
                   id="create-invoice"
@@ -704,7 +703,7 @@ export function TreatmentForm({
                 </Label>
               </div>
 
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-3">
                 <input
                   type="checkbox"
                   id="schedule-next-session"
@@ -718,11 +717,12 @@ export function TreatmentForm({
               </div>
 
               {scheduleNext && (
-                <div className="bg-muted/30 p-3 rounded-2xl border border-border space-y-3 animate-in fade-in slide-in-from-top-2">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div className="bg-muted/30 p-4 rounded-2xl border border-border space-y-4 animate-in fade-in slide-in-from-top-2">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
-                      <Label className="text-xs font-semibold block mb-1.5">Next Session Date</Label>
-                      <DatePicker
+                      <Label className="text-xs font-semibold block mb-2">Next Session Date</Label>
+                      <Input
+                        type="date"
                         min={(() => {
                           const today = new Date();
                           const year = today.getFullYear();
@@ -731,8 +731,8 @@ export function TreatmentForm({
                           return `${year}-${month}-${day}`;
                         })()}
                         value={nextSessionDraft.date}
-                        onChange={(val) => setNextSessionDraft(p => ({ ...p, date: val }))}
-                        className="w-full px-3 py-1.5 text-sm rounded-xl border focus:ring-2 focus:ring-emerald-200 bg-white font-medium"
+                        onChange={(e) => setNextSessionDraft(p => ({ ...p, date: e.target.value }))}
+                        className="w-full !inline-flex items-center justify-between px-3 py-1.5 text-sm rounded-xl border focus:ring-2 focus:ring-emerald-200 bg-white font-medium cursor-pointer [&::-webkit-calendar-picker-indicator]:ml-auto [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                       />
                     </div>
                     <div>
@@ -804,7 +804,7 @@ export function TreatmentForm({
                 <Paperclip className="w-4 h-4 text-emerald-600" />
                 <Label className="text-sm font-semibold">Attachments</Label>
               </div>
-              <div className="rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/40 p-3">
+              <div className="rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/40 p-4">
                 <Input
                   id="form-session-attachments"
                   type="file"
@@ -814,9 +814,9 @@ export function TreatmentForm({
                 />
                 <Label
                   htmlFor="form-session-attachments"
-                  className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-emerald-100 bg-white px-4 py-4 text-center transition-colors hover:bg-emerald-50"
+                  className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-emerald-100 bg-white px-4 py-5 text-center transition-colors hover:bg-emerald-50"
                 >
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
                     <Upload className="w-5 h-5" />
                   </div>
                   <div>

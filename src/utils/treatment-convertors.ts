@@ -1,4 +1,3 @@
-import type { ApiAny } from "../types/api";
 import { CreateTreatmentPlanVariables } from "@/hooks/treatment/useCreateTreatmentPlanMutation";
 import { UpdateTreatmentPlanVariables } from "@/hooks/treatment/useUpdateTreatmentPlanMutation";
 import type { TreatmentSession } from "@/types/treatment.types";
@@ -14,7 +13,7 @@ export function apiStatusToUi(status: string) {
 }
 
 export function uiStatusToApi(status: string): "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED" {
-  const map: Record<string, ApiAny> = {
+  const map: Record<string, any> = {
     planned: "PLANNED",
     "in-progress": "IN_PROGRESS",
     completed: "COMPLETED",
@@ -23,7 +22,7 @@ export function uiStatusToApi(status: string): "PLANNED" | "IN_PROGRESS" | "COMP
   return map[status] ?? "PLANNED";
 }
 
-export function convertSessionToApi(session: ApiAny) {
+export function convertSessionToApi(session: any) {
   return {
     visit_date: session.scheduledDate || session.suggestedDate,
     duration_min: session.duration || 45,
@@ -31,7 +30,7 @@ export function convertSessionToApi(session: ApiAny) {
   };
 }
 
-export function apiSessionToUi(s: ApiAny): TreatmentSession {
+export function apiSessionToUi(s: any): TreatmentSession {
   return {
     id: s.id,
     sessionNumber: s.visit_number,
@@ -54,7 +53,7 @@ export function apiSessionToUi(s: ApiAny): TreatmentSession {
   };
 }
 
-export function apiPrescToUi(p: ApiAny) {
+export function apiPrescToUi(p: any) {
   return {
     id: p.id,
     medicine: p.medicine_name,
@@ -71,7 +70,7 @@ function firstDefined<T>(...values: T[]): T | undefined {
   return values.find((value) => value !== undefined && value !== null && value !== "");
 }
 
-function normalizeToothValue(plan: ApiAny) {
+function normalizeToothValue(plan: any) {
   const rawTooth = firstDefined(
     plan.tooth_number,
     plan.toothNumber,
@@ -90,7 +89,7 @@ function normalizeToothValue(plan: ApiAny) {
   return rawTooth ? String(rawTooth) : "—";
 }
 
-function normalizeDoctorName(plan: ApiAny) {
+function normalizeDoctorName(plan: any) {
   return firstDefined(
     plan.doctor?.name,
     plan.doctor?.staff?.name,
@@ -105,7 +104,7 @@ function normalizeDoctorName(plan: ApiAny) {
   ) as string;
 }
 
-function normalizePatientName(plan: ApiAny) {
+function normalizePatientName(plan: any) {
   return firstDefined(
     plan.patient?.name,
     plan.patient_name,
@@ -117,7 +116,7 @@ function normalizePatientName(plan: ApiAny) {
   ) as string;
 }
 
-function normalizePatientId(plan: ApiAny) {
+function normalizePatientId(plan: any) {
   return firstDefined(
     plan.patient_id,
     plan.patient?.id,
@@ -127,7 +126,7 @@ function normalizePatientId(plan: ApiAny) {
   ) as string;
 }
 
-function normalizeProcedure(plan: ApiAny) {
+function normalizeProcedure(plan: any) {
   return firstDefined(
     plan.procedure,
     plan.treatment_name,
@@ -137,7 +136,7 @@ function normalizeProcedure(plan: ApiAny) {
   ) as string;
 }
 
-function normalizeCost(plan: ApiAny) {
+function normalizeCost(plan: any) {
   return Number(firstDefined(
     plan.est_cost,
     plan.cost,
@@ -148,7 +147,7 @@ function normalizeCost(plan: ApiAny) {
   ) ?? 0);
 }
 
-function normalizeDate(plan: ApiAny) {
+function normalizeDate(plan: any) {
   return firstDefined(
     plan.treatment_date,
     plan.treatmentDate,
@@ -159,7 +158,7 @@ function normalizeDate(plan: ApiAny) {
   ) as string;
 }
 
-function normalizeNextAppointment(plan: ApiAny) {
+function normalizeNextAppointment(plan: any) {
   return firstDefined(
     plan.next_appointment,
     plan.nextAppointment,
@@ -169,7 +168,7 @@ function normalizeNextAppointment(plan: ApiAny) {
   ) as string;
 }
 
-export function toUiTreatment(plan: ApiAny) {
+export function toUiTreatment(plan: any) {
   const rawStatus = plan.overall_status ?? plan.overallStatus ?? plan.status;
 
   return {
@@ -207,7 +206,7 @@ export function toUiTreatment(plan: ApiAny) {
   };
 }
 
-export function toApiCreatePlan(formData: ApiAny): CreateTreatmentPlanVariables {
+export function toApiCreatePlan(formData: any): CreateTreatmentPlanVariables {
   const extractToothNumbers = (toothStr: string): number[] | undefined => {
     if (!toothStr || toothStr === "\u2014") return undefined;
     if (toothStr === "FM") return [-1];
@@ -220,8 +219,8 @@ export function toApiCreatePlan(formData: ApiAny): CreateTreatmentPlanVariables 
   };
 
   const prescriptions = (formData.prescriptions ?? [])
-    .filter((p: ApiAny) => p.medicine?.trim())
-    .map((p: ApiAny) => ({
+    .filter((p: any) => p.medicine?.trim())
+    .map((p: any) => ({
       medicine_name: p.medicine,
       dosage: p.dosage,
       timing: p.timing,
@@ -233,7 +232,7 @@ export function toApiCreatePlan(formData: ApiAny): CreateTreatmentPlanVariables 
     }));
 
   const sessions = (formData.sessions ?? [])
-    .map((s: ApiAny) => ({
+    .map((s: any) => ({
       visit_date: s.scheduledDate || s.suggestedDate || null,
       start_time: s.startTime || "09:00 AM",
       duration_min: s.duration || 45,
@@ -265,7 +264,7 @@ export function toApiCreatePlan(formData: ApiAny): CreateTreatmentPlanVariables 
   return payload;
 }
 
-export function toApiUpdatePlan(formData: ApiAny): UpdateTreatmentPlanVariables {
+export function toApiUpdatePlan(formData: any): UpdateTreatmentPlanVariables {
   const extractToothNumbers = (toothStr: string): number[] | undefined => {
     if (!toothStr || toothStr === "\u2014") return undefined;
     if (toothStr === "FM") return [-1];
@@ -277,8 +276,8 @@ export function toApiUpdatePlan(formData: ApiAny): UpdateTreatmentPlanVariables 
   };
 
   const prescriptions = (formData.prescriptions ?? [])
-    .filter((p: ApiAny) => p.medicine?.trim())
-    .map((p: ApiAny) => ({
+    .filter((p: any) => p.medicine?.trim())
+    .map((p: any) => ({
       id: p.id?.startsWith("new-") ? undefined : p.id,
       medicine_name: p.medicine,
       dosage: p.dosage,
@@ -291,7 +290,7 @@ export function toApiUpdatePlan(formData: ApiAny): UpdateTreatmentPlanVariables 
     }));
 
   const sessions = (formData.sessions ?? [])
-    .map((s: ApiAny) => ({
+    .map((s: any) => ({
       id: s.id?.startsWith("session-") ? undefined : s.id,
       visit_date: s.scheduledDate || s.suggestedDate || null,
       start_time: s.startTime || "09:00 AM",

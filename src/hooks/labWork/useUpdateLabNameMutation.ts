@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -10,11 +9,13 @@ export interface UpdateLabNameVariables {
 export function useUpdateLabNameMutation() {
   const queryClient = useQueryClient();
 
-  return useApiMutation<ApiAny, UpdateLabNameVariables>({
+  return useApiMutation<any, UpdateLabNameVariables>({
     getEndpoint: (variables) => `/labName/${variables.id}`,
     method: "put",
-    // `id` only selects the endpoint; the body carries just the new name.
-    transformRequest: (variables) => ({ name: variables.name }),
+    transformRequest: (variables) => {
+      const { id, ...rest } = variables;
+      return rest;
+    },
     options: {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["labNames"] });

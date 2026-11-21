@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -9,7 +8,7 @@ export interface UpdateCorporatePlanStatusVariables {
 
 export function useUpdateCorporatePlanStatusMutation() {
   const queryClient = useQueryClient();
-  return useApiMutation<ApiAny, UpdateCorporatePlanStatusVariables>({
+  return useApiMutation<any, UpdateCorporatePlanStatusVariables>({
     getEndpoint: (variables) => `/membershipPlan/${variables.id}`,
     method: "patch",
     transformRequest: (variables) => ({ status: variables.status }),

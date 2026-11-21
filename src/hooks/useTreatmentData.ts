@@ -1,5 +1,4 @@
-import type { ApiAny } from "../types/api";
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useTreatmentPlansQuery, TreatmentPlansFilters } from './treatment/useTreatmentPlansQuery';
 import { useTreatmentPlanQuery } from './treatment/useTreatmentPlanQuery';
 import { useCreateTreatmentPlanMutation } from './treatment/useCreateTreatmentPlanMutation';
@@ -49,8 +48,8 @@ export function useTreatmentData(params?: { enabled?: boolean }) {
     enabled: shouldFetchSingle && !!selectedTreatmentId,
   });
 
-  const [localTreatments, setLocalTreatments] = useState<ApiAny[]>([]);
-  const [completedConsultations, setCompletedConsultations] = useState<ApiAny[]>([]);
+  const [localTreatments, setLocalTreatments] = useState<any[]>([]);
+  const [completedConsultations, setCompletedConsultations] = useState<any[]>([]);
 
   
   const apiTreatments = useMemo(() => {
@@ -70,11 +69,11 @@ export function useTreatmentData(params?: { enabled?: boolean }) {
   }, [plansRaw]);
 
   const treatments = useMemo(() => {
-    const merged = new Map<string, ApiAny>();
-    apiTreatments.forEach((t: ApiAny) => {
+    const merged = new Map<string, any>();
+    apiTreatments.forEach((t: any) => {
       if (t && t.id) merged.set(t.id, t);
     });
-    localTreatments.forEach((t: ApiAny) => {
+    localTreatments.forEach((t: any) => {
       if (t && t.id) merged.set(t.id, t);
     });
     return Array.from(merged.values());
@@ -124,7 +123,7 @@ export function useTreatmentData(params?: { enabled?: boolean }) {
   };
 
   
-  const handleFiltersChange = (searchFilters: ApiAny) => {
+  const handleFiltersChange = (searchFilters: any) => {
     
     const newFilters: TreatmentPlansFilters = {};
 
@@ -230,7 +229,7 @@ export function useTreatmentData(params?: { enabled?: boolean }) {
     setFilters(prev => ({ ...prev, ...next }));
   }, [filters.filters]);
 
-  const handleSaveTreatment = async (treatment: ApiAny) => {
+  const handleSaveTreatment = async (treatment: any) => {
     const isEdit = Boolean(
       treatment.id && treatment.id !== "new" && treatment.id !== "create",
     );
@@ -281,18 +280,18 @@ export function useTreatmentData(params?: { enabled?: boolean }) {
     return updatedUi;
   };
 
-  const setTreatments = (updater: (current: ApiAny[]) => ApiAny[]) => {
+  const setTreatments = (updater: (current: any[]) => any[]) => {
     setLocalTreatments(() => updater(treatments));
   };
 
-  const handleUpdateConsultation = (consultation: ApiAny) => {
+  const handleUpdateConsultation = (consultation: any) => {
     setCompletedConsultations((prev) =>
       prev.map((c) => (c && c.id === consultation.id ? consultation : c)),
     );
   };
 
   
-  const stats = (statsRaw as ApiAny)?.data || statsRaw || {
+  const stats = (statsRaw as any)?.data || statsRaw || {
     total: 0,
     planned: 0,
     in_progress: 0,
@@ -320,8 +319,8 @@ export function useTreatmentData(params?: { enabled?: boolean }) {
     isTableFetching: isFetching,
     isStatsLoading,
     totals,
-    totalItems: (plansRaw as ApiAny)?.pagination?.total || (plansRaw as ApiAny)?.pagination?.total_items || (plansRaw as ApiAny)?.data?.pagination?.total || (plansRaw as ApiAny)?.data?.pagination?.total_items || (plansRaw as ApiAny)?.total || (plansRaw as ApiAny)?.total_elements || (plansRaw as ApiAny)?.totalElements || (plansRaw as ApiAny)?.count || treatments.length || 0,
-    totalPages: (plansRaw as ApiAny)?.pagination?.totalPages || (plansRaw as ApiAny)?.pagination?.total_pages || (plansRaw as ApiAny)?.data?.pagination?.totalPages || (plansRaw as ApiAny)?.data?.pagination?.total_pages || (plansRaw as ApiAny)?.totalPages || (plansRaw as ApiAny)?.total_pages || Math.max(1, Math.ceil(treatments.length / (filters.limit || 10))),
+    totalItems: (plansRaw as any)?.pagination?.total || (plansRaw as any)?.pagination?.total_items || (plansRaw as any)?.data?.pagination?.total || (plansRaw as any)?.data?.pagination?.total_items || (plansRaw as any)?.total || (plansRaw as any)?.total_elements || (plansRaw as any)?.totalElements || (plansRaw as any)?.count || treatments.length || 0,
+    totalPages: (plansRaw as any)?.pagination?.totalPages || (plansRaw as any)?.pagination?.total_pages || (plansRaw as any)?.data?.pagination?.totalPages || (plansRaw as any)?.data?.pagination?.total_pages || (plansRaw as any)?.totalPages || (plansRaw as any)?.total_pages || Math.max(1, Math.ceil(treatments.length / (filters.limit || 10))),
     currentPage: filters.page || 1,
     
     

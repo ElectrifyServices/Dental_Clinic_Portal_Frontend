@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../../types/api";
 import * as XLSX from 'xlsx';
 import { CorporateEmployee, CorporatePlan } from '../../../types';
 
@@ -9,7 +8,7 @@ export function parseXlsx(file: File, plans: CorporatePlan[]): Promise<{ rows: P
       try {
         const wb = XLSX.read(e.target?.result, { type: 'binary' });
         const ws = wb.Sheets[wb.SheetNames[0]];
-        const raw: ApiAny[] = XLSX.utils.sheet_to_json(ws, { defval: '' });
+        const raw: any[] = XLSX.utils.sheet_to_json(ws, { defval: '' });
         const errors: string[] = [];
         const rows: Partial<CorporateEmployee>[] = [];
 
@@ -31,13 +30,13 @@ export function parseXlsx(file: File, plans: CorporatePlan[]): Promise<{ rows: P
           const planCodeUpper = planCode.toUpperCase();
           const companyName = String(r['Company'] || r['CompanyName'] || r['company'] || r['company_name'] || '').trim();
 
-          if (!name) { errors.push(`Row ${row}: Name is required`); return; }
-          if (!phone) { errors.push(`Row ${row}: Phone is required`); return; }
+          if (!name) { errors.push(`Row ${row}: Name is required`); }
+          if (!phone) { errors.push(`Row ${row}: Phone is required`); }
 
           const plan = plans.find(p => 
-            p.id?.trim().toUpperCase() === planCodeUpper ||
-            p.code?.trim().toUpperCase() === planCodeUpper ||
-            p.name?.trim().toUpperCase() === planCodeUpper
+            p.id.toUpperCase() === planCodeUpper ||
+            p.code.toUpperCase() === planCodeUpper ||
+            p.name.toUpperCase() === planCodeUpper
           );
 
           const isUuid = /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i.test(planCode);
@@ -51,10 +50,8 @@ export function parseXlsx(file: File, plans: CorporatePlan[]): Promise<{ rows: P
           rows.push({
             id: `EMP-${Date.now()}-${i}`,
             employeeId: String(r['EmployeeId'] || r['EmpID'] || r['employee_id'] || r['emp_id'] || '').trim(),
-            name, phone, email,
-            country_code: countryCode,
-            countryCode,
-            gender: (['male','female','other'].includes(String(r['Gender'] || r['gender'] || '').toLowerCase()) ? String(r['Gender'] || r['gender']).toLowerCase() : 'male') as ApiAny,
+            name, country_code: countryCode, phone, email,
+            gender: (['male','female','other'].includes(String(r['Gender'] || r['gender'] || '').toLowerCase()) ? String(r['Gender'] || r['gender']).toLowerCase() : 'male') as any,
             dateOfBirth: String(r['DOB'] || r['DateOfBirth'] || r['date_of_birth'] || '').trim(),
             designation: String(r['Designation'] || r['designation'] || '').trim(),
             department: String(r['Department'] || r['department'] || '').trim(),
@@ -76,26 +73,16 @@ export function parseXlsx(file: File, plans: CorporatePlan[]): Promise<{ rows: P
 }
 
 export function downloadTemplate(plans?: CorporatePlan[]) {
-  const activePlan = plans?.find(p => p.isActive) || plans?.[0];
-  const activePlanCode = activePlan ? (activePlan.code || activePlan.id) : 'DENTAL-BASIC-2024';
+  const activePlanCode = plans && plans.length > 0 ? (plans[0].code || plans[0].id) : 'DENTAL-BASIC-2024';
+  const activeCompanyName = plans && plans.length > 0 ? (plans[0].companyName || 'electrify') : 'Tata Consultancy Services';
 
   const ws = XLSX.utils.aoa_to_sheet([
     ['name', 'country_code', 'phone', 'email', 'gender', 'plan_code', 'date_of_birth'],
-    ['Bulk User 1', '+91', '9999911111', 'bulk1@example.com', 'MALE', activePlanCode, '1995-01-01'],
-    ['Bulk User 2', '+91', '9999922222', 'bulk2@example.com', 'FEMALE', activePlanCode, '1996-02-02'],
-    ['Bulk User 3', '+91', '9999933333', 'bulk3@example.com', 'MALE', activePlanCode, '1994-03-03'],
+    ['Bulk User 1', '+91', '9999911111', 'bulk1@example.com', 'MALE', 'ISP-2026-001', '1995-01-01'],
+    ['Bulk User 2', '+91', '9999922222', 'bulk2@example.com', 'FEMALE', 'ISP-2026-001', '1996-02-02'],
+    ['Bulk User 3', '+91', '9999933333', 'bulk3@example.com', 'MALE', 'ISP-2026-001', '1994-03-03'],
   ]);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Employees');
-
-  if (plans && plans.length > 0) {
-    const plansWs = XLSX.utils.aoa_to_sheet([
-      ['Plan Name', 'Plan Code', 'Type', 'Status'],
-      ...plans.map(p => [p.name || '', p.code || '', p.planType || p.planCategory || '', p.isActive ? 'Active' : 'Inactive']),
-    ]);
-    XLSX.utils.book_append_sheet(wb, plansWs, 'Available Plans');
-  }
-
   XLSX.writeFile(wb, 'employee_import_template.xlsx');
 }
-  

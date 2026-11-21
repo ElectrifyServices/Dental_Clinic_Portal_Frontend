@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../../types/api";
 import { Textarea } from "@/components/ui/Textarea";
 import { Label } from "@/components/ui/Label";
 import React from "react";
@@ -46,7 +45,7 @@ export function ObservationsAndToothChart({
 
         <div className="space-y-3">
           <ToothChart
-            initialState={toothChartState as ApiAny}
+            initialState={toothChartState as any}
             onChartChange={onChartChange}
             defaultChartType={defaultChartType}
           />

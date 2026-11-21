@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 import { AuthStorage } from "../../auth/authStorage";
@@ -11,7 +10,7 @@ export interface DeleteAvailabilityOverrideVariables {
 export function useDeleteAvailabilityOverrideMutation() {
   const queryClient = useQueryClient();
 
-  return useApiMutation<ApiAny, DeleteAvailabilityOverrideVariables>({
+  return useApiMutation<any, DeleteAvailabilityOverrideVariables>({
     getEndpoint: (variables) => `/doctorSchedule/${variables.doctorId}/exceptions/${variables.overrideId}`,
     method: "delete",
     headers: () => {

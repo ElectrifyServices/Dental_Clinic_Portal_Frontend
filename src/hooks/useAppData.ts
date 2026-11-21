@@ -1,4 +1,3 @@
-import type { ApiAny } from "../types/api";
 import { usePatientData } from "./usePatientData";
 import { useAppointmentData } from "./useAppointmentData";
 import { useInvoiceData } from "./useInvoiceData";
@@ -51,7 +50,7 @@ export const useAppData = (params?: {
   const { setCorporateEmployees } = corpData;
 
   // ── Cross-domain: Invoice saves touch patients, treatments, consultations ──
-  const handleSaveInvoice = (invoice: ApiAny) => {
+  const handleSaveInvoice = (invoice: any) => {
     setInvoices((prev) => {
       if (prev.find((inv) => inv.id === invoice.id)) {
         return prev.map((inv) => (inv.id === invoice.id ? invoice : inv));
@@ -80,13 +79,13 @@ export const useAppData = (params?: {
         setTreatments((tt) =>
           tt.map((t) => {
             let modified = false;
-            const updated = { ...t };
+            let updated = { ...t };
             if (invoice.linkedItemIds.includes(t.id)) {
               updated.isBilled = true;
               modified = true;
             }
             if (Array.isArray(t.sessions)) {
-              const sessions = t.sessions.map((s: ApiAny) => {
+              const sessions = t.sessions.map((s: any) => {
                 if (invoice.linkedItemIds.includes(`${t.id}-${s.id}`)) {
                   modified = true;
                   return { ...s, isBilled: true };
@@ -106,7 +105,7 @@ export const useAppData = (params?: {
   const handleDeleteInvoice = async (id: string) => {
     try {
       await deleteInvoice({ id });
-    } catch (_err) {
+    } catch (err) {
       // Error handled by mutation options / Toast if any, or silently ignored here
     }
   };
@@ -135,10 +134,10 @@ export const useAppData = (params?: {
   };
 
   // ── Cross-domain: Consultation completion saves treatments ──
-  const handleCompleteConsultation = (consultation: ApiAny) => {
+  const handleCompleteConsultation = (consultation: any) => {
     setCompletedConsultations((prev) => [...prev, consultation]);
     if (consultation.treatmentPlans?.length) {
-      const plans = consultation.treatmentPlans.map((plan: ApiAny) => ({
+      const plans = consultation.treatmentPlans.map((plan: any) => ({
         id: `TR-${consultation.id || Date.now()}-${plan.tooth}`,
         patientId: consultation.patientId,
         patientName: consultation.patientName,
@@ -156,7 +155,7 @@ export const useAppData = (params?: {
         prescriptions: consultation.prescriptions || [],
       }));
       setTreatments((prev) => {
-        const ids = new Set(plans.map((p: ApiAny) => p.id));
+        const ids = new Set(plans.map((p: any) => p.id));
         return [...prev.filter((t) => !ids.has(t.id)), ...plans];
       });
     }

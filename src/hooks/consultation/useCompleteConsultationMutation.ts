@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -9,7 +8,7 @@ export interface CompleteConsultationVariables {
 export function useCompleteConsultationMutation() {
   const queryClient = useQueryClient();
 
-  return useApiMutation<ApiAny, CompleteConsultationVariables>({
+  return useApiMutation<any, CompleteConsultationVariables>({
     getEndpoint: (variables) => `/consultations/${variables.id}/complete`,
     method: "patch",
     options: {

@@ -1,15 +1,16 @@
-import type { ApiAny } from "../../../types/api";
 import { Textarea } from "@/components/ui/Textarea";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import React from "react";
 import { Stethoscope } from "lucide-react";
-import { SearchableSelect, DataTable } from "@/components/ui";
+import { SearchableSelect, DataTable, Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui";
 import { useProcedureQuery } from "@/hooks/procedures/useProcedureQuery";
 import { useCreateProcedureMutation } from "@/hooks/procedures/useCreateProcedureMutation";
 import { useUpdateProcedureMutation } from "@/hooks/procedures/useUpdateProcedureMutation";
 import { useDeleteProcedureMutation } from "@/hooks/procedures/useDeleteProcedureMutation";
 import { useModal } from "@/contexts/ModalContext";
+import { useAvailableSlotsQuery } from "@/hooks/appointments/useAvailableSlotsQuery";
+import { useDoctorsListQuery } from "@/hooks/staff/useDoctorsListQuery";
 
 interface TreatmentPlan {
   id: string;
@@ -23,6 +24,10 @@ interface TreatmentPlan {
   status: string;
   condition?: string;
   planDate?: string;
+  // First-session start time — the plan date was always set to today with
+  // no time of its own, so this session could never block the doctor's
+  // calendar until someone later opened it in Treatments and scheduled it.
+  startTime?: string;
 }
 
 const conditionLabels: Record<string, string> = {
@@ -41,7 +46,7 @@ interface TreatmentPlanningProps {
   treatmentPlanText: string;
   treatmentCost: number | string;
   onRequiresTreatmentChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onUpdatePlan: (index: number, field: keyof TreatmentPlan, value: ApiAny) => void;
+  onUpdatePlan: (index: number, field: keyof TreatmentPlan, value: any) => void;
   onTreatmentPlanTextChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onTreatmentCostChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onTreatmentCostFocus: () => void;
@@ -54,6 +59,7 @@ interface TreatmentPlanningProps {
   isEditMode?: boolean;
   originalSessionsMap?: Record<string, number>;
   patientId?: string;
+  doctorId?: string;
 }
 
 const defaultProcedures = [
@@ -70,7 +76,7 @@ const defaultProcedures = [
   { label: "No Treatment Required", value: "No Treatment Required" }
 ];
 
-const getRawProceduresList = (rawProceduresData: ApiAny): ApiAny[] => {
+const getRawProceduresList = (rawProceduresData: any): any[] => {
   if (!rawProceduresData) return [];
   const target = rawProceduresData.responseObject !== undefined ? rawProceduresData.responseObject : rawProceduresData;
   if (Array.isArray(target)) {
@@ -95,13 +101,13 @@ export function TreatmentPlanning({
   requiresTreatment,
   treatmentPlans,
   treatmentPlanText,
-  treatmentCost: _treatmentCost,
+  treatmentCost,
   onRequiresTreatmentChange,
   onUpdatePlan,
   onTreatmentPlanTextChange,
-  onTreatmentCostChange: _onTreatmentCostChange,
-  onTreatmentCostFocus: _onTreatmentCostFocus,
-  onTreatmentCostBlur: _onTreatmentCostBlur,
+  onTreatmentCostChange,
+  onTreatmentCostFocus,
+  onTreatmentCostBlur,
   followUpRequired,
   onFollowUpRequiredChange,
   onAddPlan,
@@ -110,9 +116,53 @@ export function TreatmentPlanning({
   isEditMode = false,
   originalSessionsMap = {},
   patientId,
+  doctorId,
 }: TreatmentPlanningProps) {
   const effectivePatientId = patientId && !patientId.startsWith("WALK-") ? patientId : undefined;
   const { data: rawProceduresData, isLoading: isProceduresLoading, isError: isProceduresError, refetch: refetchProcedures } = useProcedureQuery({ all: true, patient_id: effectivePatientId });
+
+  const { doctors: apiDoctors } = useDoctorsListQuery();
+  const effectiveDoctorId = React.useMemo(() => {
+    if (doctorId && doctorId !== "1") return doctorId;
+    if (apiDoctors && apiDoctors.length > 0) return apiDoctors[0].id;
+    return null;
+  }, [doctorId, apiDoctors]);
+
+  // First-session Start Time now shows this doctor's real slots for today —
+  // the plan date here always defaults to today (there's no date picker),
+  // so "today" is the only date that makes sense to check availability for.
+  const todayStr = React.useMemo(() => {
+    const today = new Date();
+    const localYear = today.getFullYear();
+    const localMonth = String(today.getMonth() + 1).padStart(2, "0");
+    const localDay = String(today.getDate()).padStart(2, "0");
+    return `${localYear}-${localMonth}-${localDay}`;
+  }, []);
+  const { data: slotsResponse, isLoading: isSlotsLoading } = useAvailableSlotsQuery(
+    effectiveDoctorId,
+    todayStr,
+  );
+  const startTimeSlots = React.useMemo(() => {
+    const rawData = (slotsResponse as any)?.data || slotsResponse;
+    const rawSlots =
+      rawData?.slots ||
+      (slotsResponse as any)?.responseObject?.data?.slots ||
+      [];
+    if (!Array.isArray(rawSlots)) return [];
+    return rawSlots.map((slot: any) => {
+      const timeStr = slot.time || "";
+      const [time, modifier] = timeStr.split(" ");
+      let [hours, minutes] = (time || "").split(":");
+      if (hours === "12") hours = "00";
+      if (modifier === "PM") hours = String(parseInt(hours, 10) + 12);
+      const time24 = `${(hours || "00").padStart(2, "0")}:${minutes || "00"}`;
+      return {
+        value: time24,
+        label: slot.time,
+        disabled: slot.disabled === true,
+      };
+    });
+  }, [slotsResponse]);
   const { confirmDelete } = useModal();
   const createProcedureMutation = useCreateProcedureMutation();
   const updateProcedureMutation = useUpdateProcedureMutation();
@@ -122,7 +172,7 @@ export function TreatmentPlanning({
     try {
       const created = await createProcedureMutation.mutateAsync({ name: newProcedureName });
       return created?.name || newProcedureName;
-    } catch (_error) {
+    } catch (error) {
       // handled in hook
     }
   };
@@ -130,11 +180,11 @@ export function TreatmentPlanning({
   const handleUpdateProcedure = async (oldName: string, newName: string) => {
     try {
       const rawList = getRawProceduresList(rawProceduresData);
-      const matched = rawList.find((p: ApiAny) => p.name === oldName);
+      const matched = rawList.find((p: any) => p.name === oldName);
       if (matched?.id) {
         await updateProcedureMutation.mutateAsync({ id: matched.id, name: newName });
       }
-    } catch (_error) {
+    } catch (error) {
       // handled in hook
     }
   };
@@ -146,11 +196,11 @@ export function TreatmentPlanning({
       async () => {
         try {
           const rawList = getRawProceduresList(rawProceduresData);
-          const matched = rawList.find((p: ApiAny) => p.name === name);
+          const matched = rawList.find((p: any) => p.name === name);
           if (matched?.id) {
             await deleteProcedureMutation.mutateAsync({ id: matched.id });
           }
-        } catch (_error) {
+        } catch (error) {
           // handled in hook
         }
       }
@@ -166,12 +216,12 @@ export function TreatmentPlanning({
     }
 
     const rawList = getRawProceduresList(rawProceduresData);
-    const filtered = rawList.filter((p: ApiAny) => p.status === "ACTIVE" && !p.deleted_at);
+    const filtered = rawList.filter((p: any) => p.status === "ACTIVE" && !p.deleted_at);
     if (filtered.length === 0) {
       return [{ label: "No procedures found", value: "", disabled: true }];
     }
 
-    return filtered.map((p: ApiAny) => ({
+    return filtered.map((p: any) => ({
       label: p.name,
       value: p.name,
       is_free: p.is_free || p.isFree || false,
@@ -337,7 +387,7 @@ export function TreatmentPlanning({
               }}
               onInput={(e: React.FormEvent<HTMLInputElement>) => {
                 const target = e.currentTarget;
-                const val = parseInt(target.value) || 0;
+                let val = parseInt(target.value) || 0;
                 if (val > 100) {
                   target.value = "100";
                 } else if (val < 0) {
@@ -369,7 +419,7 @@ export function TreatmentPlanning({
             (min: {uniqueMins.join(', ')})
           </span>
         </span>
-      ) : "Sessions") as ApiAny,
+      ) : "Sessions") as any,
       className: "py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider",
       render: (plan: TreatmentPlan, index: number) => {
         const originalMin = isEditMode && originalSessionsMap && plan.id ? (originalSessionsMap[plan.id] || 1) : 1;
@@ -389,6 +439,47 @@ export function TreatmentPlanning({
           </div>
         );
       },
+    },
+    {
+      key: "startTime",
+      header: "Start Time",
+      className: "py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider",
+      // Only the first session is scheduled from here — sessions after the
+      // first stay PLANNED either way, so there is nothing to pick a time
+      // for until they're scheduled later in Treatments.
+      render: (plan: TreatmentPlan, index: number) => (
+        <Select
+          value={plan.startTime || ""}
+          onValueChange={(val) => onUpdatePlan(index, "startTime", val)}
+          disabled={!effectiveDoctorId || isSlotsLoading}
+        >
+          <SelectTrigger className="w-28 h-9 text-xs rounded-lg border-purple-200">
+            <SelectValue
+              placeholder={
+                !effectiveDoctorId
+                  ? "No doctor"
+                  : isSlotsLoading
+                    ? "Loading..."
+                    : "Optional"
+              }
+            />
+          </SelectTrigger>
+          <SelectContent>
+            {startTimeSlots.length === 0 && (
+              <div className="px-3 py-2 text-xs text-muted-foreground">
+                No slots available today
+              </div>
+            )}
+            {startTimeSlots.map((slot) => (
+              <SelectItem key={slot.value} value={slot.value} disabled={slot.disabled}>
+                <span className={slot.disabled ? "line-through text-red-400" : ""}>
+                  {slot.label}
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ),
     },
     // {
     //   key: "planDate",
@@ -416,7 +507,7 @@ export function TreatmentPlanning({
       key: "actions",
       header: "",
       className: "py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider w-10",
-      render: (_: ApiAny, index: number) => (
+      render: (_: any, index: number) => (
         <button
           type="button"
           onClick={() => onRemovePlan?.(index)}

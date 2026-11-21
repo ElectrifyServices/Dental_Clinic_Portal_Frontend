@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { Package, MinusCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,14 +18,14 @@ import {
 } from "@/lib/schemas/inventory.schema";
 
 interface ConsumeFormProps {
-  item: ApiAny;
+  item: any;
   onClose: () => void;
-  onSave: (data: ApiAny) => void;
+  onSave: (data: any) => void;
 }
 
 export function ConsumeForm({ item, onClose, onSave }: ConsumeFormProps) {
   const form = useForm<ConsumeFormData>({
-    resolver: zodResolver(consumeSchema) as ApiAny,
+    resolver: zodResolver(consumeSchema) as any,
     defaultValues: {
       quantity: 1,
       reason: "Used in treatment session",
@@ -100,7 +99,7 @@ export function ConsumeForm({ item, onClose, onSave }: ConsumeFormProps) {
                       {...field} 
                       type="number" 
                       min={1} 
-                      value={field.value ?? ""}
+                      value={field.value === 0 ? "" : field.value}
                       onChange={(e) => field.onChange(e.target.value === "" ? "" : Number(e.target.value))}
                       onFocus={(e) => e.target.select()} 
                     />
@@ -114,11 +113,9 @@ export function ConsumeForm({ item, onClose, onSave }: ConsumeFormProps) {
               name="reason"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    Reason <span className="text-destructive">*</span>
-                  </FormLabel>
+                  <FormLabel>Reason</FormLabel>
                   <FormControl>
-                    <Input {...field} value={field.value ?? ""} placeholder="e.g. Used in treatment session" />
+                    <Input {...field} placeholder="e.g. Used in treatment session" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

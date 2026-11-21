@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -12,7 +11,7 @@ export interface CreateEMRVariables {
 
 export function useCreateEMRMutation() {
   const queryClient = useQueryClient();
-  return useApiMutation<ApiAny, FormData>({
+  return useApiMutation<any, FormData>({
     endpoint: "/medicalRecord",
     method: "post",
     options: {

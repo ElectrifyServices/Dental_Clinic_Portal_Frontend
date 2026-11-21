@@ -48,6 +48,10 @@ export function useBroadcastTemplatesQuery() {
     method: "get",
     options: {
       staleTime: 15_000,
+      // Refetch every time the "Templates" tab remounts (it's a ternary
+      // unmount/remount, not a CSS toggle) instead of serving a cached
+      // response that may already be under staleTime but stale in intent.
+      refetchOnMount: "always",
       select: (raw) => toList(raw),
     },
   });
@@ -58,6 +62,8 @@ export interface CreateTemplateVars {
   bodyText: string;
   footerText?: string;
   includeName: boolean;
+  /** A JPG/PNG image or an MP4 video — sent as the `image` field either way,
+   * the backend infers image vs. video from the file's mimetype. */
   imageFile?: File | null;
 }
 

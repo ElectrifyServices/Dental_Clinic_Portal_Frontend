@@ -1,6 +1,6 @@
 import type { ApiAny } from "../types/api";
 import { useEffect, useMemo, useCallback, useState } from 'react';
-import { useLocalStorage } from './useLocalStorage';
+import { useSessionState } from './useSessionState';
 import { useStaffQuery } from './staff/useStaffQuery';
 import { useDeleteStaffMutation } from './staff/useDeleteStaffMutation';
 import { useUpdateStaffStatusMutation } from './staff/useUpdateStaffStatusMutation';
@@ -50,8 +50,8 @@ export function useStaffData(params?: { search?: string; role?: string; enabled?
     queryClient.invalidateQueries({ queryKey: ['staff'] });
   }, [queryClient]);
 
-  const [emrRecords, setEmrRecords] = useLocalStorage<ApiAny[]>('emrRecords', []);
-  const [consentForms, setConsentForms] = useLocalStorage<ApiAny[]>('consentForms', []);
+  const [emrRecords, setEmrRecords] = useSessionState<ApiAny[]>('emrRecords', []);
+  const [consentForms, setConsentForms] = useSessionState<ApiAny[]>('consentForms', []);
 
   const staffMembers = useMemo(() => {
     let rawStaffList: ApiAny[] = [];

@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useMutation } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 import apiClient from "../../services/apiClient";
@@ -22,7 +21,7 @@ export interface DeleteTreatmentPlanResponse {
 export function useDeleteTreatmentPlanMutation() {
   const queryClient = useQueryClient();
 
-  return useMutation<DeleteTreatmentPlanResponse, ApiAny, DeleteTreatmentPlanVariables>({
+  return useMutation<DeleteTreatmentPlanResponse, any, DeleteTreatmentPlanVariables>({
     mutationFn: async (variables) => {
       const user = AuthStorage.getUser();
       const staffId = user?.id;

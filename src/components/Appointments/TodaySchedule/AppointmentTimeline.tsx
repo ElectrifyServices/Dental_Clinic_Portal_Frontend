@@ -1,19 +1,17 @@
-import type { ApiAny } from "../../../types/api";
 import React from "react";
 import { Clock, Calendar, Stethoscope } from "lucide-react";
 import { DataTable, Badge } from "@/components/ui";
 import { formatPhoneWithCountryCode } from "@/utils/phoneUtils";
 
 interface AppointmentTimelineProps {
-  appointments: ApiAny[];
-  doctors: ApiAny[];
-  statusVariants?: Record<string, ApiAny>;
+  appointments: any[];
+  doctors: any[];
+  statusVariants?: Record<string, any>;
 }
 
 export const AppointmentTimeline: React.FC<AppointmentTimelineProps> = ({
   appointments = [],
   doctors = [],
-  statusVariants = {},
 }) => {
   const sortedAppointments = [...appointments].sort((a, b) => {
     const timeA = a.time || a.bookedTime || "";
@@ -21,22 +19,13 @@ export const AppointmentTimeline: React.FC<AppointmentTimelineProps> = ({
     return timeA.localeCompare(timeB);
   });
 
-  const getStatusVariant = (status: string): ApiAny => {
-    const raw = String(status || "");
-    const lower = raw.toLowerCase().replace(/[_\s]/g, "-");
-    if (statusVariants?.[status]) return statusVariants[status];
-    if (statusVariants?.[raw.toLowerCase()]) return statusVariants[raw.toLowerCase()];
-    if (statusVariants?.[lower]) return statusVariants[lower];
-    if (lower === "completed") return "green";
-    if (lower === "checked-in") return "teal";
-    if (lower === "booked") return "blue";
-    if (lower === "rescheduled") return "orange";
-    if (lower === "confirmed") return "indigo";
-    if (lower === "in-progress") return "cyan";
-    if (lower === "cancelled" || lower === "canceled") return "red";
+  const getStatusVariant = (status: string): "green" | "blue" | "amber" | "red" | "gray" | "violet" | "indigo" => {
+    const lower = (status || "").toLowerCase();
+    if (lower === "completed" || lower === "checked-in") return "green";
+    if (lower === "booked" || lower === "confirmed" || lower === "scheduled") return "indigo";
+    if (lower === "in-progress") return "blue";
+    if (lower === "cancelled") return "red";
     if (lower === "no-show") return "amber";
-    if (lower === "follow-up") return "violet";
-    if (lower === "scheduled") return "gray";
     return "gray";
   };
 
@@ -44,7 +33,7 @@ export const AppointmentTimeline: React.FC<AppointmentTimelineProps> = ({
     {
       key: "time",
       header: "Time",
-      render: (apt: ApiAny) => (
+      render: (apt: any) => (
         <div className="flex items-center gap-2 font-mono text-xs font-semibold text-primary">
           <Clock className="w-3.5 h-3.5" />
           {apt.time || apt.bookedTime}
@@ -54,7 +43,7 @@ export const AppointmentTimeline: React.FC<AppointmentTimelineProps> = ({
     {
       key: "patientName",
       header: "Patient Name",
-      render: (apt: ApiAny) => (
+      render: (apt: any) => (
         <div className="flex flex-col">
           <span className="font-semibold text-foreground text-xs">{apt.patientName}</span>
           {apt.patientPhone && (
@@ -66,7 +55,7 @@ export const AppointmentTimeline: React.FC<AppointmentTimelineProps> = ({
     {
       key: "doctor",
       header: "Doctor",
-      render: (apt: ApiAny) => {
+      render: (apt: any) => {
         const doctor = Array.isArray(doctors) ? doctors.find((d) => d.id === apt.doctorId) : undefined;
         return (
           <span className="font-medium text-xs text-foreground">
@@ -78,7 +67,7 @@ export const AppointmentTimeline: React.FC<AppointmentTimelineProps> = ({
     {
       key: "treatment",
       header: "Treatment / Reason",
-      render: (apt: ApiAny) => (
+      render: (apt: any) => (
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <Stethoscope className="w-3.5 h-3.5 text-muted-foreground/60" />
           <span>{apt.treatmentType || apt.type || "General / Regular"}</span>
@@ -88,7 +77,7 @@ export const AppointmentTimeline: React.FC<AppointmentTimelineProps> = ({
     {
       key: "duration",
       header: "Duration",
-      render: (apt: ApiAny) => (
+      render: (apt: any) => (
         <span className="text-[10px] font-semibold text-slate-600 bg-slate-100 dark:bg-slate-800 dark:text-slate-300 px-2 py-0.5 rounded">
           {apt.duration || 15} Min
         </span>
@@ -97,25 +86,11 @@ export const AppointmentTimeline: React.FC<AppointmentTimelineProps> = ({
     {
       key: "status",
       header: "Status",
-      render: (apt: ApiAny) => {
-        const isConsultationDeleted =
-          apt.cancelled_reason &&
-          String(apt.cancelled_reason).toLowerCase().includes("consultation");
-        const rawStatus = String(apt.status || "");
-        const statusLabel = isConsultationDeleted
-          ? "Consultation Deleted"
-          : rawStatus
-              ? rawStatus
-                  .toLowerCase()
-                  .replace(/[_-]/g, " ")
-                  .replace(/\b\w/g, (c) => c.toUpperCase())
-              : "—";
-        return (
-          <Badge variant={isConsultationDeleted ? "red" : getStatusVariant(apt.status)}>
-            {statusLabel}
-          </Badge>
-        );
-      },
+      render: (apt: any) => (
+        <Badge variant={getStatusVariant(apt.status)}>
+          {apt.status}
+        </Badge>
+      ),
     },
   ];
 
@@ -133,7 +108,7 @@ export const AppointmentTimeline: React.FC<AppointmentTimelineProps> = ({
         emptyIcon={<Calendar className="w-8 h-8 text-muted-foreground/40" />}
         emptyTitle="No appointments scheduled"
         emptySubtitle="Timeline will populate once appointments are added."
-        rowKey={(row: ApiAny) => row.id || Math.random().toString()}
+        rowKey={(row: any) => row.id || Math.random().toString()}
       />
     </div>
   );

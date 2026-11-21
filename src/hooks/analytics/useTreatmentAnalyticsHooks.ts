@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 import apiClient from "../../services/apiClient";
 export interface TreatmentAnalyticsFilter {
@@ -14,7 +13,7 @@ export interface TreatmentAnalyticsFilter {
  * Endpoint: POST /treatmentAnalytics/total-procedures
  */
 export function useTotalProceduresQuery(filter: TreatmentAnalyticsFilter = {}) {
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["treatmentAnalytics", "total-procedures", filter],
     endpoint: "/treatmentAnalytics/total-procedures",
     method: "post",
@@ -27,7 +26,7 @@ export function useTotalProceduresQuery(filter: TreatmentAnalyticsFilter = {}) {
  * Endpoint: POST /treatmentAnalytics/completion-rate
  */
 export function useCompletionRateQuery(filter: TreatmentAnalyticsFilter = {}) {
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["treatmentAnalytics", "completion-rate", filter],
     endpoint: "/treatmentAnalytics/completion-rate",
     method: "post",
@@ -40,7 +39,7 @@ export function useCompletionRateQuery(filter: TreatmentAnalyticsFilter = {}) {
  * Endpoint: POST /treatmentAnalytics/avg-procedure-cost
  */
 export function useAvgProcedureCostQuery(filter: TreatmentAnalyticsFilter = {}) {
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["treatmentAnalytics", "avg-procedure-cost", filter],
     endpoint: "/treatmentAnalytics/avg-procedure-cost",
     method: "post",
@@ -53,7 +52,7 @@ export function useAvgProcedureCostQuery(filter: TreatmentAnalyticsFilter = {}) 
  * Endpoint: POST /treatmentAnalytics/highest-revenue
  */
 export function useHighestRevenueQuery(filter: TreatmentAnalyticsFilter = {}) {
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["treatmentAnalytics", "highest-revenue", filter],
     endpoint: "/treatmentAnalytics/highest-revenue",
     method: "post",
@@ -66,7 +65,7 @@ export function useHighestRevenueQuery(filter: TreatmentAnalyticsFilter = {}) {
  * Endpoint: POST /treatmentAnalytics/top-treatments-by-revenue
  */
 export function useTopTreatmentsByRevenueQuery(filter: TreatmentAnalyticsFilter = {}) {
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["treatmentAnalytics", "top-treatments-by-revenue", filter],
     endpoint: "/treatmentAnalytics/top-treatments-by-revenue",
     method: "post",
@@ -79,7 +78,7 @@ export function useTopTreatmentsByRevenueQuery(filter: TreatmentAnalyticsFilter 
  * Endpoint: POST /treatmentAnalytics/all-treatment-revenue
  */
 export function useAllTreatmentRevenueQuery(filter: TreatmentAnalyticsFilter = {}) {
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["treatmentAnalytics", "all-treatment-revenue", filter],
     endpoint: "/treatmentAnalytics/all-treatment-revenue",
     method: "post",
@@ -92,7 +91,7 @@ export function useAllTreatmentRevenueQuery(filter: TreatmentAnalyticsFilter = {
  * Endpoint: POST /treatmentAnalytics/procedures-by-volume
  */
 export function useProceduresByVolumeQuery(filter: TreatmentAnalyticsFilter = {}) {
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["treatmentAnalytics", "procedures-by-volume", filter],
     endpoint: "/treatmentAnalytics/procedures-by-volume",
     method: "post",
@@ -100,6 +99,6 @@ export function useProceduresByVolumeQuery(filter: TreatmentAnalyticsFilter = {}
   });
 }
 
-export const exportTreatmentAnalytics = async (filter: ApiAny) => {
+export const exportTreatmentAnalytics = async (filter: any) => {
   return apiClient.post("/treatmentAnalytics/export", { ...filter, format: "xlsx" }, { responseType: "blob" });
 };

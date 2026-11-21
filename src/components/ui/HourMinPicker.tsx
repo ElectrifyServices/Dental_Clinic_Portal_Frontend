@@ -7,11 +7,7 @@ interface HourMinPickerProps {
 }
 
 export function HourMinPicker({ value, onChange, optional = false }: HourMinPickerProps) {
-  const parts = value && typeof value === "string" ? value.split(":") : [];
-  const hRaw = parts[0] || "";
-  const mRaw = parts[1] || "";
-  const hStr = /^\d{2}$/.test(hRaw) ? hRaw : "";
-  const mStr = /^\d{2}$/.test(mRaw) ? mRaw : "";
+  const [hStr, mStr] = value && value.includes(":") ? value.split(":") : ["", ""];
 
   const hours = Array.from({ length: 24 }, (_, i) => {
     const val = String(i).padStart(2, "0");
@@ -27,22 +23,16 @@ export function HourMinPicker({ value, onChange, optional = false }: HourMinPick
   });
 
   const handleHourChange = (newH: string) => {
-    if (!newH || newH === "empty") {
-      onChange("");
+    if (!newH) {
+      if (optional) onChange("");
       return;
     }
-    const currentM = mStr ? mStr : "00";
+    const currentM = mStr || "00";
     onChange(`${newH}:${currentM}`);
   };
 
   const handleMinChange = (newM: string) => {
-    if (!newM || newM === "empty") {
-      if (optional) {
-        onChange("");
-      }
-      return;
-    }
-    const currentH = hStr ? hStr : "09";
+    const currentH = hStr || "09";
     onChange(`${currentH}:${newM}`);
   };
 
@@ -53,7 +43,7 @@ export function HourMinPicker({ value, onChange, optional = false }: HourMinPick
           <SelectValue placeholder="Hour" />
         </SelectTrigger>
         <SelectContent className="max-h-56">
-          {optional && <SelectItem value="empty">None (Clear)</SelectItem>}
+          <SelectItem value="empty">Hour</SelectItem>
           {hours.map((h) => (
             <SelectItem key={h.val} value={h.val}>
               {h.label}
@@ -67,7 +57,7 @@ export function HourMinPicker({ value, onChange, optional = false }: HourMinPick
           <SelectValue placeholder="Min" />
         </SelectTrigger>
         <SelectContent className="max-h-56">
-          {optional && <SelectItem value="empty">Min</SelectItem>}
+          <SelectItem value="empty">Min</SelectItem>
           {minutes.map((m) => (
             <SelectItem key={m} value={m}>
               {m}

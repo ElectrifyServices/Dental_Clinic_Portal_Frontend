@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../../types/api";
 import React from 'react';
 import { Calendar, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { MetricCard } from '@/components/ui';
@@ -26,7 +25,7 @@ export const AppointmentStats: React.FC<AppointmentStatsProps> = ({ appointments
   const { data: completedData, isPending: isCompletedLoading } = useAppointmentCompletedQuery(startDate, endDate, doctorId);
   const { data: cancelledData, isPending: isCancelledLoading } = useAppointmentCancelledQuery(startDate, endDate, doctorId);
 
-  const parseData = (d: ApiAny) => {
+  const parseData = (d: any) => {
     if (!d) return undefined;
     return d.count ?? d.total ?? d.data?.count ?? d.data?.total;
   };
@@ -37,7 +36,7 @@ export const AppointmentStats: React.FC<AppointmentStatsProps> = ({ appointments
   const cancelled = parseData(cancelledData) ?? 0;
 
   const doctorAppointments = doctorId
-    ? appointments.filter((appointment: ApiAny) => {
+    ? appointments.filter((appointment: any) => {
         const appointmentDoctorId = appointment.doctorId || appointment.doctor_id || appointment.doctor?.id;
         if (String(appointmentDoctorId) !== String(doctorId)) return false;
 
@@ -50,19 +49,19 @@ export const AppointmentStats: React.FC<AppointmentStatsProps> = ({ appointments
 
   const selectedTotal = doctorAppointments?.length ?? total;
   const selectedUpcoming = doctorAppointments
-    ? doctorAppointments.filter((appointment: ApiAny) =>
+    ? doctorAppointments.filter((appointment: any) =>
         !["completed", "cancelled", "no-show"].includes(
           String(appointment.status || "").toLowerCase(),
         ),
       ).length
     : upcoming;
   const selectedCompleted = doctorAppointments
-    ? doctorAppointments.filter((appointment: ApiAny) =>
+    ? doctorAppointments.filter((appointment: any) =>
         String(appointment.status || "").toLowerCase() === "completed",
       ).length
     : completed;
   const selectedCancelled = doctorAppointments
-    ? doctorAppointments.filter((appointment: ApiAny) =>
+    ? doctorAppointments.filter((appointment: any) =>
         String(appointment.status || "").toLowerCase() === "cancelled",
       ).length
     : cancelled;

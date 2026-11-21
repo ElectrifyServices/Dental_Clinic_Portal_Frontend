@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
 export interface AppointmentListParams {
@@ -10,7 +9,7 @@ export interface AppointmentListParams {
     doctor_id?: string;
     patient_id?: string;
     date?: string;
-    [key: string]: ApiAny;
+    [key: string]: any;
   };
 }
 
@@ -28,7 +27,7 @@ export interface Appointment {
   notes?: string;
   status: string;
   doctor_id?: string;
-  [key: string]: ApiAny;
+  [key: string]: any;
 }
 
 export interface AppointmentListResponse {
@@ -38,8 +37,8 @@ export interface AppointmentListResponse {
   limit: number;
 }
 
-export function useAppointmentsListQuery(params: AppointmentListParams = {}, options?: ApiAny) {
-  const body: Record<string, ApiAny> = {
+export function useAppointmentsListQuery(params: AppointmentListParams = {}, options?: any) {
+  const body: Record<string, any> = {
     page: params.page ?? 1,
     limit: params.limit ?? 100,
   };

@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import React, { useMemo } from 'react';
 import { AlertTriangle, CreditCard, Package, Users, CheckCircle, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -44,7 +43,7 @@ const ALERT_ICONS: Record<string, React.ReactNode> = {
   membership: <CheckCircle className="w-4 h-4" />,
 };
 
-export function SmartAlerts({ period = 'today', customStart: _customStart, customEnd: _customEnd }: { period?: string, customStart?: string, customEnd?: string }) {
+export function SmartAlerts({ period = 'today', customStart, customEnd }: { period?: string, customStart?: string, customEnd?: string }) {
   const [dismissed, setDismissed] = React.useState<Set<string>>(new Set());
 
   const { data: invoicesOverdue } = useInvoicesOverdue();
@@ -53,7 +52,7 @@ export function SmartAlerts({ period = 'today', customStart: _customStart, custo
   const { data: membershipsExpiring } = useMembershipsExpiring();
 
   const generatedAlerts = useMemo(() => {
-    const alerts: ApiAny[] = [];
+    const alerts: any[] = [];
 
     if (invoicesOverdue?.count > 0) {
       alerts.push({
@@ -67,7 +66,7 @@ export function SmartAlerts({ period = 'today', customStart: _customStart, custo
     }
 
     if (criticallyLowStock?.items?.length > 0) {
-      criticallyLowStock.items.forEach((item: ApiAny) => {
+      criticallyLowStock.items.forEach((item: any) => {
         alerts.push({
           id: `stock-${item.id || item.name}`,
           type: 'warning',
@@ -118,8 +117,8 @@ export function SmartAlerts({ period = 'today', customStart: _customStart, custo
   const periodLabel = period === 'today' ? "Today's" : period === 'week' ? "This Week's" : period === 'month' ? "This Month's" : period === 'year' ? "This Year's" : "Custom Period";
 
   return (
-    <div className="bg-card border border-border rounded-xl p-4 shadow-card h-full flex flex-col">
-      <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-2 shrink-0">
+    <div className="bg-card border border-border rounded-xl p-5 shadow-card h-full flex flex-col">
+      <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2 shrink-0">
         <AlertTriangle className="w-4 h-4 text-amber-500" />
         {periodLabel} Smart Alerts
         {alerts.length > 0 && (
@@ -148,7 +147,7 @@ export function SmartAlerts({ period = 'today', customStart: _customStart, custo
                   transition={{ duration: 0.2 }}
                   className={`flex items-start gap-3 p-3 rounded-xl border ${cfg.bg}`}
                 >
-                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${cfg.icon}`}>
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${cfg.icon}`}>
                     {ALERT_ICONS[alert.icon]}
                   </div>
                   <div className="flex-1 min-w-0">

@@ -64,7 +64,7 @@ export function OfflineDetector() {
       } else {
         throw new Error("Server response invalid");
       }
-    } catch (_error) {
+    } catch (error) {
       setConnectionState("offline");
       setIsOffline(true);
       toast.error("Still offline. Please check your internet connection.");
@@ -97,7 +97,7 @@ export function OfflineDetector() {
   return (
     <div
       className={cn(
-        "fixed top-4 left-1/2 -translate-x-1/2 z-9999 w-[90%] max-w-md transition-all duration-500 ease-out",
+        "fixed top-4 left-1/2 -translate-x-1/2 z-[9999] w-[90%] max-w-md transition-all duration-500 ease-out",
         isOffline ? "translate-y-0 opacity-100" : "-translate-y-12 opacity-0 pointer-events-none"
       )}
     >

@@ -1,9 +1,8 @@
-import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
 export interface PatientActiveResponse {
   count: number;
-  [key: string]: ApiAny;
+  [key: string]: any;
 }
 
 export function usePatientActiveQuery() {

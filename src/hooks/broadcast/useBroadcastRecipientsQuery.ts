@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { keepPreviousData } from "@tanstack/react-query";
 import { useApiQuery } from "../useApiQuery";
 
@@ -26,7 +25,7 @@ export function normalizeRecipients(raw: unknown): {
   rows: BroadcastRecipient[];
   total: number;
 } {
-  let node: ApiAny = raw;
+  let node: any = raw;
   let total: number | undefined;
 
   for (let i = 0; i < 6 && node && typeof node === "object"; i++) {
@@ -73,6 +72,9 @@ export function useBroadcastRecipientsQuery(
     options: {
       enabled: options?.enabled ?? true,
       staleTime: 60_000,
+      // SendView unmounts/remounts on every "Send broadcast" tab switch —
+      // refetch then instead of serving a (possibly minutes-old) cached page.
+      refetchOnMount: "always",
       placeholderData: keepPreviousData,
     },
   });

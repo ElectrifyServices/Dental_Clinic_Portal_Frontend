@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useQuery } from "@tanstack/react-query";
 import apiClient from "../../services/apiClient";
 import { parseApiResponse } from "../../services/parseApiResponse";
@@ -21,12 +20,12 @@ export function useMembershipStatsQuery() {
         apiClient.get("/membershipPlan/individual-plans"),
       ]);
 
-      const getCount = (res: ApiAny, key: string) => {
+      const getCount = (res: any, key: string) => {
         try {
           const parsed = parseApiResponse(res.data);
           // parseApiResponse might return responseObject, so parsed.data is the inner object
           // For example: { "company_plans": 1 }
-          const data: ApiAny = parsed?.data || parsed || {};
+          const data: any = parsed?.data || parsed || {};
           
           if (typeof data === "number") return data;
           if (typeof data === "string") return parseInt(data, 10) || 0;
@@ -44,7 +43,7 @@ export function useMembershipStatsQuery() {
           }
           
           return 0;
-        } catch (_err) {
+        } catch (err) {
           return 0;
         }
       };

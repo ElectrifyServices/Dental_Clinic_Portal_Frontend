@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import React, { useState, useEffect } from "react";
 import {
   Plus,
@@ -17,8 +16,6 @@ import {
   LayoutGrid,
   List,
   Users,
-  Filter,
-  X,
 } from "lucide-react";
 import { User as UserType } from "../../types";
 import { createPortal } from "react-dom";
@@ -27,20 +24,13 @@ import {
   PageHeader,
   DataTable,
   SearchInput,
+  FilterTabs,
   Badge,
   Card,
   CardContent,
   Loading,
   Pagination,
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-  Label,
-  FilterContainer,
 } from "@/components/ui";
-import { cn } from "@/lib/utils";
 import { useSidebar } from "../../contexts/SidebarContext";
 
 interface DoctorManagementProps {
@@ -48,7 +38,7 @@ interface DoctorManagementProps {
   onAddDoctor: () => void;
   onEditDoctor: (id: string) => void;
   onDeleteDoctor: (id: string) => void;
-  onUpdateStaff: (staff: ApiAny) => void;
+  onUpdateStaff: (staff: any) => void;
   onManageSchedule: (id: string, name: string) => void;
   onPaySalary?: (id: string, name: string) => void;
   onViewSalaryHistory?: (id: string, name: string) => void;
@@ -88,13 +78,8 @@ const ROLE_META: Record<
     variant: "green",
     icon: <User className="w-3 h-3" />,
   },
-  staff: {
-    label: "Staff",
-    variant: "amber",
-    icon: <User className="w-3 h-3" />,
-  },
   assistant: {
-    label: "Staff",
+    label: "STAFF",
     variant: "amber",
     icon: <User className="w-3 h-3" />,
   },
@@ -102,9 +87,9 @@ const ROLE_META: Record<
 
 const ROLE_FILTERS = [
   { key: "all", label: "All Roles" },
-  { key: "doctor", label: "Doctor" },
+  { key: "doctor", label: "Doctors" },
   { key: "receptionist", label: "Receptionist" },
-  { key: "staff", label: "Staff" }, 
+  { key: "staff", label: "STAFF" }, 
 ];
 
 export function DoctorManagement({
@@ -139,7 +124,6 @@ export function DoctorManagement({
 
   const [statusFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
-  const [isRoleFilterOpen, setIsRoleFilterOpen] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
@@ -151,11 +135,9 @@ export function DoctorManagement({
       s.email?.toLowerCase().includes(q) ||
       (s.specialization || "").toLowerCase().includes(q);
     const isDoctor = s.role === "doctor" || s.originalRoleName?.toLowerCase()?.includes("doctor");
-    const isStaff = s.role === "staff" || s.role === "assistant" || s.originalRoleName?.toLowerCase()?.includes("staff") || s.originalRoleName?.toLowerCase()?.includes("assist");
     const matchRole = roleFilter === "all" || 
                       (roleFilter === "doctor" && isDoctor) ||
-                      (roleFilter === "staff" && isStaff) ||
-                      (roleFilter !== "doctor" && roleFilter !== "staff" && s.role === roleFilter);
+                      (roleFilter !== "doctor" && s.role === roleFilter);
     const matchStatus =
       statusFilter === "all" ||
       (statusFilter === "active" ? s.isActive : !s.isActive);
@@ -189,11 +171,11 @@ export function DoctorManagement({
   const renderStaffMenu = (staff: UserType) => (
     <>
       <div
-        className="fixed inset-0 z-9998"
+        className="fixed inset-0 z-[9998]"
         onClick={() => setOpenMenuId(null)}
       />
       <div
-        className="fixed z-9999 bg-card rounded-2xl border border-border shadow-2xl w-48 overflow-hidden animate-in fade-in zoom-in-95 duration-150 p-1.5"
+        className="fixed z-[9999] bg-card rounded-2xl border border-border shadow-2xl w-48 overflow-hidden animate-in fade-in zoom-in-95 duration-150 p-1.5"
         style={{ top: menuPos.top, left: menuPos.left }}
       >
         <Button
@@ -276,10 +258,10 @@ export function DoctorManagement({
               src={staff.avatar}
               alt={staff.name}
               onError={() => setImgErrors(prev => ({ ...prev, [staff.id]: true }))}
-              className="w-10 h-10 rounded-2xl object-cover shrink-0 border border-border shadow-sm bg-muted/20"
+              className="w-10 h-10 rounded-2xl object-cover flex-shrink-0 border border-border shadow-sm bg-muted/20"
             />
           ) : (
-            <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-xs shrink-0 border border-primary/5">
+            <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-xs flex-shrink-0 border border-primary/5">
               {getInitials(staff.name)}
             </div>
           )}
@@ -302,7 +284,7 @@ export function DoctorManagement({
       render: (staff: UserType) => {
         const isDoctor = staff.role?.toLowerCase() === "doctor" || staff.originalRoleName?.toLowerCase()?.includes("doctor");
         const rm = isDoctor ? ROLE_META.doctor : (ROLE_META[staff.role] || ROLE_META.assistant);
-        const rawLabel = (staff as ApiAny).originalRoleName || rm.label;
+        const rawLabel = (staff as any).originalRoleName || rm.label;
         const displayLabel = rawLabel.replace(/_/g, ' ');
         return (
           <Badge
@@ -325,7 +307,7 @@ export function DoctorManagement({
           </div>
           {staff.phone && (
             <div className="text-[11px] font-medium text-muted-foreground flex items-center gap-1.5">
-              <Phone className="w-3 h-3" /> {staff.phone.startsWith("+") ? staff.phone : `${(staff as ApiAny).country_code || "+91"} ${staff.phone}`}
+              <Phone className="w-3 h-3" /> {staff.phone.startsWith("+") ? staff.phone : `${(staff as any).country_code || "+91"} ${staff.phone}`}
             </div>
           )}
         </div>
@@ -334,15 +316,15 @@ export function DoctorManagement({
     {
       key: "salary",
       header: "Financials",
-      render: (staff: ApiAny) => (
+      render: (staff: any) => (
         <div className="text-[11px] font-bold">
           <div className="flex justify-between gap-4 mb-0.5">
             <span className="text-muted-foreground/60 font-medium">Monthly:</span>
-            <span className="text-foreground">₹{(staff as ApiAny).monthlySalary?.toLocaleString() || "0"}</span>
+            <span className="text-foreground">₹{(staff as any).monthlySalary?.toLocaleString() || "0"}</span>
           </div>
           <div className="flex justify-between gap-4 mb-0.5">
             <span className="text-muted-foreground/60 font-medium">Paid:</span>
-            <span className="text-emerald-600">₹{(staff as ApiAny).salaryPaid?.toLocaleString() || "0"}</span>
+            <span className="text-emerald-600">₹{(staff as any).salaryPaid?.toLocaleString() || "0"}</span>
           </div>
           {/* <div className="flex justify-between gap-4">
             <span className="text-muted-foreground/60 font-medium">Due:</span>
@@ -416,7 +398,7 @@ export function DoctorManagement({
   }, [search, roleFilter, statusFilter, itemsPerPage, setCurrentPage]);
 
   const paginationUI = displayTotalItems > 0 ? (
-    <div className="py-4 px-6 border-t border-border/50 bg-muted/20 mt-4 rounded-xl shrink-0">
+    <div className="py-4 px-6 border-t border-border/50 bg-muted/20 mt-4 rounded-xl">
       <Pagination
         page={currentPage}
         totalPages={displayTotalPages}
@@ -429,51 +411,32 @@ export function DoctorManagement({
   ) : null;
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-4 overflow-hidden">
-      <div className="shrink-0">
-        <PageHeader
-          title="Staff Directory"
-          subtitle={`Manage ${filtered.length} team members`}
-          action={
-            <Button onClick={onAddDoctor} className="gap-2">
-              <Plus className="w-4 h-4" /> Add Staff Member
-            </Button>
-          }
-        />
-      </div>
-
-      <FilterContainer
-        isOpen={isRoleFilterOpen}
-        onClose={() => setIsRoleFilterOpen(false)}
-        className="shrink-0 space-y-3"
-      >
-        <div className="flex items-center gap-2 bg-card p-3 rounded-2xl border border-border shadow-sm">
-          <SearchInput
-            value={search}
-            onChange={setSearch}
-            placeholder="Search by name, email or role…"
-            className="flex-1 min-w-0"
-          />
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setIsRoleFilterOpen((v) => !v)}
-            className={cn("gap-2 shrink-0", roleFilter !== "all" && "border-primary bg-primary/10 text-primary hover:bg-primary/15")}
-          >
-            <Filter className="w-4 h-4" />
-            <span className="hidden sm:inline">Filters</span>
-            {roleFilter !== "all" && (
-              <span className="bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 text-[10px]">1</span>
-            )}
+    <div className="space-y-4">
+      <PageHeader
+        title="Staff Directory"
+        subtitle={`Manage ${filtered.length} team members`}
+        action={
+          <Button onClick={onAddDoctor} className="gap-2">
+            <Plus className="w-4 h-4" /> Add Staff Member
           </Button>
+        }
+      />
 
-          {roleFilter !== "all" && (
-            <Button variant="ghost" onClick={() => setRoleFilter("all")} className="gap-1 text-muted-foreground shrink-0">
-              <X className="w-3 h-3" /> <span className="hidden sm:inline">Clear</span>
-            </Button>
-          )}
-
+      <div className="flex flex-col md:flex-row gap-4 items-center bg-card p-3 rounded-2xl border border-border shadow-sm">
+        <SearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder="Search by name, email or role…"
+          className="flex-1 w-full"
+        />
+        <div className="flex flex-row items-center justify-between gap-4 w-full lg:w-auto overflow-hidden">
+          <div className="overflow-x-auto scrollbar-none flex-1">
+            <FilterTabs
+              tabs={ROLE_FILTERS}
+              active={roleFilter}
+              onChange={setRoleFilter}
+            />
+          </div>
           <div className="flex items-center bg-muted p-1 rounded-xl border border-border shrink-0">
             <Button
               variant="ghost"
@@ -491,53 +454,27 @@ export function DoctorManagement({
             </Button>
           </div>
         </div>
-
-        {isRoleFilterOpen && (
-          <div className="bg-card p-4 sm:p-5 rounded-2xl border border-border shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
-            <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">Advanced Filters</h3>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              <div>
-                <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">Role</Label>
-                <Select value={roleFilter} onValueChange={setRoleFilter}>
-                  <SelectTrigger className="h-10 w-full text-xs font-semibold rounded-xl border border-border bg-muted/50">
-                    <SelectValue placeholder="All Roles" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ROLE_FILTERS.map((t) => (
-                      <SelectItem key={t.key} value={t.key} className="text-xs font-medium">
-                        {t.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-        )}
-      </FilterContainer>
+      </div>
 
       {isLoading ? (
-        <Card className="flex flex-1 min-h-0 flex-col items-center justify-center py-24 rounded-2xl">
+        <Card className="flex flex-col items-center justify-center py-24 rounded-2xl">
           <Loading type="spinner" text="Fetching staff directory..." />
         </Card>
       ) : viewMode === "list" ? (
-        <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">
-          <DataTable
-            className="flex-1 min-h-0"
-            columns={columns}
-            data={paginatedData}
-            rowKey={(s) => s.id}
-            emptyTitle="No staff members found"
-            emptyIcon={<User className="w-12 h-12 text-muted-foreground/30" />}
-            footer={paginationUI || undefined}
-          />
-        </div>
+        <DataTable
+          columns={columns}
+          data={paginatedData}
+          rowKey={(s) => s.id}
+          emptyTitle="No staff members found"
+          emptyIcon={<User className="w-12 h-12 text-muted-foreground/30" />}
+          footer={paginationUI || undefined}
+        />
       ) : (
-        <div className="flex-1 min-h-0 flex flex-col gap-4 overflow-y-auto">
+        <>
           <div className={
             collapsed
-              ? "grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500"
-              : "grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500"
+              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500"
+              : "grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500"
           }>
           {filtered.length === 0 ? (
             <div className="col-span-full py-20 bg-card rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center text-center">
@@ -559,7 +496,7 @@ export function DoctorManagement({
                   className="group relative overflow-hidden transition-all duration-300 hover:border-primary/40 hover:shadow-2xl hover:shadow-primary/10 bg-card/50 backdrop-blur-sm"
                 >
                   {/* Subtle top gradient */}
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-primary/40 via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/40 via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
                   <CardContent className="p-6">
                     <div className="flex justify-between items-start mb-5">
@@ -572,7 +509,7 @@ export function DoctorManagement({
                             className="w-16 h-16 rounded-2xl object-cover border-4 border-card shadow-sm group-hover:scale-105 transition-transform duration-300 bg-muted/20"
                           />
                         ) : (
-                          <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-primary/10 to-primary/5 flex items-center justify-center text-primary font-black text-xl border-4 border-card shadow-sm group-hover:scale-105 transition-transform duration-300">
+                          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center text-primary font-black text-xl border-4 border-card shadow-sm group-hover:scale-105 transition-transform duration-300">
                             {getInitials(staff.name)}
                           </div>
                         )}
@@ -616,7 +553,7 @@ export function DoctorManagement({
                           variant={rm.variant}
                           className="text-[10px] font-black uppercase px-2 py-0.5 shadow-sm"
                         >
-                          {((staff as ApiAny).originalRoleName || rm.label).replace(/_/g, ' ')}
+                          {((staff as any).originalRoleName || rm.label).replace(/_/g, ' ')}
                         </Badge>
                         <Badge
                           variant={staff.isActive ? "green" : "gray"}
@@ -634,25 +571,25 @@ export function DoctorManagement({
 
                     <div className="mt-5 space-y-3 border-t border-border/50 pt-5">
                       <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium truncate group-hover:text-foreground/80 transition-colors">
-                        <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0 transition-colors group-hover:bg-blue-500/20">
+                        <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0 transition-colors group-hover:bg-blue-500/20">
                           <Mail className="w-3.5 h-3.5 text-blue-500" />
                         </div>
                         <span className="truncate">{staff.email}</span>
                       </div>
                       {staff.phone && (
                         <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium group-hover:text-foreground/80 transition-colors">
-                          <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0 transition-colors group-hover:bg-emerald-500/20">
+                          <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 transition-colors group-hover:bg-emerald-500/20">
                             <Phone className="w-3.5 h-3.5 text-emerald-500" />
                           </div>
-                          <span>{staff.phone.startsWith("+") ? staff.phone : `${(staff as ApiAny).country_code || "+91"} ${staff.phone}`}</span>
+                          <span>{staff.phone.startsWith("+") ? staff.phone : `${(staff as any).country_code || "+91"} ${staff.phone}`}</span>
                         </div>
                       )}
-                      {(staff as ApiAny).experience && (
+                      {(staff as any).experience && (
                         <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium group-hover:text-foreground/80 transition-colors">
-                          <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0 transition-colors group-hover:bg-amber-500/20">
+                          <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center flex-shrink-0 transition-colors group-hover:bg-amber-500/20">
                             <Stethoscope className="w-3.5 h-3.5 text-amber-500" />
                           </div>
-                          <span>{(staff as ApiAny).experience} Years Exp.</span>
+                          <span>{(staff as any).experience} Years Exp.</span>
                         </div>
                       )}
                     </div>
@@ -662,16 +599,16 @@ export function DoctorManagement({
                         <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider mb-1">
                           Monthly
                         </p>
-                        <p className="text-xs font-black text-foreground truncate" title={(staff as ApiAny).monthlySalary?.toLocaleString()}>
-                          ₹{(staff as ApiAny).monthlySalary?.toLocaleString() || "0"}
+                        <p className="text-xs font-black text-foreground truncate" title={(staff as any).monthlySalary?.toLocaleString()}>
+                          ₹{(staff as any).monthlySalary?.toLocaleString() || "0"}
                         </p>
                       </div>
                       <div className="p-2 bg-emerald-50/30 rounded-xl border border-emerald-100/50 group-hover:bg-emerald-50 transition-colors">
                         <p className="text-[9px] text-emerald-600/70 font-bold uppercase tracking-wider mb-1">
                           Paid
                         </p>
-                        <p className="text-xs font-black text-emerald-600 truncate" title={(staff as ApiAny).salaryPaid?.toLocaleString()}>
-                          ₹{(staff as ApiAny).salaryPaid?.toLocaleString() || "0"}
+                        <p className="text-xs font-black text-emerald-600 truncate" title={(staff as any).salaryPaid?.toLocaleString()}>
+                          ₹{(staff as any).salaryPaid?.toLocaleString() || "0"}
                         </p>
                       </div>
                       {/* <div className="p-2 bg-amber-50/30 rounded-xl border border-amber-100/50 group-hover:bg-amber-50 transition-colors">
@@ -688,9 +625,9 @@ export function DoctorManagement({
               );
             })
           )}
-          </div>
-          {paginationUI}
         </div>
+        {paginationUI}
+        </>
       )}
     </div>
   );

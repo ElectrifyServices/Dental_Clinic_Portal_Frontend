@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useState } from 'react';
 import { PlanDependent } from '../../types';
 import { updateDependent, notifyDependentChange } from './dependentStorage';
@@ -24,8 +23,7 @@ export function useUpdateDependentMutation() {
       const result = updateDependent(id, updates);
       notifyDependentChange();
       return result;
-    } catch (caught) {
-      const err = caught as ApiAny;
+    } catch (err: any) {
       setError(err);
       throw err;
     } finally {

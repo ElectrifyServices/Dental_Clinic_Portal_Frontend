@@ -1,6 +1,5 @@
-import type { ApiAny } from "../../../types/api";
 import React, { useState } from 'react';
-import { UserPlus, CheckCircle } from 'lucide-react';
+import { UserPlus, CheckCircle, Users, Plus, Trash2, User, Edit } from 'lucide-react';
 import {
   Modal,
   Button,
@@ -12,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../ui';
-import { DatePicker } from '@/components/ui/DatePicker';
 import { CorporatePlan, CoverageType } from '../../../types';
 import { useCreateEmployeeMutation } from '../../../hooks/corporate/useCreateEmployeeMutation';
 import { useAddDependentMutation } from '../../../hooks/corporate/useAddDependentMutation';
@@ -55,16 +53,16 @@ export function IndividualMemberFormModal({ showForm, setShowForm, individualPla
   const [form, setForm] = useState(EMPTY_FORM());
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [pendingDependents, setPendingDependents] = useState<PendingDependent[]>([]);
-  const [_showAddDepForm, setShowAddDepForm] = useState(false);
-  const [_addDepForm, _setAddDepForm] = useState<PendingDependent>(EMPTY_PENDING());
-  const [_editingDepId, setEditingDepId] = useState<string | null>(null);
+  const [showAddDepForm, setShowAddDepForm] = useState(false);
+  const [addDepForm, setAddDepForm] = useState<PendingDependent>(EMPTY_PENDING());
+  const [editingDepId, setEditingDepId] = useState<string | null>(null);
 
   const createEmployeeMutation = useCreateEmployeeMutation();
-  const _addDependentMutation = useAddDependentMutation();
+  const addDependentMutation = useAddDependentMutation();
 
   const selectedPlan = individualPlans.find(p => p.id === form.planId);
-  const maxDependents = selectedPlan ? (Number((selectedPlan as ApiAny).family_coverage_limit) || Number((selectedPlan as ApiAny).familyCoverageLimit) || Number(selectedPlan.limit) || Number(selectedPlan.maxDependents) || 0) : 0;
-  const _coverageLimitReached = pendingDependents.length >= maxDependents && maxDependents > 0;
+  const maxDependents = selectedPlan ? (Number((selectedPlan as any).family_coverage_limit) || Number((selectedPlan as any).familyCoverageLimit) || Number(selectedPlan.limit) || Number(selectedPlan.maxDependents) || 0) : 0;
+  const coverageLimitReached = pendingDependents.length >= maxDependents && maxDependents > 0;
 
   React.useEffect(() => {
     if (showForm) {
@@ -111,14 +109,14 @@ export function IndividualMemberFormModal({ showForm, setShowForm, individualPla
     return !Object.keys(e).length;
   };
 
-  const _handleAddDependent = () => {};
-  const _handleEditDependent = () => {};
+  const handleAddDependent = () => {};
+  const handleEditDependent = () => {};
 
   const handleSave = async () => {
     if (!validate()) return;
 
     try {
-      const payload: ApiAny = {
+      const payload: any = {
         name: form.name,
         phone: form.phone,
         plan_id: form.planId,
@@ -140,7 +138,7 @@ export function IndividualMemberFormModal({ showForm, setShowForm, individualPla
       queryClient.invalidateQueries({ queryKey: ['corporatePlans'] });
       onSave();
       setShowForm(false);
-    } catch (err: ApiAny) {
+    } catch (err: any) {
       const msg = err?.response?.data?.message || err?.message || 'Failed to register member';
       setErrors(prev => ({ ...prev, submit: Array.isArray(msg) ? msg.join(', ') : msg }));
     }
@@ -218,7 +216,7 @@ export function IndividualMemberFormModal({ showForm, setShowForm, individualPla
             </div> */}
             <div>
               <Label className="text-[10px] font-semibold text-muted-foreground mb-1 block">Enrollment Date</Label>
-              <DatePicker value={form.enrollmentDate} onChange={(val) => setForm(p => ({ ...p, enrollmentDate: val }))}
+              <Input type="date" value={form.enrollmentDate} onChange={e => setForm(p => ({ ...p, enrollmentDate: e.target.value }))}
                 className="rounded-xl" />
             </div>
           </div>

@@ -1,17 +1,16 @@
-import type { ApiAny, ApiRecord } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
 export interface CreateServiceDescriptionVariables {
   name: string;
   rate?: number;
-  [key: string]: ApiAny; // Allow flexibility for other payload properties
+  [key: string]: any; // Allow flexibility for other payload properties
 }
 
 export function useCreateServiceDescriptionMutation() {
   const queryClient = useQueryClient();
 
-  return useApiMutation<ApiRecord, CreateServiceDescriptionVariables>({
+  return useApiMutation<any, CreateServiceDescriptionVariables>({
     getEndpoint: () => "/billingDescription",
     method: "post",
     options: {

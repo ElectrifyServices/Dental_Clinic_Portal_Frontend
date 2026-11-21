@@ -1,5 +1,4 @@
 // hooks/treatment/useTreatmentPlansQuery.ts
-import type { ApiAny } from "../../types/api";
 import { keepPreviousData } from "@tanstack/react-query";
 import { useApiQuery } from "../useApiQuery";
 import { TreatmentPlanResponse } from "./useCreateTreatmentPlanMutation";
@@ -64,7 +63,7 @@ export function useTreatmentPlansQuery(
 ) {
   // Build request body
   const buildRequestBody = () => {
-    const body: ApiAny = {};
+    const body: any = {};
 
     // Pagination
     if (filters.page !== undefined) body.page = filters.page;

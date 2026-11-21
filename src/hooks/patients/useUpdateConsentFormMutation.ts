@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -10,7 +9,7 @@ export interface UpdateConsentFormVariables {
 export function useUpdateConsentFormMutation() {
   const queryClient = useQueryClient();
 
-  return useApiMutation<ApiAny, UpdateConsentFormVariables>({
+  return useApiMutation<any, UpdateConsentFormVariables>({
     getEndpoint: (variables) => `/consent/${variables.id}`,
     method: "put",
     transformRequest: (variables) => variables.formData,

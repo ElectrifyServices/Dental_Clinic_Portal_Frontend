@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../../types/api";
 import React, { useState, useMemo, useEffect } from 'react';
 import { Popover, PopoverTrigger, PopoverContent, Button, Input, Loading, ConfirmModal } from '@/components/ui';
 import { Search, Plus, Edit2, Trash2, Check, X, ChevronDown } from 'lucide-react';
@@ -34,7 +33,7 @@ export function ServiceDescriptionSelect({ value, onChange }: ServiceDescription
     if (!rawData) return [];
     if (Array.isArray(rawData)) return rawData;
     
-    let list: ApiAny = [];
+    let list: any = [];
     if (rawData.responseObject?.data?.data) {
       list = rawData.responseObject.data.data;
     } else if (rawData.data?.data) {
@@ -50,7 +49,7 @@ export function ServiceDescriptionSelect({ value, onChange }: ServiceDescription
 
   const filteredServices = useMemo(() => {
     if (!search) return services;
-    return services.filter((s: ApiAny) => 
+    return services.filter((s: any) => 
       (s.name || s.description || s.label || '').toLowerCase().includes(search.toLowerCase())
     );
   }, [services, search]);
@@ -64,9 +63,9 @@ export function ServiceDescriptionSelect({ value, onChange }: ServiceDescription
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteName, setDeleteName] = useState<string | null>(null);
 
-  const handleSelect = (s: ApiAny) => {
+  const handleSelect = (s: any) => {
     const name = s.name || s.description || s.label || '';
-    onChange(name, undefined as ApiAny, s.id);
+    onChange(name, undefined as any, s.id);
     setOpen(false);
   };
 
@@ -114,7 +113,7 @@ export function ServiceDescriptionSelect({ value, onChange }: ServiceDescription
           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] min-w-[280px] p-0" align="start">
+      <PopoverContent className="w-[350px] p-0" align="start">
         <div className="flex flex-col max-h-[300px]">
           <div className="flex items-center border-b px-3 sticky top-0 bg-popover z-10">
             <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
@@ -124,16 +123,6 @@ export function ServiceDescriptionSelect({ value, onChange }: ServiceDescription
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
-            {search && (
-              <button
-                type="button"
-                onClick={() => setSearch("")}
-                className="p-1 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted mr-1 cursor-pointer"
-                title="Clear search"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
             <Button
               variant="ghost"
               size="icon"
@@ -176,7 +165,7 @@ export function ServiceDescriptionSelect({ value, onChange }: ServiceDescription
             ) : filteredServices.length === 0 && !adding ? (
               <p className="p-4 text-sm text-center text-muted-foreground">No services found.</p>
             ) : (
-              filteredServices.map((s: ApiAny) => {
+              filteredServices.map((s: any) => {
                 const sName = s.name || s.description || s.label || '';
                 const isEditing = editingId === s.id;
 

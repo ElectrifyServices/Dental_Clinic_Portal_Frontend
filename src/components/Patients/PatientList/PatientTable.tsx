@@ -1,6 +1,16 @@
-import type { ApiAny } from "../../../types/api";
 import React from "react";
-import { Eye, Edit, Users, MoreVertical, UserPlus, Download, UserCheck, PowerOff } from "lucide-react";
+import {
+  Eye,
+  Edit,
+  Trash2,
+  Users,
+  MoreVertical,
+  UserPlus,
+  Download,
+  QrCode,
+  UserCheck,
+  PowerOff
+} from "lucide-react";
 import {
   Badge,
   Button,
@@ -30,13 +40,13 @@ export const PatientTable: React.FC<PatientTableProps> = ({
   patients,
   onView,
   onEdit,
-  onDelete: _onDelete,
+  onDelete,
   onExport,
-  onPrintBarcode: _onPrintBarcode,
+  onPrintBarcode,
   onToggleStatus,
   onToggleCategory,
 }) => {
-  const getStatusVariant = (status: string): ApiAny => {
+  const getStatusVariant = (status: string): any => {
     switch (status) {
       case "active": return "green";
       case "inactive": return "gray";
@@ -76,7 +86,7 @@ export const PatientTable: React.FC<PatientTableProps> = ({
       header: "Contact",
       render: (patient: Patient) => (
         <>
-          <div className="text-sm font-medium text-foreground">{formatPhoneWithCountryCode(patient.phone, (patient as ApiAny).country_code)}</div>
+          <div className="text-sm font-medium text-foreground">{formatPhoneWithCountryCode(patient.phone, (patient as any).country_code)}</div>
           <div className="text-[11px] text-muted-foreground">{patient.email}</div>
         </>
       ),
@@ -115,7 +125,7 @@ export const PatientTable: React.FC<PatientTableProps> = ({
           className={`text-sm font-black ${patient.outstandingBalance ? "text-amber-600" : "text-emerald-600"
             }`}
         >
-          ₹{(patient.outstandingBalance ?? (patient as ApiAny).total_pending_balance ?? (patient as ApiAny).totalPendingBalance ?? 0).toLocaleString()}
+          ₹{(patient.outstandingBalance ?? (patient as any).total_pending_balance ?? (patient as any).totalPendingBalance ?? 0).toLocaleString()}
         </div>
       ),
     },

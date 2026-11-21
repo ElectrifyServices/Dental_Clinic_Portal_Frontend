@@ -1,21 +1,21 @@
-import type { ApiAny } from "../../../types/api";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import React from "react";
-import { Info, AlertCircle, Tag, IndianRupee } from "lucide-react";
+import { Info, AlertCircle, Calendar, Tag, IndianRupee } from "lucide-react";
 import { SearchableSelect } from "@/components/ui";
-import { DatePicker } from "@/components/ui/DatePicker";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
+
 interface BasicInfoSectionProps {
-  formData: ApiAny;
-  handleChange: (e: React.ChangeEvent<ApiAny>) => void;
+  formData: any;
+  handleChange: (e: React.ChangeEvent<any>) => void;
   doctorError?: string;
-  allPatients: ApiAny[];
-  doctors: ApiAny[];
-  procedures: ApiAny[];
+  allPatients: any[];
+  doctors: any[];
+  procedures: any[];
   teeth: string[];
-  pendingPlans: ApiAny[];
-  onLoadPlan: (plan: ApiAny) => void;
+  pendingPlans: any[];
+  onLoadPlan: (plan: any) => void;
   isEdit: boolean;
   onPatientSearch?: (query: string) => void;
   onDoctorSearch?: (query: string) => void;
@@ -46,7 +46,7 @@ export function BasicInfoSection({
   onEditProcedure,
 }: BasicInfoSectionProps) {
   const normalizedProcedures = React.useMemo(() => {
-    return (procedures || []).map((proc: ApiAny) => {
+    return (procedures || []).map((proc: any) => {
       if (typeof proc === "string") {
         return { label: proc, value: proc };
       }
@@ -64,7 +64,7 @@ export function BasicInfoSection({
   }, [procedures, formData.procedure]);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <div className="space-y-2">
         <Label className="text-xs font-black text-foreground uppercase tracking-widest flex items-center gap-2">
           <Info className="w-3.5 h-3.5 text-primary" />
@@ -76,9 +76,9 @@ export function BasicInfoSection({
             const selectedPat = allPatients.find(
               (p) => (typeof p === "string" ? p : p.name) === val
             );
-            handleChange({ target: { name: "patientName", value: val } } as ApiAny);
+            handleChange({ target: { name: "patientName", value: val } } as any);
             if (selectedPat) {
-              handleChange({ target: { name: "patientId", value: selectedPat.id } } as ApiAny);
+              handleChange({ target: { name: "patientId", value: selectedPat.id } } as any);
             }
           }}
           options={allPatients.map((p) => {
@@ -95,7 +95,7 @@ export function BasicInfoSection({
             };
           })}
           onSearchChange={onPatientSearch}
-          renderOption={(pat: ApiAny) => (
+          renderOption={(pat: any) => (
             <div className="flex items-center gap-3 py-1">
               {pat.avatar ? (
                 <img
@@ -116,7 +116,7 @@ export function BasicInfoSection({
               </div>
             </div>
           )}
-          renderValue={(option: ApiAny) => (
+          renderValue={(option: any) => (
             <div className="flex items-center gap-2">
               {option.avatar ? (
                 <img
@@ -166,7 +166,7 @@ export function BasicInfoSection({
         </Label>
         <SearchableSelect
           value={formData.procedure}
-          onChange={(val) => handleChange({ target: { name: "procedure", value: val } } as ApiAny)}
+          onChange={(val) => handleChange({ target: { name: "procedure", value: val } } as any)}
           options={normalizedProcedures}
           placeholder="Select Procedure"
           searchPlaceholder="Search procedure..."
@@ -190,7 +190,7 @@ export function BasicInfoSection({
           value={formData.tooth ? formData.tooth.split(', ').filter(Boolean) : []}
           onChange={(val: string[]) => {
             const stringVal = Array.isArray(val) ? val.join(', ') : val;
-            handleChange({ target: { name: "tooth", value: stringVal } } as ApiAny);
+            handleChange({ target: { name: "tooth", value: stringVal } } as any);
           }}
           options={teeth.map((tooth) => ({ label: tooth, value: tooth }))}
           placeholder="Select Tooth/Area"
@@ -200,7 +200,7 @@ export function BasicInfoSection({
       </div>
 
       {isFreeProcedure && (
-        <div className="md:col-span-3 p-3 bg-emerald-50/70 dark:bg-emerald-950/20 rounded-2xl border border-emerald-100 dark:border-emerald-900 flex items-start gap-2.5 animate-in fade-in slide-in-from-top-1 duration-200">
+        <div className="md:col-span-3 p-3.5 bg-emerald-50/70 dark:bg-emerald-950/20 rounded-2xl border border-emerald-100 dark:border-emerald-900 flex items-start gap-2.5 animate-in fade-in slide-in-from-top-1 duration-200">
           <Info className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5" />
           <div className="min-w-0 flex-1">
             <p className="text-xs font-bold text-emerald-800 dark:text-emerald-400">
@@ -214,12 +214,16 @@ export function BasicInfoSection({
         <Label className="text-xs font-black text-foreground uppercase tracking-widest">
           Start Date
         </Label>
-        <DatePicker
-          name="date"
-          value={formData.date}
-          onChange={(val) => handleChange({ target: { name: "date", value: val } } as ApiAny)}
-          className="w-full rounded-xl text-sm font-semibold"
-        />
+        <div className="relative">
+          <Input
+            type="date"
+            name="date"
+            value={formData.date}
+            onChange={handleChange}
+            className="w-full pl-4 pr-10 py-3 border border-border rounded-xl bg-background focus:ring-2 focus:ring-primary/20 outline-none text-sm font-semibold h-11 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+          />
+          <Calendar className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+        </div>
       </div>
 
       <div className="space-y-2">
@@ -277,91 +281,89 @@ export function BasicInfoSection({
         );
       })()}
 
-      <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div className="space-y-2">
-          <Label className="text-xs font-black text-foreground uppercase tracking-widest">
-            Status
-          </Label>
-          <SearchableSelect
-            value={formData.status}
-            onChange={(val) => handleChange({ target: { name: "status", value: val } } as ApiAny)}
-            options={[
-              { label: "Planned", value: "planned" },
-              { label: "In Progress", value: "in-progress" },
-              { label: "Completed", value: "completed" },
-              { label: "Cancelled", value: "cancelled" },
-            ]}
-            placeholder="Select Status"
-          />
-        </div>
+      <div className="space-y-2">
+        <Label className="text-xs font-black text-foreground uppercase tracking-widest">
+          Status
+        </Label>
+        <SearchableSelect
+          value={formData.status}
+          onChange={(val) => handleChange({ target: { name: "status", value: val } } as any)}
+          options={[
+            { label: "Planned", value: "planned" },
+            { label: "In Progress", value: "in-progress" },
+            { label: "Completed", value: "completed" },
+            { label: "Cancelled", value: "cancelled" },
+          ]}
+          placeholder="Select Status"
+        />
+      </div>
 
-        <div className="space-y-2">
-          <Label className="text-xs font-black text-foreground uppercase tracking-widest">
-            Assigned Doctor
-            <span className="text-red-500 ml-1">*</span>
-          </Label>
-          <SearchableSelect
-            value={formData.doctorId}
-            displayValue={formData.doctorName}
-            onChange={(val) => {
-              const selectedDoc = doctors.find((d) => d.id === val);
-              handleChange({ target: { name: "doctorId", value: val } } as ApiAny);
-              handleChange({ target: { name: "doctorName", value: selectedDoc ? selectedDoc.name : "" } } as ApiAny);
-            }}
-            disabled={isEdit}
-            options={doctors.map((doc) => ({
-              label: doc.name,
-              value: doc.id,
-              phone: doc.phone,
-              country_code: doc.country_code,
-              avatar: doc.avatar || doc.image || "",
-              specialization: doc.specialization,
-              searchLabel: `${doc.name} ${doc.country_code ? doc.country_code + " " : ""}${doc.phone || ""}`
-            }))}
-            onSearchChange={onDoctorSearch}
-            renderOption={(doc: ApiAny) => (
-              <div className="flex items-center gap-3 py-1">
-                {doc.avatar ? (
-                  <img
-                    src={doc.avatar}
-                    alt={doc.label}
-                    className="w-8 h-8 rounded-full object-cover border border-border"
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
-                    {doc.label.charAt(0)}
-                  </div>
-                )}
-                <div className="flex flex-col min-w-0">
-                  <span className="font-bold text-foreground text-xs">{doc.label}</span>
-                  <span className="text-[10px] text-muted-foreground">
-                    {doc.specialization ? `${doc.specialization} • ` : ""}{doc.phone ? (doc.country_code ? `${doc.country_code} ${doc.phone}` : doc.phone) : "No phone"}
-                  </span>
+      <div className="space-y-2">
+        <Label className="text-xs font-black text-foreground uppercase tracking-widest">
+          Assigned Doctor
+          <span className="text-red-500 ml-1">*</span>
+        </Label>
+        <SearchableSelect
+          value={formData.doctorId}
+          displayValue={formData.doctorName}
+          onChange={(val) => {
+            const selectedDoc = doctors.find((d) => d.id === val);
+            handleChange({ target: { name: "doctorId", value: val } } as any);
+            handleChange({ target: { name: "doctorName", value: selectedDoc ? selectedDoc.name : "" } } as any);
+          }}
+          disabled={isEdit}
+          options={doctors.map((doc) => ({
+            label: doc.name,
+            value: doc.id,
+            phone: doc.phone,
+            country_code: doc.country_code,
+            avatar: doc.avatar || doc.image || "",
+            specialization: doc.specialization,
+            searchLabel: `${doc.name} ${doc.country_code ? doc.country_code + " " : ""}${doc.phone || ""}`
+          }))}
+          onSearchChange={onDoctorSearch}
+          renderOption={(doc: any) => (
+            <div className="flex items-center gap-3 py-1">
+              {doc.avatar ? (
+                <img
+                  src={doc.avatar}
+                  alt={doc.label}
+                  className="w-8 h-8 rounded-full object-cover border border-border"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                  {doc.label.charAt(0)}
                 </div>
+              )}
+              <div className="flex flex-col min-w-0">
+                <span className="font-bold text-foreground text-xs">{doc.label}</span>
+                <span className="text-[10px] text-muted-foreground">
+                  {doc.specialization ? `${doc.specialization} • ` : ""}{doc.phone ? (doc.country_code ? `${doc.country_code} ${doc.phone}` : doc.phone) : "No phone"}
+                </span>
               </div>
-            )}
-            renderValue={(option: ApiAny) => (
-              <div className="flex items-center gap-2">
-                {option.avatar ? (
-                  <img
-                    src={option.avatar}
-                    alt={option.label}
-                    className="w-5 h-5 rounded-full object-cover border border-border"
-                  />
-                ) : (
-                  <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">
-                    {option.label.charAt(0)}
-                  </div>
-                )}
-                <span className="font-bold text-foreground">{option.label}</span>
-              </div>
-            )}
-            placeholder="Select Doctor"
-          />
-          {doctorError && (
-            <p className="text-xs font-medium text-red-500 mt-1">{doctorError}</p>
+            </div>
           )}
-        </div>
+          renderValue={(option: any) => (
+            <div className="flex items-center gap-2">
+              {option.avatar ? (
+                <img
+                  src={option.avatar}
+                  alt={option.label}
+                  className="w-5 h-5 rounded-full object-cover border border-border"
+                />
+              ) : (
+                <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">
+                  {option.label.charAt(0)}
+                </div>
+              )}
+              <span className="font-bold text-foreground">{option.label}</span>
+            </div>
+          )}
+          placeholder="Select Doctor"
+        />
+        {doctorError && (
+          <p className="text-xs font-medium text-red-500 mt-1">{doctorError}</p>
+        )}
       </div>
     </div>
   );

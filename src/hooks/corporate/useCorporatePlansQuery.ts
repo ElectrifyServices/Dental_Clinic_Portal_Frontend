@@ -1,8 +1,7 @@
-import type { ApiAny, ApiRecord } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
 export interface CorporatePlansResponse {
-  data: ApiRecord[];
+  data: any[];
   pagination: {
     page: number;
     limit: number;
@@ -18,12 +17,11 @@ export interface CorporatePlansParams {
   planType?: string;
   staleTime?: number;
   refetchOnMount?: boolean | 'always';
-  filters?: Record<string, ApiAny>;
 }
 
 export function useCorporatePlansQuery(params: CorporatePlansParams = {}) {
   const enabled = params.enabled ?? false;
-  const body: Record<string, ApiAny> = {
+  const body: Record<string, any> = {
     page: 1,
     limit: 100,
   };
@@ -32,10 +30,8 @@ export function useCorporatePlansQuery(params: CorporatePlansParams = {}) {
     body.search = params.search;
   }
 
-  if (params.filters || (params.status && params.status !== "ALL") || (params.planType && params.planType !== "ALL")) {
-    body.filters = {
-      ...(params.filters || {}),
-    };
+  if (params.status && params.status !== "ALL" || params.planType && params.planType !== "ALL") {
+    body.filters = {};
     if (params.status && params.status !== "ALL") {
       body.filters.status = [params.status];
     }
@@ -51,7 +47,7 @@ export function useCorporatePlansQuery(params: CorporatePlansParams = {}) {
     data: body,
     options: {
       enabled,
-      staleTime: params.staleTime !== undefined ? params.staleTime : 0,
+      staleTime: params.staleTime !== undefined ? params.staleTime : 5 * 60 * 1000,
       refetchOnWindowFocus: false,
       ...(params.refetchOnMount !== undefined ? { refetchOnMount: params.refetchOnMount } : {}),
     },

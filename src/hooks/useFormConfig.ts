@@ -8,7 +8,6 @@
 //   const label = useFieldLabel('appointment', 'patientConcern');
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { ApiAny } from "../types/api";
 import { useMemo } from 'react';
 import { useTenant } from '../contexts/TenantContext';
 import { getFormConfig } from '../config/forms';
@@ -67,7 +66,7 @@ export function useFormConfig(formId: string): FormConfig {
   const { tenant } = useTenant();
   return useMemo(() => {
     const base = getFormConfig(formId);
-    const overrides = (tenant as ApiAny).formOverrides?.[formId];
+    const overrides = (tenant as any).formOverrides?.[formId];
     return mergeFormConfig(base, overrides);
   }, [formId, tenant]);
 }

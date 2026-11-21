@@ -1,8 +1,7 @@
-import type { ApiAny } from "../../types/api";
 import React, { useState } from "react";
-import { Phone, Calendar, TrendingUp, User } from "lucide-react";
+import { Phone, Calendar, TrendingUp, User, ChevronLeft, ChevronRight } from "lucide-react";
 
-import { StatusBadge, ContentCard, SearchInput, Pagination } from "@/components/ui";
+import { StatusBadge, ContentCard, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Button, SearchInput, Pagination } from "@/components/ui";
 
 import { useRecentPatients } from "../../hooks/dashboard/useDashboardAnalytics";
 import { useDebounce } from "../../hooks/useDebounce";
@@ -40,15 +39,14 @@ export function RecentPatients({ period = 'today', customStart, customEnd }: { p
       pageNumbers.push('...');
     }
   }
-  const _displayPages = pageNumbers.filter((val, index, arr) => val !== '...' || arr[index - 1] !== '...');
+  const displayPages = pageNumbers.filter((val, index, arr) => val !== '...' || arr[index - 1] !== '...');
 
   return (
     <ContentCard
       title="Patients"
       subtitle={`Registered within · ${periodLabel}`}
       icon={<TrendingUp className="w-4 h-4" />}
-      bodyClassName="p-0 flex flex-col flex-1"
-      className="h-full"
+      bodyClassName="p-0 flex flex-col"
     >
       <div className="p-4 border-b border-border bg-muted/20">
         <SearchInput
@@ -59,8 +57,8 @@ export function RecentPatients({ period = 'today', customStart, customEnd }: { p
         />
       </div>
       {patients.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 px-4">
-          <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-3 ring-8 ring-primary/5">
+        <div className="flex flex-col items-center justify-center py-16 px-4">
+          <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 ring-8 ring-primary/5">
             <User className="w-8 h-8 text-primary" />
           </div>
           <h3 className="text-[15px] font-bold text-foreground mb-1 uppercase tracking-tight">
@@ -78,12 +76,12 @@ export function RecentPatients({ period = 'today', customStart, customEnd }: { p
       ) : (
         <>
           <div className="divide-y divide-border flex-1">
-            {patients.map((p: ApiAny, i: number) => (
+            {patients.map((p: any, i: number) => (
               <div
                 key={p.id || i}
-                className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors"
+                className="flex items-center gap-3 px-5 py-3 hover:bg-muted/50 transition-colors"
               >
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-xs flex-shrink-0">
                   {p.name?.[0]?.toUpperCase() ?? "P"}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -111,7 +109,7 @@ export function RecentPatients({ period = 'today', customStart, customEnd }: { p
                     )}
                   </div>
                 </div>
-                <div className="text-xs text-muted-foreground shrink-0 flex items-center gap-1">
+                <div className="text-xs text-muted-foreground flex-shrink-0 flex items-center gap-1">
                   <Calendar className="w-2.5 h-2.5" />
                   {p.totalVisits || 0} visit{p.totalVisits !== 1 ? "s" : ""}
                 </div>

@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { Button } from "@/components/ui/Button";
 import { useState, useEffect } from "react";
 
@@ -263,7 +262,7 @@ export function ToothChart({
   const [toothState, setToothState] = useState<ToothState>(initialState || {});
   const [activeMode, setActiveMode] = useState<ConditionId>("caries");
   const [customCondition, setCustomCondition] = useState("");
-  const [chartType, setChartType] = useState<"adult" | "pediatric" | "full_mouth">(defaultChartType as ApiAny);
+  const [chartType, setChartType] = useState<"adult" | "pediatric" | "full_mouth">(defaultChartType as any);
 
   useEffect(() => {
     if (initialState && Object.keys(initialState).length === 0) {
@@ -329,19 +328,19 @@ export function ToothChart({
       return parseInt(a[0]) - parseInt(b[0]);
     });
 
-  const _hasAdultFindings = findings.some(([num]) => {
+  const hasAdultFindings = findings.some(([num]) => {
     if (num === "FM") return false;
     const n = parseInt(num);
     return UPPER_TEETH.includes(n) || LOWER_TEETH.includes(n);
   });
 
-  const _hasPediatricFindings = findings.some(([num]) => {
+  const hasPediatricFindings = findings.some(([num]) => {
     if (num === "FM") return false;
     const n = parseInt(num);
     return UPPER_PRIMARY.includes(n) || LOWER_PRIMARY.includes(n);
   });
 
-  const _hasFullMouthFindings = findings.some(([num]) => num === "FM");
+  const hasFullMouthFindings = findings.some(([num]) => num === "FM");
 
   return (
     <div

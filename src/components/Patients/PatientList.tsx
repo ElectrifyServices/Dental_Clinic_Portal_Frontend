@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { User } from "lucide-react";
+import { ConfirmModal } from "@/components/ui";
 import { useSidebar } from "../../contexts/SidebarContext";
 import { PatientStats } from "./PatientList/PatientStats";
 import { PatientFilters } from "./PatientList/PatientFilters";
@@ -167,7 +168,7 @@ export function PatientList({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <PatientStats patients={patients} />
 
       <PatientFilters
@@ -179,68 +180,66 @@ export function PatientList({
         setFilterCategory={setFilterCategoryVal}
         viewMode={viewMode}
         setViewMode={setViewMode}
+        onAddPatient={() => onAddPatient()}
       />
 
-      <div>
-        {isLoading ? (
-          <Loading type="spinner" text="Loading patients..." className="py-14" />
-        ) : filteredPatients.length === 0 ? (
-          <div className="bg-card rounded-2xl border border-dashed border-border py-14 text-center">
-            <User className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
-            <h3 className="text-lg font-bold text-foreground">
-              No patients found
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Try adjusting your search or filters
-            </p>
-          </div>
-        ) : viewMode === "grid" ? (
-          <div className={
-            collapsed
-              ? "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6"
-              : "grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
-          }>
-            {displayPatients.map((patient) => (
-              <PatientCard
-                key={patient.id}
-                patient={patient}
-                onView={onViewPatient}
-                onEdit={onEditPatient}
-                onDelete={onDeletePatient}
-                onExport={(id) => onExportPatient?.(id)}
-                onPrintBarcode={printBarcode}
-                onToggleStatus={handleToggleStatus}
-                onToggleCategory={handleToggleCategory}
-              />
-            ))}
-          </div>
-        ) : (
-          <PatientTable
-            patients={displayPatients}
-            onView={onViewPatient}
-            onEdit={onEditPatient}
-            onDelete={onDeletePatient}
-            onExport={(id) => onExportPatient?.(id)}
-            onPrintBarcode={printBarcode}
-            onToggleStatus={handleToggleStatus}
-            onToggleCategory={handleToggleCategory}
-          />
-        )}
-
-        {(displayTotalItems > 0) && onPageChange && (
-          <div className="mt-4 pt-4 pb-6 border-t border-border">
-            <Pagination
-              page={currentPage}
-              totalPages={displayTotalPages}
-              totalItems={displayTotalItems}
-              perPage={limit}
-              onPageChange={onPageChange}
-              onPerPageChange={onLimitChange}
-              className="px-0 py-1"
+      {isLoading ? (
+        <Loading type="spinner" text="Loading patients..." className="py-20" />
+      ) : filteredPatients.length === 0 ? (
+        <div className="bg-card rounded-2xl border border-dashed border-border py-20 text-center">
+          <User className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
+          <h3 className="text-lg font-bold text-foreground">
+            No patients found
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Try adjusting your search or filters
+          </p>
+        </div>
+      ) : viewMode === "grid" ? (
+        <div className={
+          collapsed
+            ? "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6"
+            : "grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
+        }>
+          {displayPatients.map((patient) => (
+            <PatientCard
+              key={patient.id}
+              patient={patient}
+              onView={onViewPatient}
+              onEdit={onEditPatient}
+              onDelete={onDeletePatient}
+              onExport={(id) => onExportPatient?.(id)}
+              onPrintBarcode={printBarcode}
+              onToggleStatus={handleToggleStatus}
+              onToggleCategory={handleToggleCategory}
             />
-          </div>
-        )}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <PatientTable
+          patients={displayPatients}
+          onView={onViewPatient}
+          onEdit={onEditPatient}
+          onDelete={onDeletePatient}
+          onExport={(id) => onExportPatient?.(id)}
+          onPrintBarcode={printBarcode}
+          onToggleStatus={handleToggleStatus}
+          onToggleCategory={handleToggleCategory}
+        />
+      )}
+
+      {(displayTotalItems > 0) && onPageChange && (
+        <div className="mt-6">
+          <Pagination
+            page={currentPage}
+            totalPages={displayTotalPages}
+            totalItems={displayTotalItems}
+            perPage={limit}
+            onPageChange={onPageChange}
+            onPerPageChange={onLimitChange}
+          />
+        </div>
+      )}
     </div>
   );
 }

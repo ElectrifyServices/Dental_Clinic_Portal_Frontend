@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
@@ -47,7 +46,7 @@ export interface TreatmentSessionResponse {
     start_time_ist?: string;
     time?: string;
   };
-  prescriptions?: ApiAny[];
+  prescriptions?: any[];
   attachments?: ConsultationFeedbackAttachment[];
 }
 
@@ -183,6 +182,7 @@ export interface AddSessionVariables {
   start_time?: string;          // "09:00 AM"
   duration_min?: number;
   clinical_objectives?: string;
+  doctor_id?: string;           // defaults to the plan's own doctor when omitted
 }
 
 export function useAddTreatmentSessionMutation() {
@@ -231,7 +231,7 @@ export interface UpdateSessionVariables {
   status?: "PLANNED" | "SCHEDULED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
   paid_amount?: number;
   payment_method?: string;
-  prescriptions?: ApiAny[];
+  prescriptions?: any[];
   attachments?: File[];
 }
 
@@ -244,7 +244,7 @@ export function useUpdateTreatmentSessionMutation() {
     method: "patch",
     headers: getAuthHeaders,
     transformRequest: ({ planId: _p, sessionId: _s, attachments, ...rest }) => {
-      const appendFormValue = (formData: FormData, data: ApiAny, parentKey?: string) => {
+      const appendFormValue = (formData: FormData, data: any, parentKey?: string) => {
         if (data === null || data === undefined) return;
 
         if (data instanceof File) {
@@ -302,7 +302,9 @@ export interface CompleteSessionVariables {
   discount_value?: number;
   work_done?: string;
   session_findings?: string;
-  prescriptions?: ApiAny[];
+  notes?: string;
+  additional_notes?: string;
+  prescriptions?: any[];
   attachments?: File[];
   /** If true, also books the next visit */
   schedule_next_session?: boolean;
@@ -321,7 +323,7 @@ export function useCompleteTreatmentSessionMutation() {
     method: "patch",
     headers: getAuthHeaders,
     transformRequest: ({ planId: _p, sessionId: _s, attachments, ...rest }) => {
-      const appendFormValue = (formData: FormData, data: ApiAny, parentKey?: string) => {
+      const appendFormValue = (formData: FormData, data: any, parentKey?: string) => {
         if (data === null || data === undefined) return;
 
         if (data instanceof File) {

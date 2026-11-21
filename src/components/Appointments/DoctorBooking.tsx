@@ -1,7 +1,5 @@
-import type { ApiAny } from "../../types/api";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
-import { DatePicker } from "@/components/ui/DatePicker";
 import { useState, useRef, useEffect } from "react";
 import {
   Search,
@@ -9,6 +7,7 @@ import {
   MapPin,
   Clock,
   Star,
+  Calendar as CalendarIcon,
   ChevronRight,
   Stethoscope,
   ChevronLeft,
@@ -17,7 +16,7 @@ import {
   User,
   Check,
 } from "lucide-react";
-import { Button, SearchInput, FilterContainer } from "../ui";
+import { Button } from "../ui";
 
 interface Doctor {
   id: string;
@@ -46,8 +45,8 @@ interface DoctorBookingProps {
   onBookAppointment: (doctorId: string, date?: Date, time?: string) => void;
   onViewAppointments: () => void;
   onViewCalendar: () => void;
-  onEditAppointment: (appointment: ApiAny) => void;
-  appointments: ApiAny[];
+  onEditAppointment: (appointment: any) => void;
+  appointments: any[];
 }
 
 export function DoctorBooking({
@@ -64,6 +63,21 @@ export function DoctorBooking({
     doctors[0]?.id || null,
   );
   const [showFilters, setShowFilters] = useState(false);
+  const filterRef = useRef<HTMLDivElement>(null);
+
+  // Close filters when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        filterRef.current &&
+        !filterRef.current.contains(event.target as Node)
+      ) {
+        setShowFilters(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -233,17 +247,17 @@ export function DoctorBooking({
       <div className="flex-1 space-y-6">
         {/* Search & Filter Header */}
         <div className="flex items-center gap-4">
-          <SearchInput
-            placeholder="Search by name or department..."
-            value={searchTerm}
-            onChange={setSearchTerm}
-            className="flex-1 [&>input]:h-12 [&>input]:rounded-2xl [&>input]:bg-card [&>input]:border-border [&>input]:text-sm font-medium"
-          />
-          <FilterContainer
-            isOpen={showFilters}
-            onClose={() => setShowFilters(false)}
-            className="relative"
-          >
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
+            <Input
+              type="text"
+              placeholder="Search by name or department..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-11 pr-4 py-3 bg-card border border-border rounded-2xl shadow-sm focus:ring-2 focus:ring-primary outline-none text-sm font-medium"
+            />
+          </div>
+          <div className="relative" ref={filterRef}>
             <Button
               onClick={() => setShowFilters(!showFilters)}
               className={`p-3 rounded-2xl transition-all shadow-sm border ${showFilters ? "bg-primary text-white border-primary shadow-blue-100" : "bg-card text-muted-foreground border-border hover:text-primary"}`}
@@ -347,14 +361,14 @@ export function DoctorBooking({
                 </div>
               </div>
             )}
-          </FilterContainer>
+          </div>
         </div>
 
         {/* Quick Department Filter Bar */}
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
           <Button
             onClick={() => setSelectedSpecialty([])}
-            className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-bold transition-all border ${selectedSpecialty.length === 0 ? "bg-slate-900 border-slate-900 text-white" : "bg-card border-border text-muted-foreground hover:border-border"}`}
+            className={`flex-shrink-0 px-4 py-2 rounded-xl text-[10px] font-bold transition-all border ${selectedSpecialty.length === 0 ? "bg-slate-900 border-slate-900 text-white" : "bg-card border-border text-muted-foreground hover:border-border"}`}
           >
             All Departments
           </Button>
@@ -364,7 +378,7 @@ export function DoctorBooking({
               onClick={() =>
                 toggleFilter(selectedSpecialty, setSelectedSpecialty, s)
               }
-              className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-bold transition-all border ${selectedSpecialty.includes(s) ? "bg-primary border-primary text-white" : "bg-card border-border text-muted-foreground hover:border-border"}`}
+              className={`flex-shrink-0 px-4 py-2 rounded-xl text-[10px] font-bold transition-all border ${selectedSpecialty.includes(s) ? "bg-primary border-primary text-white" : "bg-card border-border text-muted-foreground hover:border-border"}`}
             >
               {s}
             </Button>
@@ -380,7 +394,7 @@ export function DoctorBooking({
               className={`group relative p-3 rounded-[1.75rem] border-2 transition-all cursor-pointer flex items-center gap-4
                 ${selectedDoctorId === doctor.id ? "bg-primary/10 border-primary shadow-lg shadow-blue-100/50" : "bg-card border-border hover:border-primary/30 shadow-sm"}`}
             >
-              <div className="w-16 h-16 rounded-[1.25rem] overflow-hidden shrink-0 shadow-inner ring-4 ring-gray-50 group-hover:ring-blue-100 transition-all">
+              <div className="w-16 h-16 rounded-[1.25rem] overflow-hidden flex-shrink-0 shadow-inner ring-4 ring-gray-50 group-hover:ring-blue-100 transition-all">
                 <img
                   src={doctor.image}
                   alt={doctor.name}
@@ -455,9 +469,9 @@ export function DoctorBooking({
           {selectedDoctor ? (
             <div className="flex flex-col h-full">
               {/* Header: Doctor Info */}
-              <div className="p-8 border-b border-border bg-linear-to-br from-white to-gray-50/50">
+              <div className="p-8 border-b border-border bg-gradient-to-br from-white to-gray-50/50">
                 <div className="flex items-center gap-5">
-                  <div className="w-20 h-20 rounded-[1.75rem] overflow-hidden shadow-xl ring-4 ring-blue-50 shrink-0">
+                  <div className="w-20 h-20 rounded-[1.75rem] overflow-hidden shadow-xl ring-4 ring-blue-50 flex-shrink-0">
                     <img
                       src={selectedDoctor.image}
                       alt={selectedDoctor.name}
@@ -492,32 +506,37 @@ export function DoctorBooking({
                     </p>
                   </div>
                   <div className="flex gap-1.5 items-center">
-                    <DatePicker
-                      value={`${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`}
-                      min={new Date().toISOString().split("T")[0]}
-                      onChange={(val) => {
-                        if (val) {
-                          const newDate = new Date(val);
-                          setSelectedDate(newDate);
-                          // Calculate index and scroll
-                          const today = new Date();
-                          today.setHours(0, 0, 0, 0);
-                          const diffTime = Math.abs(
-                            newDate.getTime() - today.getTime(),
-                          );
-                          const diffDays = Math.ceil(
-                            diffTime / (1000 * 60 * 60 * 24),
-                          );
-                          const el = document.getElementById("date-strip");
-                          if (el)
-                            el.scrollTo({
-                              left: diffDays * 64,
-                              behavior: "smooth",
-                            }); // 64px is approx width of date card
-                        }
-                      }}
-                      className="h-8 w-auto px-2 text-[10px] rounded-lg border-border text-muted-foreground"
-                    />
+                    <div className="relative group">
+                      <Button variant="ghost" className="p-1.5 hover:bg-muted rounded-lg border border-border transition-all text-muted-foreground">
+                        <CalendarIcon className="w-3.5 h-3.5" />
+                        <Input
+                          type="date"
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                          min={new Date().toISOString().split("T")[0]}
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              const newDate = new Date(e.target.value);
+                              setSelectedDate(newDate);
+                              // Calculate index and scroll
+                              const today = new Date();
+                              today.setHours(0, 0, 0, 0);
+                              const diffTime = Math.abs(
+                                newDate.getTime() - today.getTime(),
+                              );
+                              const diffDays = Math.ceil(
+                                diffTime / (1000 * 60 * 60 * 24),
+                              );
+                              const el = document.getElementById("date-strip");
+                              if (el)
+                                el.scrollTo({
+                                  left: diffDays * 64,
+                                  behavior: "smooth",
+                                }); // 64px is approx width of date card
+                            }
+                          }}
+                        />
+                      </Button>
+                    </div>
                     <div className="w-px h-4 bg-muted mx-0.5" />
                     <Button
                       onClick={() => {
@@ -558,7 +577,7 @@ export function DoctorBooking({
                       <Button
                         key={idx}
                         onClick={() => setSelectedDate(date)}
-                        className={`shrink-0 w-14 h-16 flex flex-col items-center justify-center rounded-2xl border-2 transition-all
+                        className={`flex-shrink-0 w-14 h-16 flex flex-col items-center justify-center rounded-2xl border-2 transition-all
                           ${
                             isSelected
                               ? "border-primary bg-primary text-white shadow-lg shadow-blue-100"
@@ -694,7 +713,7 @@ export function DoctorBooking({
                         selectedTime || undefined,
                       )
                     }
-                    className="w-full bg-linear-to-r from-blue-600 to-indigo-600 text-white font-bold py-4 rounded-xl shadow-2xl shadow-blue-200 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3 text-sm"
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-4 rounded-xl shadow-2xl shadow-blue-200 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3 text-sm"
                   >
                     Confirm & Schedule
                     <ChevronRight className="w-5 h-5 font-bold" />

@@ -10,6 +10,9 @@ import {
 const MAX_BODY = 900;
 const MAX_FOOTER = 60;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_VIDEO_BYTES = 16 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png"];
+const ALLOWED_VIDEO_TYPES = ["video/mp4"];
 
 function balanced(text: string, marker: string): boolean {
   return (text.split(marker).length - 1) % 2 === 0;
@@ -44,11 +47,16 @@ export function TemplateFormModal({
   };
 
   const handleImage = (file: File) => {
-    if (!["image/jpeg", "image/png"].includes(file.type)) {
-      toast.error("Image must be a JPG or PNG");
+    const isVideo = ALLOWED_VIDEO_TYPES.includes(file.type);
+    if (!isVideo && !ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      toast.error("Header media must be a JPG/PNG image or an MP4 video");
       return;
     }
-    if (file.size > MAX_IMAGE_BYTES) {
+    if (isVideo && file.size > MAX_VIDEO_BYTES) {
+      toast.error("Video exceeds the 16 MB limit");
+      return;
+    }
+    if (!isVideo && file.size > MAX_IMAGE_BYTES) {
       toast.error("Image exceeds the 5 MB limit");
       return;
     }
@@ -58,6 +66,8 @@ export function TemplateFormModal({
       return URL.createObjectURL(file);
     });
   };
+
+  const isVideoFile = imageFile ? ALLOWED_VIDEO_TYPES.includes(imageFile.type) : false;
 
   const clearImage = () => {
     setImageFile(null);
@@ -228,7 +238,7 @@ export function TemplateFormModal({
 
           <div>
             <Label className="text-xs mb-1.5 block">
-              Header image{" "}
+              Header image / video{" "}
               <span className="font-normal text-muted-foreground">
                 (optional — reused for every send)
               </span>
@@ -236,7 +246,7 @@ export function TemplateFormModal({
             <input
               ref={fileRef}
               type="file"
-              accept="image/jpeg,image/png"
+              accept="image/jpeg,image/png,video/mp4"
               className="hidden"
               onChange={(e) => {
                 const f = e.target.files?.[0];
@@ -245,11 +255,20 @@ export function TemplateFormModal({
             />
             {imagePreview ? (
               <div className="relative rounded-lg overflow-hidden border border-border">
-                <img
-                  src={imagePreview}
-                  alt="Header"
-                  className="w-full max-h-44 object-contain bg-muted"
-                />
+                {isVideoFile ? (
+                  <video
+                    src={imagePreview}
+                    controls
+                    muted
+                    className="w-full max-h-44 bg-muted"
+                  />
+                ) : (
+                  <img
+                    src={imagePreview}
+                    alt="Header"
+                    className="w-full max-h-44 object-contain bg-muted"
+                  />
+                )}
                 <Button
                   type="button"
                   variant="ghost"
@@ -269,10 +288,10 @@ export function TemplateFormModal({
               >
                 <ImageIcon className="size-6 text-muted-foreground/50 mb-1.5" />
                 <p className="text-xs font-medium text-foreground">
-                  Click to add a JPG or PNG
+                  Click to add a JPG/PNG image or an MP4 video
                 </p>
                 <p className="text-[11px] text-muted-foreground mt-0.5">
-                  Max 5 MB
+                  Image: max 5 MB · Video: max 16 MB
                 </p>
               </Button>
             )}
@@ -282,13 +301,21 @@ export function TemplateFormModal({
         <div className="space-y-2">
           <p className="text-xs font-semibold text-foreground">Preview</p>
           <div className="rounded-xl bg-[#efe7de] p-3">
-            {imagePreview && (
-              <img
-                src={imagePreview}
-                alt=""
-                className="w-full max-h-40 object-cover rounded-lg mb-1.5"
-              />
-            )}
+            {imagePreview &&
+              (isVideoFile ? (
+                <video
+                  src={imagePreview}
+                  controls
+                  muted
+                  className="w-full max-h-40 object-cover rounded-lg mb-1.5"
+                />
+              ) : (
+                <img
+                  src={imagePreview}
+                  alt=""
+                  className="w-full max-h-40 object-cover rounded-lg mb-1.5"
+                />
+              ))}
             <WaTextPreview text={previewText || "Your message…"} />
           </div>
           <p className="text-[11px] text-muted-foreground">

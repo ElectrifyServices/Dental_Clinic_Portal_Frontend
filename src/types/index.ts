@@ -13,7 +13,8 @@ export interface PlanDependent {
   email?: string;
   isActive?: boolean;
   patientId?: string;         // set when this dependent registers as a patient
-  corporatePlanId?: string;   // copied from primary member at time of creation
+  corporatePlanId?: string;   // this dependent's own active plan — can differ from the head's plan when linked via Link as Family
+  corporatePlanName?: string;
   primaryMemberName?: string; // copied from primary member at time of creation
 }
 
@@ -130,18 +131,7 @@ export interface Appointment {
   time: string;
   duration: number;
   type: 'consultation' | 'cleaning' | 'filling' | 'extraction' | 'root-canal' | 'crown' | 'orthodontics' | 'surgery' | 'emergency' | 'other';
-  status:
-    | 'scheduled'
-    | 'confirmed'
-    | 'booked'
-    | 'rescheduled'
-    | 'in-progress'
-    | 'completed'
-    | 'cancelled'
-    | 'no-show'
-    | 'checked-in'
-    | 'follow-up'
-    | string;
+  status: 'scheduled' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled' | 'no-show' | 'checked-in';
   treatment?: string;
   notes?: string;
   fee: number;
@@ -293,8 +283,7 @@ export interface Report {
   type: 'earnings' | 'patients' | 'appointments' | 'inventory' | 'treatments';
   title: string;
   dateRange: { start: string; end: string; };
-  /** Report payload shape depends on `type`, so it stays untyped here. */
-  data: unknown;
+  data: any;
   generatedAt: string;
   generatedBy: string;
 }

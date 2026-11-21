@@ -1,10 +1,9 @@
-import type { ApiAny } from "../../../types/api";
 import React from 'react';
 import { UserCheck, UserX } from 'lucide-react';
 import { Button, Card, StatusBadge } from '@/components/ui';
 
 interface DoctorAvailabilityProps {
-  doctors: ApiAny[];
+  doctors: any[];
   doctorAvailability: { [key: string]: boolean };
   onToggle: (id: string) => void;
 }
@@ -44,7 +43,7 @@ export const DoctorAvailability: React.FC<DoctorAvailabilityProps> = ({
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 flex-shrink-0">
                   <StatusBadge variant={available ? "green" : "gray"}>
                     {available ? "Active" : "Inactive"}
                   </StatusBadge>

@@ -1,14 +1,22 @@
-import type { ApiAny } from "../../../types/api";
 import React from 'react';
 import { Trash2, Check } from 'lucide-react';
 import { InvoiceItem } from '../../../types';
-import { Button, Label, Input } from '@/components/ui';
+import {
+  Button,
+  Label,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui';
 import { ServiceDescriptionSelect } from './ServiceDescriptionSelect';
 import { sanitizeNumericString } from '@/utils/inputUtils';
 
 interface InvoiceItemRowProps {
   item: InvoiceItem;
-  onUpdate: (id: string, field: keyof InvoiceItem, value: ApiAny) => void;
+  onUpdate: (id: string, field: keyof InvoiceItem, value: any) => void;
   onRemove: (id: string) => void;
 }
 
@@ -17,7 +25,7 @@ export const InvoiceItemRow: React.FC<InvoiceItemRowProps> = ({
   onUpdate, 
   onRemove 
 }) => {
-  const isLinked = !!(item as ApiAny).linkedId;
+  const isLinked = !!(item as any).linkedId;
 
   return (
     <div className={`grid grid-cols-12 gap-3 items-end p-3 rounded-xl border transition-all ${
@@ -37,7 +45,7 @@ export const InvoiceItemRow: React.FC<InvoiceItemRowProps> = ({
               onChange={(name, rate, billingDescriptionId) => {
                 onUpdate(item.id, 'description', name);
                 if (billingDescriptionId) {
-                  onUpdate(item.id, 'billing_description_id' as ApiAny, billingDescriptionId);
+                  onUpdate(item.id, 'billing_description_id' as any, billingDescriptionId);
                 }
                 if (rate !== undefined && rate > 0) {
                   onUpdate(item.id, 'rate', rate);

@@ -1,4 +1,3 @@
-import type { ApiAny } from "../types/api";
 import { useMemo, useCallback, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLabWorksQuery } from './labWork/useLabWorksQuery';
@@ -21,7 +20,7 @@ export function useLabWorkData(
   const isEnabled = options?.enabled !== false;
 
   const queryParams = useMemo(() => {
-    const filters: ApiAny = {};
+    const filters: any = {};
     if (params?.status && params.status !== "all") {
       filters.status = [params.status.toUpperCase()];
     }
@@ -63,7 +62,7 @@ export function useLabWorkData(
       file_type: file.type,
     }));
 
-  const handleCreateLabWork = async (data: ApiAny) => {
+  const handleCreateLabWork = async (data: any) => {
     const payload: CreateLabWorkVariables = {
       patient_id: data.patientId || data.patient_id,
       treatment_plan_id: data.treatmentId || data.treatment_plan_id,
@@ -112,7 +111,7 @@ export function useLabWorkData(
     return newEntry;
   };
 
-  const handleUpdateLabWork = async (data: ApiAny) => {
+  const handleUpdateLabWork = async (data: any) => {
     const payload: UpdateLabWorkVariables = {
       id: data.id,
       patient_id: data.patientId || data.patient_id,
@@ -195,7 +194,7 @@ export function useLabWorkData(
   }, [queryClient]);
 
   const apiDerivedLabWorks = useMemo(() => {
-    let rawList: ApiAny[] = [];
+    let rawList: any[] = [];
     if (!apiLabWorks) return [];
 
     const target = apiLabWorks.responseObject !== undefined ? apiLabWorks.responseObject : apiLabWorks;
@@ -212,8 +211,8 @@ export function useLabWorkData(
     }
 
     // Flat map entries if backend returned grouped data structure
-    const flatEntries: ApiAny[] = [];
-    rawList.forEach((item: ApiAny) => {
+    let flatEntries: any[] = [];
+    rawList.forEach((item: any) => {
       if (item && Array.isArray(item.entries)) {
         flatEntries.push(...item.entries);
       } else if (item && Array.isArray(item.data)) {
@@ -224,7 +223,7 @@ export function useLabWorkData(
     });
 
     return flatEntries
-      .map((lw: ApiAny) => normalizeLabWork(lw))
+      .map((lw: any) => normalizeLabWork(lw))
       .filter((lw): lw is NonNullable<typeof lw> => lw !== null);
   }, [apiLabWorks]);
 

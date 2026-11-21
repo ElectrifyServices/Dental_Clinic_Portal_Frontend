@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../../types/api";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -19,10 +18,10 @@ import { Badge, Loading } from "@/components/ui";
 import { useRolesQuery } from "@/hooks/roles/useRolesQuery";
 
 interface Step2Props {
-  formData: ApiAny;
+  formData: any;
   onChange: (role: string) => void;
   onPermissionChange: (id: string, checked: boolean) => void;
-  errors?: ApiAny;
+  errors?: any;
 }
 
 const ROLES = [
@@ -155,19 +154,19 @@ export function Step2Role({
 }: Step2Props) {
   const { data: apiRoles, isLoading } = useRolesQuery();
 
-  let rawRoles: ApiAny[] | null = null;
+  let rawRoles: any[] | null = null;
   if (Array.isArray(apiRoles)) {
     rawRoles = apiRoles;
-  } else if (apiRoles && Array.isArray((apiRoles as ApiAny).roles)) {
-    rawRoles = (apiRoles as ApiAny).roles;
-  } else if (apiRoles && (apiRoles as ApiAny).data && Array.isArray((apiRoles as ApiAny).data.roles)) {
-    rawRoles = (apiRoles as ApiAny).data.roles;
-  } else if (apiRoles && Array.isArray((apiRoles as ApiAny).data)) {
-    rawRoles = (apiRoles as ApiAny).data;
+  } else if (apiRoles && Array.isArray((apiRoles as any).roles)) {
+    rawRoles = (apiRoles as any).roles;
+  } else if (apiRoles && (apiRoles as any).data && Array.isArray((apiRoles as any).data.roles)) {
+    rawRoles = (apiRoles as any).data.roles;
+  } else if (apiRoles && Array.isArray((apiRoles as any).data)) {
+    rawRoles = (apiRoles as any).data;
   }
 
   const rolesList = rawRoles
-    ? rawRoles.map((r: ApiAny) => {
+    ? rawRoles.map((r: any) => {
         const val = r.name.toLowerCase().trim();
         const existing = ROLES.find((x) => x.value === val || x.value.replace(/_/g, ' ') === val.replace(/_/g, ' '));
         return (

@@ -1,3 +1,4 @@
+import { placeholderImage } from "@/components/ui/InitialsAvatar";
 import type { ApiAny } from "../../types/api";
 import React, { useState, useEffect, useMemo } from "react";
 import {
@@ -695,7 +696,7 @@ export function ConsentForm({
                               alt="Uploaded Consent Form"
                               className="h-24 object-contain mx-auto rounded-lg"
                               onError={(e) => {
-                                (e.target as HTMLImageElement).src = "https://placehold.co/150x100?text=Consent+Form";
+                                (e.target as HTMLImageElement).src = placeholderImage("Consent Form", 150, 100);
                               }}
                             />
                           )}

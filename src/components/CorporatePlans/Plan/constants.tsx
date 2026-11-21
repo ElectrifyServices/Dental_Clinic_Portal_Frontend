@@ -1,7 +1,6 @@
-import type { ApiAny } from "../../../types/api";
 import React from 'react';
 import { Percent, Tag, Gift, Star, CheckCircle, Settings2, Infinity as InfinityIcon, Sparkles, Zap, Baby } from 'lucide-react';
-import { PlanBenefitType, PlanBenefit, CorporatePlanTier } from '../../../types';
+import { PlanBenefitType, PlanBenefit, PlanCategory, CorporatePlanTier } from '../../../types';
 import { TREATMENT_LABELS } from '../../../utils/corporatePlan';
 
 export const BENEFIT_ICONS: Record<PlanBenefitType, React.ReactNode> = {
@@ -48,7 +47,7 @@ export const mkForm = () => {
     validTo: localNextYear,
     maxMembers: undefined as number | undefined,
     isActive: true, color: 'blue',
-    planCategory: '' as ApiAny,
+    planCategory: '' as any,
     annualFee: undefined as number | undefined,
     maxDependents: 0,
     planTier: undefined as CorporatePlanTier | undefined,
@@ -80,11 +79,15 @@ export function autoDesc(b: PlanBenefit): string {
     case 'capped_discount': return `${b.value}% discount (max ₹${b.cap?.toLocaleString() || '...'} per visit)`;
     case 'unlimited_consultations': return 'Unlimited diagnostic check-ups and consultations for one year';
     case 'complimentary_session': {
-      const list = (b.treatmentTypes || []).map(t => {
+      // Teeth cleaning + whitening are always included (hardcoded on the
+      // backend for this benefit type regardless of selection) — any extra
+      // Applicable Treatments picked here are additional, appended after.
+      const extra = (b.treatmentTypes || []).map(t => {
         if (t === 'other' && b.customTreatmentText) return b.customTreatmentText;
         return TREATMENT_LABELS[t] || t;
       });
-      return `One complimentary ${list.join(', ') || 'teeth cleaning and whitening'} session`;
+      const base = 'One complimentary teeth cleaning and teeth whitening';
+      return extra.length ? `${base}, ${extra.join(', ')} session` : `${base} session`;
     }
     case 'priority_scheduling': return 'Priority appointment scheduling';
     case 'fluoride_application': return 'Fluoride application for kids, as needed';

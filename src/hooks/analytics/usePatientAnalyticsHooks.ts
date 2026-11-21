@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 import apiClient from "../../services/apiClient";
 
@@ -13,7 +12,7 @@ export interface PatientAnalyticsFilter {
  * Endpoint: POST /patientAnalytics/total-patients
  */
 export function useTotalPatientsAnalyticsQuery(filter: PatientAnalyticsFilter = {}) {
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["patientAnalytics", "total-patients", filter],
     endpoint: "/patientAnalytics/total-patients",
     method: "post",
@@ -26,7 +25,7 @@ export function useTotalPatientsAnalyticsQuery(filter: PatientAnalyticsFilter = 
  * Endpoint: POST /patientAnalytics/new-patients
  */
 export function useNewPatientsAnalyticsQuery(filter: PatientAnalyticsFilter = {}) {
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["patientAnalytics", "new-patients", filter],
     endpoint: "/patientAnalytics/new-patients",
     method: "post",
@@ -39,7 +38,7 @@ export function useNewPatientsAnalyticsQuery(filter: PatientAnalyticsFilter = {}
  * Endpoint: POST /patientAnalytics/retention-rate
  */
 export function useRetentionRateAnalyticsQuery(filter: PatientAnalyticsFilter = {}) {
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["patientAnalytics", "retention-rate", filter],
     endpoint: "/patientAnalytics/retention-rate",
     method: "post",
@@ -52,7 +51,7 @@ export function useRetentionRateAnalyticsQuery(filter: PatientAnalyticsFilter = 
  * Endpoint: POST /patientAnalytics/churn-risk-count
  */
 export function useChurnRiskCountAnalyticsQuery(filter: PatientAnalyticsFilter = {}) {
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["patientAnalytics", "churn-risk-count", filter],
     endpoint: "/patientAnalytics/churn-risk-count",
     method: "post",
@@ -65,7 +64,7 @@ export function useChurnRiskCountAnalyticsQuery(filter: PatientAnalyticsFilter =
  * Endpoint: POST /patientAnalytics/age-distribution
  */
 export function useAgeDistributionAnalyticsQuery(filter: PatientAnalyticsFilter = {}) {
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["patientAnalytics", "age-distribution", filter],
     endpoint: "/patientAnalytics/age-distribution",
     method: "post",
@@ -78,7 +77,7 @@ export function useAgeDistributionAnalyticsQuery(filter: PatientAnalyticsFilter 
  * Endpoint: POST /patientAnalytics/gender-distribution
  */
 export function useGenderDistributionAnalyticsQuery(filter: PatientAnalyticsFilter = {}) {
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["patientAnalytics", "gender-distribution", filter],
     endpoint: "/patientAnalytics/gender-distribution",
     method: "post",
@@ -91,7 +90,7 @@ export function useGenderDistributionAnalyticsQuery(filter: PatientAnalyticsFilt
  * Endpoint: POST /patientAnalytics/monthly-growth
  */
 export function useMonthlyGrowthAnalyticsQuery(filter: PatientAnalyticsFilter = {}) {
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["patientAnalytics", "monthly-growth", filter],
     endpoint: "/patientAnalytics/monthly-growth",
     method: "post",
@@ -104,7 +103,7 @@ export function useMonthlyGrowthAnalyticsQuery(filter: PatientAnalyticsFilter = 
  * Endpoint: POST /patientAnalytics/churn-risk
  */
 export function useChurnRiskAnalyticsQuery(filter: PatientAnalyticsFilter = {}) {
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["patientAnalytics", "churn-risk", filter],
     endpoint: "/patientAnalytics/churn-risk",
     method: "post",
@@ -112,6 +111,6 @@ export function useChurnRiskAnalyticsQuery(filter: PatientAnalyticsFilter = {}) 
   });
 }
 
-export const exportPatientAnalytics = async (filter: ApiAny) => {
+export const exportPatientAnalytics = async (filter: any) => {
   return apiClient.post("/patientAnalytics/export", { ...filter, format: "xlsx" }, { responseType: "blob" });
 };

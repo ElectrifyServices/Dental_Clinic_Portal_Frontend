@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 import apiClient from "@/services/apiClient";
 import { parseApiResponse } from "@/services/parseApiResponse";
@@ -19,7 +18,7 @@ export interface PhoneExistsResponse {
         name: string;
         phone: string;
         email?: string;
-        [key: string]: ApiAny;
+        [key: string]: any;
       };
     };
   };

@@ -1,5 +1,16 @@
 import React, { useState } from "react";
-import { Phone, MoreVertical, Eye, History, IndianRupee, Send, Trash2, MessageCircle } from "lucide-react";
+import { PreviousBillsModal } from "./PreviousBillsModal";
+import {
+  Phone,
+  MoreVertical,
+  ChevronDown,
+  Eye,
+  History,
+  IndianRupee,
+  Send,
+  Trash2,
+  MessageCircle,
+} from "lucide-react";
 import {
   Button,
   StatusBadge,
@@ -26,9 +37,9 @@ interface Invoice {
   allInvoices?: Invoice[];
   is_edited?: boolean;
 }
- 
+
 interface BillingCardProps {
-  invoice: Invoice;
+  invoice: Invoice; // Grouped invoice record
   onView: (id: string) => void;
   onHistory: (invoice: Invoice) => void;
   onPay: (invoice: Invoice) => void;
@@ -36,7 +47,7 @@ interface BillingCardProps {
   onDelete: (id: string, invoiceNumber?: string) => void;
   onWhatsapp?: (phone: string, name: string) => void;
 }
- 
+
 const AVATAR_COLORS = [
   "from-blue-500 to-blue-700",
   "from-violet-500 to-purple-700",
@@ -84,7 +95,7 @@ export const BillingCard: React.FC<BillingCardProps> = ({
   onDelete,
   onWhatsapp,
 }) => {
-  const [_showPrevious, _setShowPrevious] = useState(false);
+  const [showPrevious, setShowPrevious] = useState(false);
 
   const avatarGrad = (name: string) => {
     const safeName = name || "P";
@@ -93,7 +104,7 @@ export const BillingCard: React.FC<BillingCardProps> = ({
 
   const mainStatus = invoice.status?.toLowerCase() || "draft";
   const mainMeta = STATUS_META[mainStatus] || { label: invoice.status, variant: "gray" };
-  const _hasMultiple = invoice.allInvoices && invoice.allInvoices.length > 1;
+  const hasMultiple = invoice.allInvoices && invoice.allInvoices.length > 1;
 
   const ActionMenu = ({ inv }: { inv: Invoice }) => {
     const statusLower = inv.status?.toLowerCase() || "draft";
@@ -142,14 +153,14 @@ export const BillingCard: React.FC<BillingCardProps> = ({
   };
 
   return (
-    <div className="bg-white border border-border/60 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all space-y-4 overflow-hidden">
+    <div className="bg-white border border-border/60 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all space-y-4">
       {/* Patient Header */}
       <div className="flex flex-nowrap items-start gap-3">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div
-            className={`w-10 h-10 rounded-xl bg-linear-to-br ${avatarGrad(
+            className={`w-10 h-10 rounded-xl bg-gradient-to-br ${avatarGrad(
               invoice.patientName
-            )} flex items-center justify-center text-white font-black text-sm shrink-0 shadow-sm`}
+            )} flex items-center justify-center text-white font-black text-sm flex-shrink-0 shadow-sm`}
           >
             {invoice.patientName ? invoice.patientName[0]?.toUpperCase() : "P"}
           </div>
@@ -159,7 +170,7 @@ export const BillingCard: React.FC<BillingCardProps> = ({
             </h3>
             {invoice.phone && (
               <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5 whitespace-nowrap">
-                <Phone className="w-3.5 h-3.5 opacity-60 shrink-0" />
+                <Phone className="w-3.5 h-3.5 opacity-60 flex-shrink-0" />
                 <span>{invoice.phone}</span>
               </p>
             )}
@@ -179,22 +190,22 @@ export const BillingCard: React.FC<BillingCardProps> = ({
 
       {/* Invoice Key Details Grid */}
       <div className="grid grid-cols-2 gap-x-4 gap-y-3 pt-1 text-xs border-t border-slate-50">
-        <div className="flex flex-col gap-1 min-w-0">
+        <div className="flex flex-col gap-1">
           <span className="text-slate-400 font-bold text-[9px] uppercase tracking-wide">
             Invoice No.
           </span>
-          <div className="flex items-center gap-1.5 min-w-0">
-            <span className="font-mono font-bold text-foreground truncate">
+          <div className="flex items-center gap-1.5">
+            <span className="font-mono font-bold text-foreground">
               {invoice.invoice_number || invoice.id}
             </span>
           </div>
         </div>
 
-        <div className="flex flex-col gap-1 min-w-0">
+        <div className="flex flex-col gap-1">
           <span className="text-slate-400 font-bold text-[9px] uppercase tracking-wide">
             Amount
           </span>
-          <span className="font-bold text-foreground text-sm truncate">
+          <span className="font-bold text-foreground text-sm">
             ₹{getDisplayAmount(invoice).toLocaleString("en-IN")}
           </span>
         </div>

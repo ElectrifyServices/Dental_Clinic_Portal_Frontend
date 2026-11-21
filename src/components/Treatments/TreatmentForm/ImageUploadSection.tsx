@@ -1,7 +1,7 @@
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import React from 'react';
+﻿import React from 'react';
 import { Camera, X, Plus } from 'lucide-react';
 
 interface ImageUploadSectionProps {
@@ -13,14 +13,14 @@ interface ImageUploadSectionProps {
 export function ImageUploadSection({ images, onUpload, onRemove }: ImageUploadSectionProps) {
   return (
     <div>
-      <Label className="form-label text-muted-foreground mb-2 flex items-center gap-2">
+      <Label className="form-label text-muted-foreground mb-3 flex items-center gap-2">
         <Camera className="w-4 h-4 text-primary" />
         Treatment Images
       </Label>
-      <div className="border-2 border-dashed border-border rounded-3xl p-4 bg-muted/50 hover:bg-muted hover:border-primary/50 transition-all group relative min-h-[160px] flex flex-col justify-center">
+      <div className="border-2 border-dashed border-border rounded-3xl p-6 bg-muted/50 hover:bg-muted hover:border-primary/50 transition-all group relative min-h-[200px] flex flex-col justify-center">
         {images.length > 0 ? (
           <div className="w-full">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-4">
               <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">Uploaded Images ({images.length})</p>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
@@ -34,7 +34,7 @@ export function ImageUploadSection({ images, onUpload, onRemove }: ImageUploadSe
                   <Button
                     type="button"
                     onClick={() => onRemove(index)}
-                    className="absolute -top-1.5 -right-1.5 bg-destructive text-white rounded-lg w-7 h-7 flex items-center justify-center shadow-lg hover:bg-destructive transition-all opacity-0 group-hover/img:opacity-100 scale-90 group-hover/img:scale-100"
+                    className="absolute -top-1.5 -right-1.5 bg-destructive/100 text-white rounded-lg w-7 h-7 flex items-center justify-center shadow-lg hover:bg-destructive transition-all opacity-0 group-hover/img:opacity-100 scale-90 group-hover/img:scale-100"
                   >
                     <X className="w-4 h-4" />
                   </Button>
@@ -59,12 +59,12 @@ export function ImageUploadSection({ images, onUpload, onRemove }: ImageUploadSe
             />
           </div>
         ) : (
-          <div className="text-center w-full py-2">
-            <div className="w-12 h-12 bg-card rounded-2xl flex items-center justify-center shadow-sm border border-border mx-auto mb-3 group-hover:scale-110 transition-transform">
-              <Camera className="w-6 h-6 text-muted-foreground/60 group-hover:text-blue-500 transition-colors" />
+          <div className="text-center w-full py-4">
+            <div className="w-16 h-16 bg-card rounded-2xl flex items-center justify-center shadow-sm border border-border mx-auto mb-4 group-hover:scale-110 transition-transform">
+              <Camera className="w-8 h-8 text-muted-foreground/60 group-hover:text-blue-500 transition-colors" />
             </div>
             <p className="text-sm font-bold text-foreground">Drop images here or click to upload</p>
-            <p className="text-xs text-muted-foreground mt-1 mb-3">Upload before/after images, X-rays, or other relevant photos</p>
+            <p className="text-xs text-muted-foreground mt-1 mb-4">Upload before/after images, X-rays, or other relevant photos</p>
             
             <Input
               type="file"

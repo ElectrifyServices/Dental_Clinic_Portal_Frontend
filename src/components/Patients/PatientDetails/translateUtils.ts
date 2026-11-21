@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../../types/api";
 export const translations = {
   en: {
     rx: "Rx",
@@ -70,8 +69,8 @@ export const translateValue = async (val: string, targetLang: string) => {
       `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${targetLang}&dt=t&q=${encodeURIComponent(val)}`,
     );
     const data = await response.json();
-    return data[0].map((x: ApiAny) => x[0]).join("");
-  } catch (_error) {
+    return data[0].map((x: any) => x[0]).join("");
+  } catch (error) {
     return val;
   }
 };

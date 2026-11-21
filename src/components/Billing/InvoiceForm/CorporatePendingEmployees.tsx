@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../../types/api";
 import React, { useState, useRef } from "react";
 import {
   Users,
@@ -12,16 +11,16 @@ import {
   RotateCcw,
   X,
 } from "lucide-react";
-import { Card, CardContent, Button, SearchInput } from "@/components/ui";
+import { Card, CardContent, Button } from "@/components/ui";
 import { Input } from "@/components/ui/Input";
 import { CorporateBulkSelectModal } from "./CorporateBulkSelectModal";
 
 interface CorporatePendingEmployeesProps {
-  employees: ApiAny[];
+  employees: any[];
   linkedItemIds: string[];
-  onAdd: (item: ApiAny) => void;
+  onAdd: (item: any) => void;
   onRemove: (id: string) => void;
-  onAddMultiple: (items: ApiAny[]) => void;
+  onAddMultiple: (items: any[]) => void;
   onRemoveMultiple: (ids: string[]) => void;
 }
 
@@ -100,7 +99,7 @@ export const CorporatePendingEmployees: React.FC<
         {/* Top Header Row */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-indigo-100/80">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-sm shrink-0">
+            <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-sm flex-shrink-0">
               <Users className="w-4 h-4" />
             </div>
             <div>
@@ -119,12 +118,27 @@ export const CorporatePendingEmployees: React.FC<
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            <SearchInput
-              placeholder="Search employee..."
-              value={searchTerm}
-              onChange={setSearchTerm}
-              className="flex-1 sm:w-52 [&>input]:h-8 [&>input]:text-xs [&>input]:rounded-xl [&>input]:border-indigo-200 [&>input]:bg-white"
-            />
+            <div className="relative flex-1 sm:w-52">
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-indigo-400 z-10" />
+              <Input
+                type="text"
+                placeholder="Search employee..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-8 pr-7 py-1.5 h-8 text-xs border border-indigo-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+              />
+              {searchTerm && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                  onClick={() => setSearchTerm("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-indigo-400 hover:text-indigo-600 p-0 h-4 w-4 z-10"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </Button>
+              )}
+            </div>
 
             <Button
               type="button"
@@ -294,8 +308,9 @@ export const CorporatePendingEmployees: React.FC<
                             status: emp.status,
                             rawItem: emp,
                           };
-                          if (isSelected) onRemove(emp.enrollment_id);
-                          else onAdd(invoiceItem);
+                          isSelected
+                            ? onRemove(emp.enrollment_id)
+                            : onAdd(invoiceItem);
                         }}
                         className={`w-full text-[10px] h-7 font-black uppercase tracking-wider transition-all ${
                           isSelected ? btnSelected : btnDefault

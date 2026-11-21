@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -12,7 +11,7 @@ export interface ConsumeInventoryItemPayload {
 export function useConsumeInventoryItemMutation() {
   const queryClient = useQueryClient();
 
-  return useApiMutation<ApiAny, ConsumeInventoryItemPayload>({
+  return useApiMutation<any, ConsumeInventoryItemPayload>({
     getEndpoint: (variables) => `/inventory/${variables.id}/consume`,
     method: "post",
     options: {

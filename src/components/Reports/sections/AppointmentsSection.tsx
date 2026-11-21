@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../../types/api";
 import React from 'react';
 import { Activity, Calendar, CheckCircle, Clock, Target } from 'lucide-react';
 import { MetricCard, ContentCard } from '@/components/ui';
@@ -51,10 +50,10 @@ export function AppointmentsSection({ period, startDate, endDate }: { period: st
 
   // 5. Peak Hours Heatmap
   const heatmapDataObj = heatmapRes?.data ?? heatmapRes;
-  let heatmapProcessed: ApiAny[] = [];
+  let heatmapProcessed: any[] = [];
   let dynamicHourLabels = HOURS_LABELS;
   
-  const extractHeatmap = (obj: ApiAny): ApiAny => {
+  const extractHeatmap = (obj: any): any => {
     if (!obj) return null;
     if (obj.columns && obj.rows) return obj;
     if (obj.data) return extractHeatmap(obj.data);
@@ -64,8 +63,8 @@ export function AppointmentsSection({ period, startDate, endDate }: { period: st
   const validHeatmapObj = extractHeatmap(heatmapDataObj);
   
   if (validHeatmapObj) {
-    dynamicHourLabels = validHeatmapObj.columns.map((c: ApiAny) => c.time);
-    heatmapProcessed = validHeatmapObj.rows.map((row: ApiAny) => ({
+    dynamicHourLabels = validHeatmapObj.columns.map((c: any) => c.time);
+    heatmapProcessed = validHeatmapObj.rows.map((row: any) => ({
       day: row.day,
       slots: row.counts.map((count: number, index: number) => ({
         hour: validHeatmapObj.columns[index]?.time || `${index}h`,
@@ -110,10 +109,10 @@ export function AppointmentsSection({ period, startDate, endDate }: { period: st
               </div>
 
               {/* Heatmap rows */}
-              {heatmapProcessed.map((row: ApiAny) => (
+              {heatmapProcessed.map((row: any) => (
                 <div key={row.day} className="grid gap-2 mb-2" style={{ gridTemplateColumns: `64px repeat(${dynamicHourLabels.length}, 1fr)` }}>
                   <div className="text-xs font-extrabold text-slate-700 flex items-center">{row.day}</div>
-                  {(row.slots || []).map((slot: ApiAny, idx: number) => (
+                  {(row.slots || []).map((slot: any, idx: number) => (
                     <HeatmapCell key={`${slot.hour}-${idx}`} count={slot.count} day={row.day} hour={slot.hour} />
                   ))}
                 </div>

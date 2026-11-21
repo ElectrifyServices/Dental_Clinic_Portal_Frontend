@@ -1,9 +1,8 @@
-import type { ApiAny } from "../../types/api";
-import { useState } from "react";
-import { Plus, Eye, Edit, Trash2, Shield, CheckCircle, Clock, MoreVertical, Filter, X } from "lucide-react";
+import React, { useState } from "react";
+import { Plus, Eye, Edit, Trash2, Shield, CheckCircle, Clock, MoreVertical } from "lucide-react";
 
 interface ConsentFormListProps {
-  forms: ApiAny[];
+  forms: any[];
   search: string;
   onSearchChange: (val: string) => void;
   onAddForm: () => void;
@@ -36,8 +35,6 @@ import {
   DataTable,
   Pagination,
   Loading,
-  Label,
-  FilterContainer,
 } from "@/components/ui";
 import {
   DropdownMenu,
@@ -45,7 +42,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/DropdownMenu";
-import { cn } from "@/lib/utils";
 
 export function ConsentFormList({
   forms,
@@ -66,20 +62,12 @@ export function ConsentFormList({
   onPerPageChange,
   isLoading = false,
 }: ConsentFormListProps) {
-  const [showFilters, setShowFilters] = useState(false);
-  const activeFilterCount = Object.values(filters).filter((v) => v && v !== "All").length;
-  const clearAllFilters = () => {
-    onFilterChange("status", "All");
-    onFilterChange("procedure", "All");
-    onFilterChange("doctor", "All");
-    onFilterChange("date", "All");
-  };
 
   const columns = [
     {
       key: "patient",
       header: "Patient",
-      render: (form: ApiAny) => (
+      render: (form: any) => (
         <>
           <div className="font-bold text-foreground text-sm">
             {form.patientName}
@@ -100,7 +88,7 @@ export function ConsentFormList({
     {
       key: "consentType",
       header: "Consent Type",
-      render: (form: ApiAny) => {
+      render: (form: any) => {
         const treatments = form.treatmentType?.split(", ").filter(Boolean) || [];
         return (
           <div className="flex flex-wrap gap-1.5 max-w-[280px]">
@@ -120,7 +108,7 @@ export function ConsentFormList({
     {
       key: "doctor",
       header: "Doctor",
-      render: (form: ApiAny) => (
+      render: (form: any) => (
         <div className="font-semibold text-muted-foreground text-sm">
           {form.doctorName}
         </div>
@@ -130,7 +118,7 @@ export function ConsentFormList({
     {
       key: "created",
       header: "Created",
-      render: (form: ApiAny) => (
+      render: (form: any) => (
         <div className="text-sm font-medium text-muted-foreground">
           {form.createdDate
             ? new Date(form.createdDate).toLocaleDateString("en-IN", {
@@ -146,7 +134,7 @@ export function ConsentFormList({
     {
       key: "signed",
       header: "Signed",
-      render: (form: ApiAny) => {
+      render: (form: any) => {
         const statusUpper = form.status?.toUpperCase() || "";
         const isSigned = statusUpper === "SIGNED" || statusUpper === "COMPLETED";
         return (
@@ -168,7 +156,7 @@ export function ConsentFormList({
     {
       key: "status",
       header: "Status",
-      render: (form: ApiAny) => {
+      render: (form: any) => {
         const statusUpper = form.status?.toUpperCase() || "";
         const isSigned = statusUpper === "SIGNED" || statusUpper === "COMPLETED";
         const isDraft = statusUpper === "DRAFT";
@@ -192,7 +180,7 @@ export function ConsentFormList({
       key: "actions",
       header: "Actions",
       align: "right" as const,
-      render: (form: ApiAny) => (
+      render: (form: any) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0 inline-flex items-center justify-center rounded-lg hover:bg-muted transition-colors outline-none">
@@ -217,202 +205,145 @@ export function ConsentFormList({
   ];
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3 overflow-hidden">
-      <div className="shrink-0">
-        <PageHeader
-          title="Consent Forms"
-          subtitle={`${forms.length} authorized consent documents on record`}
-          action={
-            <Button onClick={onAddForm} className="gap-2">
-              <Plus className="w-4 h-4" /> New Consent Form
-            </Button>
-          }
-        />
-      </div>
+    <div className="space-y-3">
+      <PageHeader
+        title="Consent Forms"
+        subtitle={`${forms.length} authorized consent documents on record`}
+        action={
+          <Button onClick={onAddForm} className="gap-2">
+            <Plus className="w-4 h-4" /> New Consent Form
+          </Button>
+        }
+      />
 
-      <FilterContainer
-        isOpen={showFilters}
-        onClose={() => setShowFilters(false)}
-        className="shrink-0 space-y-3"
-      >
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex-1">
           <SearchInput
             placeholder="Search by patient or treatment type…"
             value={search}
             onChange={onSearchChange}
-            className="flex-1 min-w-0"
           />
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setShowFilters((v) => !v)}
-            className={cn("gap-2 shrink-0", activeFilterCount > 0 && "border-primary bg-primary/10 text-primary hover:bg-primary/15")}
-          >
-            <Filter className="w-4 h-4" />
-            <span className="hidden sm:inline">Filters</span>
-            {activeFilterCount > 0 && (
-              <span className="bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 text-[10px]">
-                {activeFilterCount}
-              </span>
-            )}
-          </Button>
-
-          {activeFilterCount > 0 && (
-            <Button variant="ghost" onClick={clearAllFilters} className="gap-1 text-muted-foreground shrink-0">
-              <X className="w-3 h-3" /> <span className="hidden sm:inline">Clear all</span>
-            </Button>
-          )}
         </div>
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
+          <Select
+            value={filters.status}
+            onValueChange={(val) => onFilterChange("status", val)}
+          >
+            <SelectTrigger className="px-3 py-2 bg-background border border-border rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 shrink-0 h-9 w-[130px] text-left flex items-center justify-between">
+              <SelectValue placeholder="All Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All Status</SelectItem>
+              <SelectItem value="PENDING">Pending</SelectItem>
+              <SelectItem value="COMPLETED">Completed</SelectItem>
+            </SelectContent>
+          </Select>
 
-        {showFilters && (
-          <div className="bg-card p-4 sm:p-5 rounded-2xl border border-border shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
-            <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">Advanced Filters</h3>
-            <FilterFields
-              filters={filters}
-              onFilterChange={onFilterChange}
-              doctorsList={doctorsList}
+          <Select
+            value={filters.procedure}
+            onValueChange={(val) => onFilterChange("procedure", val)}
+          >
+            <SelectTrigger className="px-3 py-2 bg-background border border-border rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 shrink-0 h-9 w-[240px] text-left flex items-center justify-between">
+              <SelectValue placeholder="All Procedures" />
+            </SelectTrigger>
+            <SelectContent className="max-h-56">
+              <SelectItem value="All">All Procedures</SelectItem>
+              <SelectItem value="GENERAL_DENTISTRY">General Dentistry</SelectItem>
+              <SelectItem value="TOOTH_EXTRACTION_OR_ORAL_SURGERY">Tooth Extraction / Oral Surgery</SelectItem>
+              <SelectItem value="ROOT_CANAL_TREATMENT_ENDODONTICS">Root Canal Treatment (Endodontics)</SelectItem>
+              <SelectItem value="DENTAL_IMPLANTS">Dental Implants</SelectItem>
+              <SelectItem value="ORTHODONTIC_BRACES_OR_CLEAR_ALIGNERS">Orthodontic Braces / Clear Aligners</SelectItem>
+              <SelectItem value="SCALING_AND_ROOT_PLANING">Scaling and Root Planing</SelectItem>
+              <SelectItem value="CROWN_AND_BRIDGE">Crown and Bridge</SelectItem>
+              <SelectItem value="COMPLETE_PARTIAL_DENTURE">Complete / Partial Denture</SelectItem>
+              <SelectItem value="PEDIATRIC_DENTAL_TREATMENT">Pediatric Dental Treatment</SelectItem>
+              <SelectItem value="TEETH_WHITENING">Teeth Whitening</SelectItem>
+              <SelectItem value="COSMETIC_DENTISTRY_OR_VENEERS">Cosmetic Dentistry / Veneers</SelectItem>
+              <SelectItem value="SEDATION_OR_ANESTHESIA_CONSENT">Sedation / Anesthesia Consent</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={filters.doctor}
+            onValueChange={(val) => onFilterChange("doctor", val)}
+          >
+            <SelectTrigger className="px-3 py-2 bg-background border border-border rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 shrink-0 h-9 w-[130px] text-left flex items-center justify-between">
+              <SelectValue placeholder="All Doctors" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All Doctors</SelectItem>
+              {doctorsList.map((doc) => (
+                <SelectItem key={doc.id} value={doc.id}>
+                  {doc.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={filters.date}
+            onValueChange={(val) => onFilterChange("date", val)}
+          >
+            <SelectTrigger className="px-3 py-2 bg-background border border-border rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 shrink-0 h-9 w-[130px] text-left flex items-center justify-between">
+              <SelectValue placeholder="All Time" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All Time</SelectItem>
+              <SelectItem value="TODAY">Today</SelectItem>
+              <SelectItem value="THIS_WEEK">This Week</SelectItem>
+              <SelectItem value="THIS_MONTH">This Month</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {isLoading && forms.length === 0 ? (
+        <div className="py-20 bg-card rounded-[2.5rem] border border-border flex flex-col items-center justify-center text-center">
+          <Loading type="spinner" text="Fetching consent documents..." />
+        </div>
+      ) : forms.length === 0 ? (
+        <div className="py-20 bg-card rounded-[2.5rem] border-2 border-dashed border-border flex flex-col items-center justify-center text-center">
+          <Shield className="w-16 h-16 text-muted-foreground/10 mb-6" />
+          <h3 className="text-sm font-black text-foreground uppercase tracking-[0.2em]">
+            No consent forms found
+          </h3>
+          <p className="text-xs text-muted-foreground mt-2 font-medium">
+            Authorized forms will appear here once created.
+          </p>
+        </div>
+      ) : (
+        <div className="relative">
+          {isLoading && (
+            <div className="absolute inset-0 bg-background/50 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-3xl">
+              <Loading type="spinner" text="Updating list..." />
+            </div>
+          )}
+          <ContentCard
+            bodyClassName="p-0 overflow-hidden"
+            className="rounded-3xl border-border/50"
+          >
+            <DataTable
+              columns={columns}
+              data={forms}
+              rowKey={(row) => row.id}
+              footer={
+                totalItems > 0 ? (
+                  <div className="py-4 px-6 border-t border-border/50 bg-muted/20">
+                    <Pagination
+                      page={page}
+                      totalPages={totalPages}
+                      totalItems={totalItems}
+                      perPage={limit}
+                      onPageChange={onPageChange}
+                      onPerPageChange={onPerPageChange}
+                    />
+                  </div>
+                ) : undefined
+              }
             />
-          </div>
-        )}
-      </FilterContainer>
-
-      <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">
-        {isLoading && forms.length === 0 ? (
-          <div className="py-20 bg-card rounded-[2.5rem] border border-border flex flex-col items-center justify-center text-center">
-            <Loading type="spinner" text="Fetching consent documents..." />
-          </div>
-        ) : forms.length === 0 ? (
-          <div className="py-20 bg-card rounded-[2.5rem] border-2 border-dashed border-border flex flex-col items-center justify-center text-center">
-            <Shield className="w-16 h-16 text-muted-foreground/10 mb-6" />
-            <h3 className="text-sm font-black text-foreground uppercase tracking-[0.2em]">
-              No consent forms found
-            </h3>
-            <p className="text-xs text-muted-foreground mt-2 font-medium">
-              Authorized forms will appear here once created.
-            </p>
-          </div>
-        ) : (
-          <div className="relative flex-1 min-h-0 flex flex-col">
-            {isLoading && (
-              <div className="absolute inset-0 bg-background/50 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-3xl">
-                <Loading type="spinner" text="Updating list..." />
-              </div>
-            )}
-            <ContentCard
-              bodyClassName="flex-1 p-0 overflow-auto"
-              className="rounded-3xl border-border/50 flex-1 min-h-0"
-            >
-              <DataTable
-                className="flex-1 min-h-0"
-                columns={columns}
-                data={forms}
-                rowKey={(row) => row.id}
-                footer={
-                  totalItems > 0 ? (
-                    <div className="py-4 px-6 border-t border-border/50 bg-muted/20">
-                      <Pagination
-                        page={page}
-                        totalPages={totalPages}
-                        totalItems={totalItems}
-                        perPage={limit}
-                        onPageChange={onPageChange}
-                        onPerPageChange={onPerPageChange}
-                      />
-                    </div>
-                  ) : undefined
-                }
-              />
-            </ContentCard>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function FilterFields({
-  filters,
-  onFilterChange,
-  doctorsList,
-}: {
-  filters: { status: string; procedure: string; doctor: string; date: string };
-  onFilterChange: (key: string, value: string) => void;
-  doctorsList: { id: string; name: string }[];
-}) {
-  const triggerClass = "h-10 w-full text-left bg-muted/50 border border-border rounded-xl text-xs font-semibold";
-
-  return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <div>
-        <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">Status</Label>
-        <Select value={filters.status} onValueChange={(val) => onFilterChange("status", val)}>
-          <SelectTrigger className={triggerClass}>
-            <SelectValue placeholder="All Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="All">All Status</SelectItem>
-            <SelectItem value="PENDING">Pending</SelectItem>
-            <SelectItem value="COMPLETED">Completed</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">Procedure</Label>
-        <Select value={filters.procedure} onValueChange={(val) => onFilterChange("procedure", val)}>
-          <SelectTrigger className={triggerClass}>
-            <SelectValue placeholder="All Procedures" />
-          </SelectTrigger>
-          <SelectContent className="max-h-56">
-            <SelectItem value="All">All Procedures</SelectItem>
-            <SelectItem value="GENERAL_DENTISTRY">General Dentistry</SelectItem>
-            <SelectItem value="TOOTH_EXTRACTION_OR_ORAL_SURGERY">Tooth Extraction / Oral Surgery</SelectItem>
-            <SelectItem value="ROOT_CANAL_TREATMENT_ENDODONTICS">Root Canal Treatment (Endodontics)</SelectItem>
-            <SelectItem value="DENTAL_IMPLANTS">Dental Implants</SelectItem>
-            <SelectItem value="ORTHODONTIC_BRACES_OR_CLEAR_ALIGNERS">Orthodontic Braces / Clear Aligners</SelectItem>
-            <SelectItem value="SCALING_AND_ROOT_PLANING">Scaling and Root Planing</SelectItem>
-            <SelectItem value="CROWN_AND_BRIDGE">Crown and Bridge</SelectItem>
-            <SelectItem value="COMPLETE_PARTIAL_DENTURE">Complete / Partial Denture</SelectItem>
-            <SelectItem value="PEDIATRIC_DENTAL_TREATMENT">Pediatric Dental Treatment</SelectItem>
-            <SelectItem value="TEETH_WHITENING">Teeth Whitening</SelectItem>
-            <SelectItem value="COSMETIC_DENTISTRY_OR_VENEERS">Cosmetic Dentistry / Veneers</SelectItem>
-            <SelectItem value="SEDATION_OR_ANESTHESIA_CONSENT">Sedation / Anesthesia Consent</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">Doctor</Label>
-        <Select value={filters.doctor} onValueChange={(val) => onFilterChange("doctor", val)}>
-          <SelectTrigger className={triggerClass}>
-            <SelectValue placeholder="All Doctors" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="All">All Doctors</SelectItem>
-            {doctorsList.map((doc) => (
-              <SelectItem key={doc.id} value={doc.id}>
-                {doc.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">Time Period</Label>
-        <Select value={filters.date} onValueChange={(val) => onFilterChange("date", val)}>
-          <SelectTrigger className={triggerClass}>
-            <SelectValue placeholder="All Time" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="All">All Time</SelectItem>
-            <SelectItem value="TODAY">Today</SelectItem>
-            <SelectItem value="THIS_WEEK">This Week</SelectItem>
-            <SelectItem value="THIS_MONTH">This Month</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+          </ContentCard>
+        </div>
+      )}
     </div>
   );
 }

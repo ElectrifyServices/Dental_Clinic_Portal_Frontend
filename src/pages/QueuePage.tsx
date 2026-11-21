@@ -1,21 +1,4 @@
 import React, { useMemo } from "react";
-
-/** A queue row exactly as PatientQueue defines it. */
-type QueuedPatientRow = Parameters<
-  React.ComponentProps<typeof PatientQueue>["onSelectPatient"]
->[0];
-
-/** The same row while it is only held in local state, where `status` is still
- *  a plain string coming from the UI. */
-interface QueueStateRow {
-  id: string;
-  [key: string]: unknown;
-}
-
-/** A staff member, narrowed to the fields this page filters on. */
-interface StaffRow {
-  role?: string;
-}
 import { useAppData } from "../hooks/useAppData";
 import { useModal } from "../contexts/ModalContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -37,12 +20,12 @@ export const QueuePage: React.FC = () => {
   const { mutateAsync: updateConsultation } = useUpdateConsultationMutation();
 
   const activeDoctors = useMemo(
-    () => staffMembers.filter((s: StaffRow) => s.role === "doctor" || s.role === "admin"),
+    () => staffMembers.filter((s: any) => s.role === "doctor" || s.role === "admin"),
     [staffMembers]
   );
 
-  const handleSelectPatient = (p: QueuedPatientRow) => {
-    const bg = patients.find((bp) => bp.phone === p.patientPhone);
+  const handleSelectPatient = (p: any) => {
+    const bg = patients.find((bp: any) => bp.phone === p.patientPhone);
     setSelectedPatientForDiagnose({
       ...p,
       phone: p.patientPhone,
@@ -66,10 +49,13 @@ export const QueuePage: React.FC = () => {
     const cleanPhone = (phone || "").replace(/\D/g, "");
 
     const ex = (trimmedName && cleanPhone) ? patients.find(
-      (p) =>
+      (p: any) =>
         p.name.toLowerCase() === trimmedName.toLowerCase() &&
         p.phone.replace(/\D/g, "") === cleanPhone
     ) : null;
+
+    const fallbackDocId = dId || (activeDoctors.some((d: any) => d.id === state.user?.id) ? state.user?.id : activeDoctors[0]?.id) || "";
+    const fallbackDocName = dName || (activeDoctors.find((d: any) => d.id === fallbackDocId)?.name) || state.user?.name || "Doctor";
 
     if (ex) {
       setSelectedPatientForDiagnose({
@@ -81,9 +67,14 @@ export const QueuePage: React.FC = () => {
         treatmentType: ex.treatmentType || "General Consultation",
         patientConcern: "",
         status: "in-consultation",
-        doctorId: dId || state.user?.id || "1",
-        doctorName: dName || state.user?.name || "Doctor",
+        doctorId: fallbackDocId,
+        doctorName: fallbackDocName,
         appointmentTime: time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        // Was missing here (present in the "new patient" branch below) —
+        // without it, PatientConsultation treats this as a regular queue
+        // consultation and skips resolving the logged-in doctor, falling
+        // back to whatever doctorId happens to be, including the "1" stub.
+        isDirect: true,
         patientHistory: {
           medicalHistory: ex.medicalHistory || [],
           allergies: ex.allergies || [],
@@ -103,8 +94,8 @@ export const QueuePage: React.FC = () => {
         treatmentType: "General Consultation",
         patientConcern: "",
         status: "in-consultation",
-        doctorId: dId || state.user?.id || "1",
-        doctorName: dName || state.user?.name || "Doctor",
+        doctorId: fallbackDocId,
+        doctorName: fallbackDocName,
         appointmentTime: time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         isDirect: true,
         patientHistory: {
@@ -124,21 +115,20 @@ export const QueuePage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-6">
       <PatientQueue
         doctorName={state.user?.name || "Doctor"}
         queuedPatients={queuedPatients}
         onSelectPatient={handleSelectPatient}
         onUpdatePatientStatus={async (id: string, s: string) => {
-          setQueuedPatients((prev: QueueStateRow[]) =>
-            prev.map((p) => (p.id === id ? { ...p, status: s } : p))
+          setQueuedPatients((prev: any[]) =>
+            prev.map((p: any) => (p.id === id ? { ...p, status: s } : p))
           );
           const isExistingBackend = id && !String(id).startsWith("WALK-");
           if (isExistingBackend) {
             try {
-              await updateConsultation({ id, status: s } as Parameters<typeof updateConsultation>[0]);
-            } catch {
-              /* status is already updated locally; a failed sync is non-fatal */
+              await updateConsultation({ id, status: s } as any);
+            } catch (err) {
             }
           }
         }}

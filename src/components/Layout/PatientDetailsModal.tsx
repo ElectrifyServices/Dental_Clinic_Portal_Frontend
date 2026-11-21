@@ -1,14 +1,13 @@
-import type { ApiAny } from "../../types/api";
 import React from "react";
 import { PatientDetails } from "../Patients/PatientDetails";
 
 interface PatientDetailsModalProps {
-  patients: ApiAny[];
+  patients: any[];
   selectedPatientId: string;
-  apiPatientDetail: ApiAny;
-  appointments: ApiAny[];
-  treatments: ApiAny[];
-  invoices: ApiAny[];
+  apiPatientDetail: any;
+  appointments: any[];
+  treatments: any[];
+  invoices: any[];
   onClose: () => void;
   onExport: (id: string) => void;
 }
@@ -23,15 +22,15 @@ export function PatientDetailsModal({
   onClose,
   onExport,
 }: PatientDetailsModalProps) {
-  const localPatient = patients.find((x: ApiAny) => x.id === selectedPatientId);
+  const localPatient = patients.find((x: any) => x.id === selectedPatientId);
   const p = apiPatientDetail || localPatient;
   if (!p) return null;
 
-  let family: ApiAny[] = [];
+  let family: any[] = [];
   if (p.parentId) {
-    const parent = patients.find((x: ApiAny) => x.id === p.parentId);
+    const parent = patients.find((x: any) => x.id === p.parentId);
     const siblings = patients.filter(
-      (x: ApiAny) => x.parentId === p.parentId && x.id !== p.id
+      (x: any) => x.parentId === p.parentId && x.id !== p.id
     );
     if (parent)
       family.push({
@@ -42,7 +41,7 @@ export function PatientDetailsModal({
       });
     family = [...family, ...siblings];
   } else {
-    family = patients.filter((x: ApiAny) => x.parentId === p.id);
+    family = patients.filter((x: any) => x.parentId === p.id);
   }
 
   return (

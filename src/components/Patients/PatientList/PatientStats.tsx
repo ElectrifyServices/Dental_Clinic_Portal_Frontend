@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../../types/api";
 import React from 'react';
 import { Users, UserCheck, UserPlus, CreditCard } from 'lucide-react';
 import { useSidebar } from "../../../contexts/SidebarContext";
@@ -26,7 +25,7 @@ export const PatientStats: React.FC<PatientStatsProps> = ({ patients }) => {
   const { data: newData } = usePatientNewQuery();
   const { data: outstandingData } = usePatientOutstandingQuery();
 
-  const parseData = (d: ApiAny) => {
+  const parseData = (d: any) => {
     if (!d) return undefined;
     return d.total_pending ?? d.count ?? d.total ?? d.amount ?? d.data?.total_pending ?? d.data?.count ?? d.data?.total ?? d.data?.amount;
   };
@@ -46,8 +45,8 @@ export const PatientStats: React.FC<PatientStatsProps> = ({ patients }) => {
   return (
     <div className={
       collapsed
-        ? "grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-4"
-        : "grid grid-cols-2 xl:grid-cols-4 lg:grid-cols-2 gap-3 md:gap-6 mb-4"
+        ? "grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6"
+        : "grid grid-cols-2 xl:grid-cols-4 lg:grid-cols-2 gap-3 md:gap-6 mb-6"
     }>
       <MetricCard 
         label="Total Patients"

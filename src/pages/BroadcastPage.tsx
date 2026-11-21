@@ -12,6 +12,8 @@ import {
   FileText,
   Megaphone,
   Image as ImageIcon,
+  Clock,
+  CalendarClock,
 } from "lucide-react";
 import {
   PageHeader,
@@ -23,6 +25,8 @@ import {
   Modal,
   StatusBadge,
   Label,
+  Input,
+  Switch,
   toast,
 } from "../components/ui";
 import {
@@ -43,9 +47,36 @@ import {
 } from "../hooks/broadcast/useBroadcastTemplates";
 import { WaTextPreview } from "../components/broadcast/WaTextPreview";
 import { TemplateFormModal } from "../components/broadcast/TemplateFormModal";
+import {
+  useScheduledBroadcastsQuery,
+  useCancelScheduledBroadcastMutation,
+  type ScheduledBroadcast,
+} from "../hooks/broadcast/useScheduledBroadcasts";
 
 const PAGE_SIZE = 25;
 const rowKey = (r: BroadcastRecipient) => `${r.source}:${r.id}`;
+
+/**
+ * Same normalization the backend's broadcast dedup uses (digits only,
+ * strip leading zeros, assume a <=10-digit number needs the country code
+ * prepended) — used here purely to GROUP same-number recipients in the UI
+ * so the user can pick which one to actually send to, instead of the
+ * backend silently keeping the first and skipping the rest.
+ */
+function canonicalPhone(
+  phone: string | null | undefined,
+  countryCode?: string,
+): string | null {
+  const digits = (phone ?? "").replace(/\D/g, "").replace(/^0+/, "");
+  if (digits.length < 7) return null;
+  if (digits.length > 10) return digits;
+  const cc = (countryCode ?? "").replace(/\D/g, "") || "91";
+  return `${cc}${digits}`;
+}
+
+type RecipientDisplayItem =
+  | { kind: "single"; r: BroadcastRecipient }
+  | { kind: "group"; phoneKey: string; members: BroadcastRecipient[] };
 
 const STATUS_VARIANT: Record<
   BroadcastTemplateStatus,
@@ -69,10 +100,21 @@ const STATUS_LABEL: Record<BroadcastTemplateStatus, string> = {
 };
 
 export function BroadcastPage() {
-  const [view, setView] = useState<"send" | "templates">("send");
+  const [view, setView] = useState<"send" | "templates" | "scheduled">("send");
   const [showCreate, setShowCreate] = useState(false);
 
   const templatesQuery = useBroadcastTemplatesQuery();
+  const { refetch: refetchTemplates } = templatesQuery;
+
+  // templatesQuery lives here in the parent, which never unmounts across tab
+  // switches, so refetchOnMount alone can't re-trigger it — refetch it
+  // explicitly whenever the user switches onto a tab that depends on it.
+  useEffect(() => {
+    if (view === "send" || view === "templates") {
+      refetchTemplates();
+    }
+  }, [view, refetchTemplates]);
+
   const templates = useMemo(
     () => templatesQuery.data ?? [],
     [templatesQuery.data],
@@ -121,6 +163,19 @@ export function BroadcastPage() {
             </span>
           )}
         </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setView("scheduled")}
+          className={`text-sm font-semibold ${
+            view === "scheduled"
+              ? "bg-background text-foreground shadow-sm hover:bg-background"
+              : "text-muted-foreground"
+          }`}
+        >
+          <CalendarClock className="w-4 h-4" />
+          Scheduled
+        </Button>
       </div>
 
       {view === "send" ? (
@@ -129,12 +184,14 @@ export function BroadcastPage() {
           loadingTemplates={templatesQuery.isLoading}
           onGoToTemplates={() => setView("templates")}
         />
-      ) : (
+      ) : view === "templates" ? (
         <TemplatesView
           templates={templates}
           loading={templatesQuery.isLoading}
           onNew={() => setShowCreate(true)}
         />
+      ) : (
+        <ScheduledView />
       )}
 
       {showCreate && (
@@ -170,6 +227,12 @@ function SendView({
   const [templateName, setTemplateName] = useState<string>("");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [result, setResult] = useState<SendBroadcastResponse | null>(null);
+  const [scheduleLater, setScheduleLater] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState("");
+  const [scheduleTime, setScheduleTime] = useState("");
+  // phoneKey -> rowKey of the member currently chosen to represent that
+  // shared number (defaults to the first member of the group when unset).
+  const [groupPicks, setGroupPicks] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -194,7 +257,61 @@ function SendView({
   const sendMutation = useSendBroadcastMutation();
 
   const withPhone = (r: BroadcastRecipient) => Boolean((r.phone ?? "").trim());
-  const pageSelectable = rows.filter(withPhone);
+
+  // Group same-page recipients by (normalized) phone number — when 2+
+  // distinct patients/members share one number, the UI must let the user
+  // pick exactly one to represent that number, instead of silently sending
+  // to whichever one the backend happens to keep first.
+  const phoneGroups = useMemo(() => {
+    const map = new Map<string, BroadcastRecipient[]>();
+    for (const r of rows) {
+      if (!withPhone(r)) continue;
+      const key = canonicalPhone(r.phone, r.country_code);
+      if (!key) continue;
+      const arr = map.get(key) ?? [];
+      arr.push(r);
+      map.set(key, arr);
+    }
+    return map;
+     
+  }, [rows]);
+
+  const itemsToRender: RecipientDisplayItem[] = useMemo(() => {
+    const seenGroupKeys = new Set<string>();
+    const items: RecipientDisplayItem[] = [];
+    for (const r of rows) {
+      const key = withPhone(r) ? canonicalPhone(r.phone, r.country_code) : null;
+      const group = key ? phoneGroups.get(key) : undefined;
+      if (!key || !group || group.length <= 1) {
+        items.push({ kind: "single", r });
+        continue;
+      }
+      if (seenGroupKeys.has(key)) continue;
+      seenGroupKeys.add(key);
+      items.push({ kind: "group", phoneKey: key, members: group });
+    }
+    return items;
+     
+  }, [rows, phoneGroups]);
+
+  const activeOf = (phoneKey: string, members: BroadcastRecipient[]) => {
+    const pickedKey = groupPicks.get(phoneKey);
+    return (pickedKey && members.find((m) => rowKey(m) === pickedKey)) || members[0];
+  };
+
+  // The representative actually eligible for selection per display row —
+  // for a group this is whichever member is currently picked.
+  const pageSelectable = useMemo(
+    () =>
+      itemsToRender
+        .map((item) =>
+          item.kind === "single" ? item.r : activeOf(item.phoneKey, item.members),
+        )
+        .filter(withPhone),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [itemsToRender, groupPicks],
+  );
+
   const allOnPageSelected =
     pageSelectable.length > 0 &&
     pageSelectable.every((r) => selected.has(rowKey(r)));
@@ -217,12 +334,56 @@ function SendView({
       return next;
     });
 
+  // Switching which member represents a shared number — if the previous
+  // representative was already selected, swap the selection over to the
+  // newly-picked one so a checked group row never silently loses its check.
+  const handleGroupPick = (
+    phoneKey: string,
+    members: BroadcastRecipient[],
+    newRowKey: string,
+  ) => {
+    const prevActive = activeOf(phoneKey, members);
+    const prevKey = rowKey(prevActive);
+    const wasSelected = selected.has(prevKey);
+    const newActive = members.find((m) => rowKey(m) === newRowKey);
+
+    setGroupPicks((prev) => {
+      const next = new Map(prev);
+      next.set(phoneKey, newRowKey);
+      return next;
+    });
+
+    if (wasSelected && newActive) {
+      setSelected((prev) => {
+        const next = new Map(prev);
+        next.delete(prevKey);
+        next.set(newRowKey, newActive);
+        return next;
+      });
+    }
+  };
+
   const clearSelection = () => setSelected(new Map());
 
   const selectedCount = selected.size;
   const chosenTemplate = approved.find((t) => t.name === templateName);
+
+  // Combine the date + time inputs into an ISO string in the browser's local
+  // time (clinic staff work in IST, same as the rest of this app's pickers).
+  const scheduledAtISO =
+    scheduleLater && scheduleDate && scheduleTime
+      ? new Date(`${scheduleDate}T${scheduleTime}:00`).toISOString()
+      : undefined;
+  const scheduleInPast =
+    scheduleLater &&
+    Boolean(scheduledAtISO) &&
+    new Date(scheduledAtISO as string).getTime() <= Date.now();
+
   const canSend =
-    selectedCount > 0 && Boolean(chosenTemplate) && !sendMutation.isPending;
+    selectedCount > 0 &&
+    Boolean(chosenTemplate) &&
+    !sendMutation.isPending &&
+    (!scheduleLater || (Boolean(scheduledAtISO) && !scheduleInPast));
 
   const doSend = async () => {
     const picked = [...selected.values()];
@@ -231,13 +392,23 @@ function SendView({
         templateName,
         patientIds: picked.filter((r) => r.source === "patient").map((r) => r.id),
         memberIds: picked.filter((r) => r.source === "member").map((r) => r.id),
+        scheduledAt: scheduledAtISO,
       })) as SendBroadcastResponse & { data?: SendBroadcastResponse };
       const res: SendBroadcastResponse =
         raw && typeof raw.queued === "number" ? raw : (raw?.data ?? raw);
       setResult(res);
       setConfirmOpen(false);
-      toast.success(`Broadcast queued for ${res?.queued ?? 0} recipient(s)`);
+      toast.success(
+        res?.scheduledBroadcastId
+          ? `Broadcast scheduled for ${res?.queued ?? 0} recipient(s)`
+          : `Broadcast queued for ${res?.queued ?? 0} recipient(s)`,
+      );
       clearSelection();
+      if (scheduleLater) {
+        setScheduleLater(false);
+        setScheduleDate("");
+        setScheduleTime("");
+      }
     } catch (err) {
       setConfirmOpen(false);
       toast.error(
@@ -270,10 +441,19 @@ function SendView({
       {result && (
         <Card className="p-4 border-emerald-200 bg-emerald-50/50">
           <div className="flex items-start gap-3">
-            <CheckCircle2 className="w-5 h-5 text-emerald-600 mt-0.5 shrink-0" />
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-foreground">
-                Queued for {result.queued ?? 0} recipient(s).
+                {result.scheduledBroadcastId
+                  ? `Scheduled for ${result.queued ?? 0} recipient(s)${
+                      result.scheduledAt
+                        ? ` at ${new Date(result.scheduledAt).toLocaleString(
+                            "en-IN",
+                            { dateStyle: "medium", timeStyle: "short" },
+                          )}`
+                        : ""
+                    }.`
+                  : `Queued for ${result.queued ?? 0} recipient(s).`}
               </p>
               {(result.skipped?.length ?? 0) > 0 && (
                 <details className="mt-2">
@@ -359,39 +539,87 @@ function SendView({
               </div>
             ) : (
               <ul className="divide-y divide-border">
-                {rows.map((r) => {
-                  const k = rowKey(r);
-                  const noPhone = !withPhone(r);
+                {itemsToRender.map((item) => {
+                  if (item.kind === "single") {
+                    const r = item.r;
+                    const k = rowKey(r);
+                    const noPhone = !withPhone(r);
+                    return (
+                      <li
+                        key={k}
+                        className={`flex items-center gap-3 px-4 py-2.5 ${
+                          noPhone ? "opacity-50" : "hover:bg-muted/30"
+                        }`}
+                      >
+                        <Checkbox
+                          checked={selected.has(k)}
+                          onCheckedChange={() => toggleOne(r)}
+                          disabled={noPhone}
+                          id={`r-${k}`}
+                        />
+                        <Label
+                          htmlFor={`r-${k}`}
+                          className="flex-1 min-w-0 cursor-pointer font-normal"
+                        >
+                          <span className="block text-sm font-medium text-foreground truncate">
+                            {r.name}
+                          </span>
+                          <span className="block text-xs text-muted-foreground">
+                            {noPhone
+                              ? "No phone number"
+                              : `${r.country_code ?? ""} ${r.phone}`}
+                          </span>
+                        </Label>
+                        <StatusBadge
+                          variant={r.source === "patient" ? "violet" : "indigo"}
+                        >
+                          {r.source}
+                        </StatusBadge>
+                      </li>
+                    );
+                  }
+
+                  // Same phone number shared by 2+ distinct patients/members —
+                  // let the user pick which one this broadcast should go to.
+                  const active = activeOf(item.phoneKey, item.members);
+                  const k = rowKey(active);
                   return (
                     <li
-                      key={k}
-                      className={`flex items-center gap-3 px-4 py-2.5 ${
-                        noPhone ? "opacity-50" : "hover:bg-muted/30"
-                      }`}
+                      key={`group:${item.phoneKey}`}
+                      className="flex items-center gap-3 px-4 py-2.5 bg-amber-50/40 hover:bg-amber-50/70"
                     >
                       <Checkbox
                         checked={selected.has(k)}
-                        onCheckedChange={() => toggleOne(r)}
-                        disabled={noPhone}
-                        id={`r-${k}`}
+                        onCheckedChange={() => toggleOne(active)}
+                        id={`r-group-${item.phoneKey}`}
                       />
-                      <Label
-                        htmlFor={`r-${k}`}
-                        className="flex-1 min-w-0 cursor-pointer font-normal"
-                      >
-                        <span className="block text-sm font-medium text-foreground truncate">
-                          {r.name}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <select
+                            value={k}
+                            onChange={(e) =>
+                              handleGroupPick(item.phoneKey, item.members, e.target.value)
+                            }
+                            className="text-sm font-medium text-foreground bg-background border border-input rounded-md px-1.5 py-0.5 max-w-[170px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            {item.members.map((m) => (
+                              <option key={rowKey(m)} value={rowKey(m)}>
+                                {m.name}
+                              </option>
+                            ))}
+                          </select>
+                          <span className="text-[10px] font-bold text-amber-700 bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-full uppercase tracking-wide">
+                            {item.members.length} share this number
+                          </span>
+                        </div>
+                        <span className="block text-xs text-muted-foreground mt-0.5">
+                          {active.country_code ?? ""} {active.phone}
                         </span>
-                        <span className="block text-xs text-muted-foreground">
-                          {noPhone
-                            ? "No phone number"
-                            : `${r.country_code ?? ""} ${r.phone}`}
-                        </span>
-                      </Label>
+                      </div>
                       <StatusBadge
-                        variant={r.source === "patient" ? "violet" : "indigo"}
+                        variant={active.source === "patient" ? "violet" : "indigo"}
                       >
-                        {r.source}
+                        {active.source}
                       </StatusBadge>
                     </li>
                   );
@@ -453,13 +681,65 @@ function SendView({
             </div>
           )}
 
+          <div className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2">
+            <Label
+              htmlFor="schedule-later"
+              className="flex items-center gap-1.5 text-xs font-medium text-foreground cursor-pointer"
+            >
+              <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+              Schedule for later
+            </Label>
+            <Switch
+              id="schedule-later"
+              checked={scheduleLater}
+              onCheckedChange={(v) => setScheduleLater(Boolean(v))}
+            />
+          </div>
+
+          {scheduleLater && (
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Date
+                </label>
+                <Input
+                  type="date"
+                  value={scheduleDate}
+                  min={new Date().toISOString().split("T")[0]}
+                  onChange={(e) => setScheduleDate(e.target.value)}
+                  className="h-9 text-sm"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Time
+                </label>
+                <Input
+                  type="time"
+                  value={scheduleTime}
+                  onChange={(e) => setScheduleTime(e.target.value)}
+                  className="h-9 text-sm"
+                />
+              </div>
+              {scheduleInPast && (
+                <p className="col-span-2 text-[11px] text-red-600">
+                  Pick a time in the future
+                </p>
+              )}
+            </div>
+          )}
+
           <Button
             className="w-full"
             disabled={!canSend}
             onClick={() => setConfirmOpen(true)}
           >
-            <Send className="w-4 h-4 mr-2" />
-            Send broadcast
+            {scheduleLater ? (
+              <CalendarClock className="w-4 h-4 mr-2" />
+            ) : (
+              <Send className="w-4 h-4 mr-2" />
+            )}
+            {scheduleLater ? "Schedule broadcast" : "Send broadcast"}
           </Button>
           {selectedCount === 0 && (
             <p className="text-[11px] text-muted-foreground text-center -mt-2">
@@ -471,7 +751,9 @@ function SendView({
 
       {confirmOpen && chosenTemplate && (
         <Modal
-          title="Send this broadcast?"
+          title={
+            scheduleLater ? "Schedule this broadcast?" : "Send this broadcast?"
+          }
           size="sm"
           onClose={() => !sendMutation.isPending && setConfirmOpen(false)}
           icon={<AlertTriangle className="w-4 h-4 text-primary" />}
@@ -488,8 +770,10 @@ function SendView({
                 {sendMutation.isPending ? (
                   <span className="flex items-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Sending…
+                    {scheduleLater ? "Scheduling…" : "Sending…"}
                   </span>
+                ) : scheduleLater ? (
+                  `Schedule for ${selectedCount}`
                 ) : (
                   `Send to ${selectedCount}`
                 )}
@@ -499,11 +783,30 @@ function SendView({
         >
           <div className="space-y-3 text-sm">
             <p className="text-muted-foreground">
-              “{chosenTemplate.occasion}” will be queued for{" "}
-              <span className="font-semibold text-foreground">
-                {selectedCount}
-              </span>{" "}
-              recipient(s).
+              {scheduleLater && scheduledAtISO ? (
+                <>
+                  “{chosenTemplate.occasion}” will be sent to{" "}
+                  <span className="font-semibold text-foreground">
+                    {selectedCount}
+                  </span>{" "}
+                  recipient(s) at{" "}
+                  <span className="font-semibold text-foreground">
+                    {new Date(scheduledAtISO).toLocaleString("en-IN", {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    })}
+                  </span>
+                  .
+                </>
+              ) : (
+                <>
+                  “{chosenTemplate.occasion}” will be queued for{" "}
+                  <span className="font-semibold text-foreground">
+                    {selectedCount}
+                  </span>{" "}
+                  recipient(s).
+                </>
+              )}
             </p>
             <WaTextPreview
               text={
@@ -694,6 +997,130 @@ function TemplatesView({
           <p className="text-sm text-muted-foreground">
             “{confirmDelete.occasion}” will be removed from WhatsApp and this
             list. Broadcasts already queued are unaffected.
+          </p>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+/* ── Scheduled view ────────────────────────────────────────────────────── */
+
+function ScheduledView() {
+  const { data, isLoading } = useScheduledBroadcastsQuery();
+  const scheduled = data ?? [];
+  const cancelMutation = useCancelScheduledBroadcastMutation();
+  const [confirmCancel, setConfirmCancel] =
+    useState<ScheduledBroadcast | null>(null);
+
+  return (
+    <div className="space-y-4">
+      {isLoading ? (
+        <Card className="p-10 text-center text-sm text-muted-foreground">
+          <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2" />
+          Loading scheduled broadcasts…
+        </Card>
+      ) : scheduled.length === 0 ? (
+        <Card className="p-10 text-center">
+          <CalendarClock className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+          <p className="text-sm font-semibold text-foreground">
+            No scheduled broadcasts
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Pick “Schedule for later” while sending a broadcast to see it
+            here.
+          </p>
+        </Card>
+      ) : (
+        <Card className="overflow-hidden">
+          <ul className="divide-y divide-border">
+            {scheduled.map((s) => (
+              <li
+                key={s.id}
+                className="flex items-center justify-between gap-3 px-4 py-3"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground truncate">
+                    {s.templateName}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {s.patientCount + s.memberCount} recipient(s) ·{" "}
+                    {new Date(s.scheduledAt).toLocaleString("en-IN", {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    })}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <StatusBadge
+                    variant={
+                      s.status === "SENT"
+                        ? "green"
+                        : s.status === "CANCELLED"
+                          ? "gray"
+                          : s.status === "FAILED"
+                            ? "red"
+                            : "amber"
+                    }
+                  >
+                    {s.status}
+                  </StatusBadge>
+                  {s.status === "PENDING" && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setConfirmCancel(s)}
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                    </Button>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
+
+      {confirmCancel && (
+        <Modal
+          title="Cancel this scheduled broadcast?"
+          size="sm"
+          onClose={() => !cancelMutation.isPending && setConfirmCancel(null)}
+          icon={<AlertTriangle className="w-4 h-4 text-red-500" />}
+          footer={
+            <>
+              <Button
+                variant="outline"
+                onClick={() => setConfirmCancel(null)}
+                disabled={cancelMutation.isPending}
+              >
+                Keep it
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() =>
+                  cancelMutation
+                    .mutateAsync({ id: confirmCancel.id })
+                    .then(() => {
+                      toast.success("Scheduled broadcast cancelled");
+                      setConfirmCancel(null);
+                    })
+                    .catch((e) =>
+                      toast.error(
+                        e instanceof Error ? e.message : "Could not cancel",
+                      ),
+                    )
+                }
+                disabled={cancelMutation.isPending}
+              >
+                {cancelMutation.isPending ? "Cancelling…" : "Cancel broadcast"}
+              </Button>
+            </>
+          }
+        >
+          <p className="text-sm text-muted-foreground">
+            “{confirmCancel.templateName}” will not be sent at its scheduled
+            time.
           </p>
         </Modal>
       )}

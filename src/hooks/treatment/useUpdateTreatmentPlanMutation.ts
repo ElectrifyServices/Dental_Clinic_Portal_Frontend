@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 import { CreateTreatmentPrescriptionVariables, TreatmentPlanResponse } from "./useCreateTreatmentPlanMutation";
@@ -52,18 +51,18 @@ export interface UpdateTreatmentPlanVariables {
 export function useUpdateTreatmentPlanMutation() {
   const queryClient = useQueryClient();
 
-  const _buildFormData = (formData: FormData, data: ApiAny, parentKey?: string) => {
+  const buildFormData = (formData: FormData, data: any, parentKey?: string) => {
     if (data === null || data === undefined) return;
 
     if (data instanceof File) {
       formData.append(parentKey || "", data);
     } else if (Array.isArray(data)) {
       data.forEach((val, i) => {
-        _buildFormData(formData, val, `${parentKey}[${i}]`);
+        buildFormData(formData, val, `${parentKey}[${i}]`);
       });
     } else if (typeof data === "object" && !(data instanceof Date)) {
       Object.keys(data).forEach((key) => {
-        _buildFormData(formData, data[key], parentKey ? `${parentKey}[${key}]` : key);
+        buildFormData(formData, data[key], parentKey ? `${parentKey}[${key}]` : key);
       });
     } else {
       formData.append(parentKey || "", String(data));
@@ -76,7 +75,7 @@ export function useUpdateTreatmentPlanMutation() {
     headers: getAuthHeaders,
     transformRequest: (variables) => {
       if (!variables.rawFiles || variables.rawFiles.length === 0) {
-        const { rawFiles: _rawFiles, existingImages: _existingImages, ...rest } = variables;
+        const { rawFiles, existingImages, ...rest } = variables;
         return rest;
       }
 
@@ -90,7 +89,7 @@ export function useUpdateTreatmentPlanMutation() {
       // Append all other fields — arrays go as JSON strings (API multipart convention)
       Object.keys(variables).forEach((key) => {
         if (key === "id" || key === "rawFiles" || key === "existingImages") return;
-        const val = (variables as ApiAny)[key];
+        const val = (variables as any)[key];
         if (val === undefined || val === null) return;
 
         if (Array.isArray(val)) {

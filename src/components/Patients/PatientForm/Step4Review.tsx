@@ -1,6 +1,5 @@
-import type { ApiAny } from "../../../types/api";
 import React from "react";
-import { User, Phone, Heart, ClipboardCheck, ShieldCheck } from "lucide-react";
+import { User, Phone, Heart, ClipboardCheck, CheckCircle, ShieldCheck } from "lucide-react";
 import { calculateAge } from "./utils";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -10,12 +9,12 @@ import { getFileUrl } from "../../../services/apiClient";
 import { formatPhoneWithCountryCode } from "@/utils/phoneUtils";
 
 interface Step4Props {
-  formData: ApiAny;
+  formData: any;
   isCheckIn?: boolean;
-  corporatePlans?: ApiAny[];
+  corporatePlans?: any[];
 }
 
-const DentalFileThumbnail: React.FC<{ file: ApiAny; index: number }> = ({ file, index }) => {
+const DentalFileThumbnail: React.FC<{ file: any; index: number }> = ({ file, index }) => {
   const [failed, setFailed] = React.useState(false);
   const src = file.data || file.url || file;
   const isImage = typeof src === 'string' && (src.startsWith('data:image/') || src.match(/\.(jpeg|jpg|gif|png|webp)$/i));
@@ -81,14 +80,22 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
   const { data: rawMedicalHistories } = useMedicalHistoriesQuery({ staleTime: 0 });
   const { data: rawAllergies } = useAllergiesQuery({ staleTime: 0 });
 
-  const extractList = (data: ApiAny) => {
+  const matchedCorporatePlan = corporatePlans.find(
+    (p: any) => p.id === formData.corporatePlanId,
+  );
+  const planCode =
+    formData.corporatePlanCode ||
+    matchedCorporatePlan?.plan_code ||
+    matchedCorporatePlan?.code;
+
+  const extractList = (data: any) => {
     if (!data) return [];
     if (Array.isArray(data)) return data;
-    if (data && Array.isArray((data as ApiAny).all)) return (data as ApiAny).all;
-    if (data && Array.isArray((data as ApiAny).data?.all)) return (data as ApiAny).data.all;
-    if (data && Array.isArray((data as ApiAny).data)) return (data as ApiAny).data;
-    if (data && Array.isArray((data as ApiAny).responseObject?.data?.all)) return (data as ApiAny).responseObject.data.all;
-    if (data && Array.isArray((data as ApiAny).responseObject?.data)) return (data as ApiAny).responseObject.data;
+    if (data && Array.isArray((data as any).all)) return (data as any).all;
+    if (data && Array.isArray((data as any).data?.all)) return (data as any).data.all;
+    if (data && Array.isArray((data as any).data)) return (data as any).data;
+    if (data && Array.isArray((data as any).responseObject?.data?.all)) return (data as any).responseObject.data.all;
+    if (data && Array.isArray((data as any).responseObject?.data)) return (data as any).responseObject.data;
     if (data?.allergies && Array.isArray(data.allergies)) return data.allergies;
     if (data?.history && Array.isArray(data.history)) return data.history;
     if (data?.medicalHistories && Array.isArray(data.medicalHistories)) return data.medicalHistories;
@@ -97,20 +104,20 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
 
   const getAllergyName = (id: string) => {
     const list = extractList(rawAllergies);
-    const found = list.find((a: ApiAny) => a.id === id);
+    const found = list.find((a: any) => a.id === id);
     return found ? (found.allergy_name || found.name || id) : id;
   };
 
   const getMedicalHistoryName = (id: string) => {
     const list = extractList(rawMedicalHistories);
-    const found = list.find((m: ApiAny) => m.id === id);
+    const found = list.find((m: any) => m.id === id);
     return found ? (found.name || found.history_name || id) : id;
   };
 
   return (
-    <div className="space-y-3">
-      <div className="text-center mb-1">
-        <div className="w-14 h-14 bg-linear-to-r from-secondary to-ternary/20 rounded-full flex items-center justify-center mx-auto mb-1.5 overflow-hidden border-4 border-white shadow-lg">
+    <div className="space-y-4">
+      <div className="text-center mb-3">
+        <div className="w-24 h-24 bg-gradient-to-r from-secondary to-ternary/20 rounded-full flex items-center justify-center mx-auto mb-2 overflow-hidden border-4 border-white shadow-lg">
           {formData.avatar ? (
             <img
               src={formData.avatar}
@@ -118,20 +125,20 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
               className="w-full h-full object-cover rounded-full"
             />
           ) : (
-            <User className="w-7 h-7 text-primary" />
+            <User className="w-12 h-12 text-primary" />
           )}
         </div>
-        <h3 className="text-base font-bold text-foreground leading-none">
+        <h3 className="text-xl font-bold text-foreground">
           {isCheckIn ? "Verify & Confirm Check-in" : "Review & Finalize"}
         </h3>
-        <p className="text-[10px] text-primary/60 mt-1 uppercase font-bold tracking-widest">
+        <p className="text-sm text-muted-foreground">
           {isCheckIn
             ? "Review patient history and details before checking in"
             : "Please review all information before saving"}
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="space-y-4">
           <Card className="border-secondary bg-card shadow-sm overflow-hidden">
           <CardContent className="p-4">
@@ -250,11 +257,11 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
                     Enrolling in Corporate/Membership Plan
                   </span>
                   <p className="font-bold text-foreground text-sm">
-                    {formData.corporatePlanName || corporatePlans.find((p: ApiAny) => p.id === formData.corporatePlanId)?.name || "Corporate Plan"}
+                    {formData.corporatePlanName || matchedCorporatePlan?.name || "Corporate Plan"}
                   </p>
-                  {formData.corporateMemberId && (
+                  {planCode && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      Member ID: {formData.corporateMemberId}
+                      Plan Code: {planCode}
                     </p>
                   )}
                 </div>
@@ -448,7 +455,7 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
                           Uploaded Images / X-rays
                         </span>
                         <div className="grid grid-cols-4 gap-2">
-                          {formData.dentalFiles.map((file: ApiAny, index: number) => (
+                          {formData.dentalFiles.map((file: any, index: number) => (
                             <DentalFileThumbnail key={index} file={file} index={index} />
                           ))}
                         </div>
@@ -479,7 +486,7 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
                     {formData.consentFormUrl ? "ATTACHED" : "PENDING"}
                   </Badge>
                 </div>
-                <div className="bg-card rounded-lg p-2 border border-secondary shadow-inner min-h-18 flex items-center justify-center">
+                <div className="bg-card rounded-lg p-2 border border-secondary shadow-inner min-h-[4.5rem] flex items-center justify-center">
                   {(() => {
                     const consentFormUrl = formData.consentFormUrl;
                     const isValidForm = consentFormUrl && consentFormUrl !== "null" && consentFormUrl !== "undefined" && consentFormUrl !== "";
@@ -540,7 +547,7 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
                     {formData.patientSignature || formData.guardianSignature ? "SIGNED" : "PENDING"}
                   </Badge>
                 </div>
-                <div className="bg-card rounded-lg p-2 border border-secondary shadow-inner min-h-18 flex items-center justify-center">
+                <div className="bg-card rounded-lg p-2 border border-secondary shadow-inner min-h-[4.5rem] flex items-center justify-center">
                   {(() => {
                     const signature = formData.patientSignature || formData.guardianSignature;
                     const isValidSig = signature && signature !== "null" && signature !== "undefined" && signature !== "";

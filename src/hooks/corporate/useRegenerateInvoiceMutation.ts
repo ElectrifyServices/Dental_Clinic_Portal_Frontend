@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 
 export interface RegenerateInvoiceVariables {
@@ -7,7 +6,7 @@ export interface RegenerateInvoiceVariables {
 }
 
 export function useRegenerateInvoiceMutation() {
-  return useApiMutation<ApiAny, RegenerateInvoiceVariables>({
+  return useApiMutation<any, RegenerateInvoiceVariables>({
     getEndpoint: (variables) => `/invoice/regenerate/${variables.memberId}`,
     method: "post",
     transformRequest: ({ memberId: _memberId, ...rest }) => rest,

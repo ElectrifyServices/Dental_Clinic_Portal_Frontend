@@ -1,11 +1,10 @@
-import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 import { getFileUrl } from "../../services/apiClient";
 import { useMemo } from "react";
 
 // Fetches ALL staff members (all roles) up to 1000 — used for edit lookups in ModalRegistry
-export function useAllStaffListQuery(options?: ApiAny) {
-  const query = useApiQuery<ApiAny>({
+export function useAllStaffListQuery(options?: any) {
+  const query = useApiQuery<any>({
     queryKey: ["allStaffList"],
     endpoint: "/staff/list",
     method: "post",
@@ -17,21 +16,21 @@ export function useAllStaffListQuery(options?: ApiAny) {
   });
 
   const staffList = useMemo(() => {
-    let rawList: ApiAny[] = [];
+    let rawList: any[] = [];
     const apiData = query.data;
 
     if (Array.isArray(apiData)) {
       rawList = apiData;
-    } else if (apiData && Array.isArray((apiData as ApiAny).responseObject?.data)) {
-      rawList = (apiData as ApiAny).responseObject.data;
-    } else if (apiData && Array.isArray((apiData as ApiAny).data?.staffs)) {
-      rawList = (apiData as ApiAny).data.staffs;
-    } else if (apiData && Array.isArray((apiData as ApiAny).data?.data)) {
-      rawList = (apiData as ApiAny).data.data;
-    } else if (apiData && Array.isArray((apiData as ApiAny).data)) {
-      rawList = (apiData as ApiAny).data;
-    } else if (apiData && Array.isArray((apiData as ApiAny).staffs)) {
-      rawList = (apiData as ApiAny).staffs;
+    } else if (apiData && Array.isArray((apiData as any).responseObject?.data)) {
+      rawList = (apiData as any).responseObject.data;
+    } else if (apiData && Array.isArray((apiData as any).data?.staffs)) {
+      rawList = (apiData as any).data.staffs;
+    } else if (apiData && Array.isArray((apiData as any).data?.data)) {
+      rawList = (apiData as any).data.data;
+    } else if (apiData && Array.isArray((apiData as any).data)) {
+      rawList = (apiData as any).data;
+    } else if (apiData && Array.isArray((apiData as any).staffs)) {
+      rawList = (apiData as any).staffs;
     }
 
     return rawList

@@ -1,7 +1,25 @@
 import { Button } from "@/components/ui/Button";
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
-import { Home, Calendar, Users, CreditCard, Activity, Stethoscope, FileText, Shield, Package, BarChart3, UserCheck, Building2, Menu, X, FlaskConical, Megaphone } from "lucide-react";
+import {
+  Home,
+  Calendar,
+  Users,
+  CreditCard,
+  Activity,
+  Stethoscope,
+  FileText,
+  Shield,
+  Package,
+  BarChart3,
+  UserCheck,
+  IndianRupee,
+  Building2,
+  Menu,
+  X,
+  FlaskConical,
+  Megaphone,
+} from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { getParsedPermissions } from "../../utils/permission";
 

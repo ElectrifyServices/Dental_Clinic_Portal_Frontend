@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 import apiClient from "@/services/apiClient";
 import { parseApiResponse } from "@/services/parseApiResponse";
@@ -7,7 +6,7 @@ export interface Role {
   id: string;
   name: string;
   description: string;
-  [key: string]: ApiAny;
+  [key: string]: any;
 }
 
 export function useRolesQuery() {

@@ -1,18 +1,27 @@
-import type { ApiAny } from "../../types/api";
 import React, { useState, useMemo, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Upload, Building2, User, Users, Phone, MoreHorizontal, ArrowRightLeft, MessageCircle, Activity, Ban, Wallet, Filter, X } from 'lucide-react';
+import {
+  Plus, Trash2, Edit2, Upload, Building2, User,
+  Users, Phone, Search,
+  MoreHorizontal, ArrowRightLeft,
+  UserPlus, Zap, MessageCircle, Activity, Ban, Wallet,
+  Link2, X,
+} from 'lucide-react';
 import { CorporateEmployee, CorporatePlan, CoverageType } from '../../types';
-import { DataTable, Pagination, PlanBadge, ConfirmModal, Modal, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Button, SearchInput, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Loading, Label, FilterContainer } from '../ui';
-import { cn } from '@/lib/utils';
+import {
+  PageHeader, DataTable, Pagination, PlanBadge, ConfirmModal, Modal,
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Button, SearchInput, FilterTabs,
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Loading,
+} from '../ui';
 import { useDeleteEmployeeMutation } from '../../hooks/corporate/useDeleteEmployeeMutation';
 import { useEmployeesQuery } from '../../hooks/corporate/useEmployeesQuery';
+import { useCompaniesQuery } from '../../hooks/corporate/useCompaniesQuery';
 import { useUpdateEmployeeStatusMutation } from '../../hooks/corporate/useUpdateEmployeeStatusMutation';
 import { useRegenerateInvoiceMutation } from '../../hooks/corporate/useRegenerateInvoiceMutation';
 import { useModal } from '../../contexts/ModalContext';
 import { EmployeeImportTab } from './Employee/EmployeeImportTab';
 import { EmployeeFormModal } from './Employee/EmployeeFormModal';
 import { ChangePlanModal } from './Employee/ChangePlanModal';
-import { getDependentsByMember } from '../../hooks/corporate/dependentStorage';
+import { getDependentsByMember, removeDependent, notifyDependentChange } from '../../hooks/corporate/dependentStorage';
 import { useQueryClient } from '@tanstack/react-query';
 import { EmployeeDependentFormModal } from './Employee/EmployeeDependentFormModal';
 import { MemberCard } from './Employee/MemberCard';
@@ -20,6 +29,7 @@ import { WhatsAppHistoryModal } from './Employee/WhatsAppHistoryModal';
 import { BenefitUsageModal } from './Employee/BenefitUsageModal';
 import { CancelMembershipModal } from './Employee/CancelMembershipModal';
 import { RecordRefundModal } from './Employee/RecordRefundModal';
+import { LinkFamilyModal } from './Employee/LinkFamilyModal';
 import { formatPhoneWithCountryCode } from '../../utils/phoneUtils';
 
 interface EmployeeManagementProps {
@@ -33,10 +43,10 @@ interface EmployeeManagementProps {
 }
 
 export function EmployeeManagement({
-  employees: _employees, plans, onSave, onDelete, onBulkSave, onChangePlan: _onChangePlan, onGoToRegister: _onGoToRegister,
+  employees, plans, onSave, onDelete, onBulkSave, onChangePlan, onGoToRegister,
 }: EmployeeManagementProps) {
   const queryClient = useQueryClient();
-  const { showToast, confirmDelete: _confirmDelete, showConfirm: _showConfirm, setActiveModal, setWhatsappPhone, setWhatsappPatientName } = useModal();
+  const { showToast, confirmDelete, showConfirm, setActiveModal, setWhatsappPhone, setWhatsappPatientName } = useModal();
 
   const deleteEmployeeMutation = useDeleteEmployeeMutation();
   const updateStatusMutation = useUpdateEmployeeStatusMutation();
@@ -47,7 +57,6 @@ export function EmployeeManagement({
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [planTypeFilter, setPlanTypeFilter] = useState<'all' | 'corporate' | 'individual'>('all');
   const [selectedPlanFilter, setSelectedPlanFilter] = useState<string>('all');
-  const [showFilters, setShowFilters] = useState(false);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
 
@@ -63,14 +72,18 @@ export function EmployeeManagement({
   const [cancelMembershipEmp, setCancelMembershipEmp] = useState<CorporateEmployee | null>(null);
   const [recordRefundEmp, setRecordRefundEmp] = useState<CorporateEmployee | null>(null);
   const [addDependentEmp, setAddDependentEmp] = useState<CorporateEmployee | null>(null);
-  const [editDep, setEditDep] = useState<ApiAny | null>(null);
-  const [deleteDep, setDeleteDep] = useState<ApiAny | null>(null);
+  const [editDep, setEditDep] = useState<any | null>(null);
+  const [deleteDep, setDeleteDep] = useState<any | null>(null);
   const [expandedRowIds, setExpandedRowIds] = useState<Set<string>>(new Set());
   const [viewDependentsEmpId, setViewDependentsEmpId] = useState<string | null>(null);
   const [whatsappHistoryEmp, setWhatsappHistoryEmp] = useState<CorporateEmployee | null>(null);
   const [benefitUsageEmp, setBenefitUsageEmp] = useState<CorporateEmployee | null>(null);
   const [statusToggleEmp, setStatusToggleEmp] = useState<CorporateEmployee | null>(null);
-  const [statusToggleDep, setStatusToggleDep] = useState<ApiAny | null>(null);
+  const [statusToggleDep, setStatusToggleDep] = useState<any | null>(null);
+  const [linkMode, setLinkMode] = useState(false);
+  const [linkSelectedIds, setLinkSelectedIds] = useState<Set<string>>(new Set());
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [showExitLinkConfirm, setShowExitLinkConfirm] = useState(false);
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(search), 500);
@@ -78,7 +91,7 @@ export function EmployeeManagement({
   }, [search]);
 
   const queryFilters = useMemo(() => {
-    const filters: ApiAny = {};
+    const filters: any = {};
 
     if (planTypeFilter === 'corporate') {
       filters.plan_type = ['COMPANY'];
@@ -91,7 +104,7 @@ export function EmployeeManagement({
     }
 
     return filters;
-  }, [planTypeFilter, selectedPlanFilter]);
+  }, [planTypeFilter, selectedPlanFilter, plans]);
 
   const { data: employeesData, isLoading: employeesLoading, refetch } = useEmployeesQuery({
     search: debouncedSearch,
@@ -110,18 +123,39 @@ export function EmployeeManagement({
   }, [refetch, queryClient]);
 
   const apiMembers: CorporateEmployee[] = useMemo(() => {
-    let arr: ApiAny[] = [];
+    let arr: any[] = [];
     if (Array.isArray(employeesData)) arr = employeesData;
     else if (Array.isArray(employeesData?.data)) arr = employeesData.data;
     else if (Array.isArray(employeesData?.data?.data)) arr = employeesData.data.data;
     else if (Array.isArray(employeesData?.data?.employees)) arr = employeesData.data.employees;
     else if (Array.isArray(employeesData?.employees)) arr = employeesData.employees;
 
-    return arr.map((e: ApiAny) => {
-      const activeEnrollment = e.enrollments?.find((en: ApiAny) => en.status === 'ACTIVE') || e.enrollments?.[0];
-      const planInfo = activeEnrollment?.plan || {};
+    // A family member can now be linked to a plan different from the head's
+    // own plan (via Link as Family), so each dependent's own active
+    // enrollment must be resolved the same way the head's is — it can no
+    // longer be assumed to match the head's plan.
+    interface EnrollmentLike {
+      status?: string;
+      plan_id?: string;
+      enrollment_date?: string;
+      plan?: { plan_name?: string; company_name?: string; family_coverage_limit?: number };
+    }
+    const resolveActivePlan = (member: { enrollments?: EnrollmentLike[] }) => {
+      const enrollments = member.enrollments ?? [];
+      const activeEnrollment = enrollments.find((en) => en.status === 'ACTIVE') ?? enrollments[0];
+      const planInfo = activeEnrollment?.plan ?? {};
       const planId = activeEnrollment?.plan_id || '';
-      
+      return {
+        planId,
+        planName: planInfo.plan_name || plans.find(p => p.id === planId)?.name || '',
+        planInfo,
+        activeEnrollment,
+      };
+    };
+
+    return arr.map((e: any) => {
+      const { planId, planName, planInfo, activeEnrollment } = resolveActivePlan(e);
+
       return {
         id: e.id,
         employeeId: e.id || '', // No emp_id provided in new json
@@ -135,14 +169,21 @@ export function EmployeeManagement({
         department: '',
         companyName: planInfo.company_name || '',
         corporatePlanId: planId,
-        corporatePlanName: planInfo.plan_name || plans.find(p => p.id === planId)?.name || '',
+        corporatePlanName: planName,
         enrolledAt: activeEnrollment?.enrollment_date || e.created_at || new Date().toISOString(),
         eligible_date: activeEnrollment?.enrollment_date || e.created_at || new Date().toISOString(),
         isActive: e.status === 'ACTIVE',
         status: e.status,
         patientId: e.patient_id || undefined,
         coverageType: (e.family_members?.length > 0 ? 'family' : 'self') as CoverageType,
-        dependents: e.family_members || getDependentsByMember(e.id),
+        dependents: (e.family_members || getDependentsByMember(e.id)).map((dep) => {
+          const depPlan = resolveActivePlan(dep);
+          return {
+            ...dep,
+            corporatePlanId: depPlan.planId,
+            corporatePlanName: depPlan.planName,
+          };
+        }),
         familyCoverageLimit: planInfo.family_coverage_limit || 0,
       };
     });
@@ -189,7 +230,7 @@ export function EmployeeManagement({
   ];
 
   const handlePlanTypeChange = (val: string) => {
-    setPlanTypeFilter(val as ApiAny);
+    setPlanTypeFilter(val as any);
     setSelectedPlanFilter('all');
     setPage(1);
   };
@@ -214,7 +255,7 @@ export function EmployeeManagement({
       onDelete(deleteEmp.id);
       refetch();
       setDeleteEmp(null);
-    } catch (e: ApiAny) {
+    } catch (e: any) {
       const d = e.response?.data || e;
       const msg = d?.responseStatusList?.statusList?.[0]?.statusDesc || d?.statusDesc || d?.message || e.message || 'Failed to remove member';
       showToast(msg, 'error');
@@ -231,7 +272,7 @@ export function EmployeeManagement({
       showToast("Family member removed successfully", "success");
       refetch();
       setDeleteDep(null);
-    } catch (err: ApiAny) {
+    } catch (err: any) {
       showToast(err?.message || "Failed to remove family member", "error");
     }
   };
@@ -247,9 +288,9 @@ export function EmployeeManagement({
         plan_id: emp.corporatePlanId,
       });
       showToast(`Invoice resent successfully for ${emp.name}`, 'success');
-    } catch (e: ApiAny) {
-      const d = (e as ApiAny).response?.data || e;
-      const msg = d?.responseStatusList?.statusList?.[0]?.statusDesc || d?.statusDesc || d?.message || (e as ApiAny).message || 'Failed to resend invoice';
+    } catch (e: any) {
+      const d = (e as any).response?.data || e;
+      const msg = d?.responseStatusList?.statusList?.[0]?.statusDesc || d?.statusDesc || d?.message || (e as any).message || 'Failed to resend invoice';
       showToast(msg, 'error');
     }
   };
@@ -257,8 +298,7 @@ export function EmployeeManagement({
   const handleRowClick = (emp: CorporateEmployee) => {
     setExpandedRowIds(prev => {
       const next = new Set(prev);
-      if (next.has(emp.id)) next.delete(emp.id);
-      else next.add(emp.id);
+      next.has(emp.id) ? next.delete(emp.id) : next.add(emp.id);
       return next;
     });
   };
@@ -276,17 +316,27 @@ export function EmployeeManagement({
       {
         key: 'name',
         header: 'Name',
-        render: (dep: ApiAny) => <span className="font-bold text-foreground text-sm">{dep.name}</span>,
+        render: (dep: any) => <span className="font-bold text-foreground text-sm">{dep.name}</span>,
       },
       {
         key: 'relationship',
         header: 'Relation',
-        render: (dep: ApiAny) => <span className="text-xs text-muted-foreground">{dep.relationship_type || dep.relationship}</span>,
+        render: (dep: any) => <span className="text-xs text-muted-foreground">{dep.relationship_type || dep.relationship}</span>,
+      },
+      {
+        key: 'plan',
+        header: 'Plan',
+        render: (dep) => {
+          const plan = plans.find(p => p.id === dep.corporatePlanId);
+          if (plan) return <PlanBadge name={plan.name} code={plan.code} color={plan.color} />;
+          if (dep.corporatePlanName) return <span className="text-sm font-semibold">{dep.corporatePlanName}</span>;
+          return <span className="text-xs text-muted-foreground/60 italic">No plan</span>;
+        },
       },
       {
         key: 'contact',
         header: 'Contact',
-        render: (dep: ApiAny) => dep.phone ? (
+        render: (dep: any) => dep.phone ? (
           <span className="text-xs text-muted-foreground flex items-center gap-1">
             <Phone className="w-3 h-3 opacity-60" /> {formatPhoneWithCountryCode(dep.phone, dep.country_code || dep.countryCode)}
           </span>
@@ -297,7 +347,7 @@ export function EmployeeManagement({
       {
         key: 'status',
         header: 'Status',
-        render: (dep: ApiAny) => {
+        render: (dep: any) => {
           const isDepActive = dep.status === 'ACTIVE' || (dep.status === undefined && dep.isActive !== false);
           const isDepExpired = dep.status === 'EXPIRED';
           const isDepCancelled = dep.status === 'CANCELLED';
@@ -318,7 +368,7 @@ export function EmployeeManagement({
                       ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
                       : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
               }`}
-              disabled={isDepExpired || (updateStatusMutation as ApiAny).isPending}
+              disabled={isDepLocked || (updateStatusMutation as any).isPending}
             >
               <span className={`w-1.5 h-1.5 rounded-full ${
                 isDepCancelled ? 'bg-violet-500' : isDepExpired ? 'bg-rose-500' : isDepActive ? 'bg-emerald-500' : 'bg-muted-foreground/40'
@@ -332,7 +382,7 @@ export function EmployeeManagement({
         key: 'actions',
         header: 'ACTION',
         align: 'right' as const,
-        render: (dep: ApiAny) => (
+        render: (dep: any) => (
           <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
             <Button
               variant="outline"
@@ -375,8 +425,8 @@ export function EmployeeManagement({
     ];
 
     return (
-      <div className="p-3 bg-muted/20 border-l-2 border-primary/40">
-        <h4 className="text-sm font-semibold mb-2">Family Members ({emp.dependents.length})</h4>
+      <div className="p-4 bg-muted/20 border-l-2 border-primary/40">
+        <h4 className="text-sm font-semibold mb-3">Family Members ({emp.dependents.length})</h4>
         <DataTable
           columns={dependentColumns}
           data={emp.dependents}
@@ -400,19 +450,57 @@ export function EmployeeManagement({
   const avatarGrad = (name: string) =>
     AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length];
 
+  const toggleLinkSelect = (id: string) => {
+    setLinkSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const exitLinkMode = () => {
+    setLinkMode(false);
+    setLinkSelectedIds(new Set());
+  };
+
+  const handleCancelLinkMode = () => {
+    if (linkSelectedIds.size > 0) {
+      setShowExitLinkConfirm(true);
+    } else {
+      exitLinkMode();
+    }
+  };
+
   // ── Table columns ─────────────────────────────────────────────────────────
   const columns = [
+    ...(linkMode ? [{
+      key: 'select', header: '',
+      render: (e: CorporateEmployee) => {
+        const isCancelled = e.status === 'CANCELLED';
+        return (
+          <input
+            type="checkbox"
+            className="w-4 h-4 rounded accent-primary cursor-pointer disabled:cursor-not-allowed disabled:opacity-30"
+            checked={linkSelectedIds.has(e.id)}
+            disabled={isCancelled}
+            title={isCancelled ? 'This membership is cancelled and cannot be linked' : undefined}
+            onClick={(ev: React.MouseEvent) => ev.stopPropagation()}
+            onChange={() => toggleLinkSelect(e.id)}
+          />
+        );
+      },
+    }] : []),
     {
       key: 'member', header: 'Member',
       render: (e: CorporateEmployee) => (
         <div className="flex items-center gap-3">
-          <div className={`w-9 h-9 rounded-xl bg-linear-to-br ${avatarGrad(e.name)} flex items-center justify-center text-white font-black text-sm shrink-0 shadow-sm`}>
+          <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${avatarGrad(e.name)} flex items-center justify-center text-white font-black text-sm flex-shrink-0 shadow-sm`}>
             {e.name[0]?.toUpperCase()}
           </div>
           <div>
             <div className="font-bold text-foreground text-sm">{e.name}</div>
             <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-              <Phone className="w-3 h-3 opacity-60" /> {formatPhoneWithCountryCode(e.phone, (e as ApiAny).country_code || (e as ApiAny).countryCode)}
+              <Phone className="w-3 h-3 opacity-60" /> {formatPhoneWithCountryCode(e.phone, (e as any).country_code || (e as any).countryCode)}
             </div>
           </div>
         </div>
@@ -446,7 +534,7 @@ export function EmployeeManagement({
     },
     {
       key: 'family', header: 'Family',
-      render: (e: ApiAny) => {
+      render: (e: any) => {
         const count = e.dependents?.length ?? 0;
         const limit = e.familyCoverageLimit ?? 0;
         return count > 0 || limit > 0 ? (
@@ -480,7 +568,7 @@ export function EmployeeManagement({
                     ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
                     : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
             }`}
-            disabled={isExpired || (updateStatusMutation as ApiAny).isPending}
+            disabled={isLocked || (updateStatusMutation as any).isPending}
           >
             <span className={`w-1.5 h-1.5 rounded-full ${
               isCancelled ? 'bg-violet-500' : isExpired ? 'bg-rose-500' : e.isActive ? 'bg-emerald-500' : 'bg-muted-foreground/40'
@@ -553,16 +641,14 @@ export function EmployeeManagement({
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="flex-1 min-h-0 flex flex-col gap-4">
+    <div className="space-y-4">
       {tab === 'list' ? (
         <>
           {/* Controls Container */}
-          <FilterContainer
-            isOpen={showFilters}
-            onClose={() => setShowFilters(false)}
-            className="shrink-0 space-y-3"
-          >
-            <div className="flex items-center gap-2 p-3 bg-slate-50/50 rounded-2xl border border-border/50 w-full">
+          <div className="flex flex-col gap-2 p-3 bg-slate-50/50 rounded-2xl border border-border/50 w-full">
+            {/* Row 1: Search + Action Buttons */}
+            <div className="flex items-center gap-2 w-full">
+              {/* Search Input */}
               <div className="flex-1 min-w-0">
                 <SearchInput
                   value={search}
@@ -571,100 +657,112 @@ export function EmployeeManagement({
                   className="w-full"
                 />
               </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowFilters(v => !v)}
-                className={cn(
-                  "h-10 gap-2 shrink-0",
-                  (planTypeFilter !== 'all' || selectedPlanFilter !== 'all') && "border-primary bg-primary/10 text-primary hover:bg-primary/15"
-                )}
-              >
-                <Filter className="w-4 h-4" />
-                <span className="hidden sm:inline">Filters</span>
-                {(planTypeFilter !== 'all' || selectedPlanFilter !== 'all') && (
-                  <span className="bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 text-[10px]">
-                    {[planTypeFilter !== 'all', selectedPlanFilter !== 'all'].filter(Boolean).length}
-                  </span>
-                )}
-              </Button>
-
-              {(planTypeFilter !== 'all' || selectedPlanFilter !== 'all') && (
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    setPlanTypeFilter('all');
-                    setSelectedPlanFilter('all');
-                    setPage(1);
-                  }}
-                  className="h-10 gap-1 text-muted-foreground shrink-0"
-                >
-                  <X className="w-3 h-3" /> <span className="hidden sm:inline">Clear</span>
-                </Button>
-              )}
-
               {/* Action Buttons — always visible */}
               <div className="flex items-center gap-2 shrink-0">
-                <Button onClick={() => setTab('import')} variant="outline" className="gap-1.5 rounded-xl h-10 border-border/60 hover:bg-slate-50 px-3">
-                  <Upload className="w-4 h-4" /> <span className="hidden sm:inline">Import</span>
-                </Button>
-                <Button onClick={() => { setEditEmp(null); setShowForm(true); }} className="gap-1.5 rounded-xl shadow-md shadow-primary/15 bg-primary text-white hover:bg-primary/90 h-10 px-3">
-                  <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Add Member</span>
-                </Button>
+                {linkMode ? (
+                  <Button onClick={handleCancelLinkMode} variant="outline" className="gap-1.5 rounded-xl h-10 border-border/60 hover:bg-slate-50">
+                    <X className="w-4 h-4" /> Cancel
+                  </Button>
+                ) : (
+                  <>
+                    <Button onClick={() => setLinkMode(true)} variant="outline" className="gap-1.5 rounded-xl h-10 border-border/60 hover:bg-slate-50 hidden sm:flex">
+                      <Link2 className="w-4 h-4" /> Link as Family
+                    </Button>
+                    <Button onClick={() => setLinkMode(true)} variant="outline" size="icon" className="rounded-xl h-10 w-10 border-border/60 hover:bg-slate-50 flex sm:hidden">
+                      <Link2 className="w-4 h-4" />
+                    </Button>
+                    <Button onClick={() => setTab('import')} variant="outline" className="gap-1.5 rounded-xl h-10 border-border/60 hover:bg-slate-50 hidden sm:flex">
+                      <Upload className="w-4 h-4" /> Import
+                    </Button>
+                    <Button onClick={() => setTab('import')} variant="outline" size="icon" className="rounded-xl h-10 w-10 border-border/60 hover:bg-slate-50 flex sm:hidden">
+                      <Upload className="w-4 h-4" />
+                    </Button>
+                    <Button onClick={() => { setEditEmp(null); setShowForm(true); }} className="gap-1.5 rounded-xl shadow-md shadow-primary/15 bg-primary text-white hover:bg-primary/90 h-10 px-3 hidden sm:flex">
+                      <Plus className="w-4 h-4" /> Add Member
+                    </Button>
+                    <Button onClick={() => { setEditEmp(null); setShowForm(true); }} size="icon" className="rounded-xl shadow-md shadow-primary/15 bg-primary text-white hover:bg-primary/90 h-10 w-10 flex sm:hidden">
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
 
-            {showFilters && (
-              <div className="bg-card p-4 sm:p-5 rounded-2xl border border-border shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
-                <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">Advanced Filters</h3>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                  <div>
-                    <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">Member Type</Label>
-                    <Select value={planTypeFilter} onValueChange={handlePlanTypeChange}>
-                      <SelectTrigger className="w-full h-10 rounded-xl text-xs bg-muted/50 border-border/60">
-                        <SelectValue placeholder="Filter Type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {planTypeTabs.map(tab => (
-                          <SelectItem key={tab.key} value={tab.key} className="text-xs">
-                            {tab.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">Plan</Label>
-                    <Select value={selectedPlanFilter} onValueChange={val => { setSelectedPlanFilter(val); setPage(1); }}>
-                      <SelectTrigger className="w-full h-10 rounded-xl text-xs bg-muted/50 border-border/60">
-                        <SelectValue placeholder="Filter by Plan" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all" className="text-xs font-bold text-primary">All Plans</SelectItem>
-                        {availablePlanOptions.map(opt => (
-                          <SelectItem key={opt.value} value={opt.value} className="text-xs">
-                            {opt.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+            {linkMode && (
+              <div className="flex items-center justify-between gap-2 px-1">
+                <p className="text-xs text-muted-foreground">
+                  Select 2 or more members to link as a family ({linkSelectedIds.size} selected)
+                </p>
+                <Button
+                  onClick={() => setShowLinkModal(true)}
+                  disabled={linkSelectedIds.size < 2}
+                  size="sm"
+                  className="gap-1.5 rounded-xl bg-primary text-white hover:bg-primary/90"
+                >
+                  <Link2 className="w-3.5 h-3.5" /> Link {linkSelectedIds.size > 0 ? `${linkSelectedIds.size} ` : ''}Members
+                </Button>
               </div>
             )}
-          </FilterContainer>
 
-          <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">
+            {/* Row 2: Filter Tabs + Plan Select */}
+            <div className="flex items-center gap-2 w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {/* Filter Tabs - Desktop only */}
+              <div className="hidden sm:block shrink-0">
+                <FilterTabs
+                  tabs={planTypeTabs}
+                  active={planTypeFilter}
+                  onChange={handlePlanTypeChange}
+                />
+              </div>
+
+              {/* Plan Type Select - Mobile only */}
+              <div className="block sm:hidden shrink-0 w-[140px]">
+                <Select
+                  value={planTypeFilter}
+                  onValueChange={handlePlanTypeChange}
+                >
+                  <SelectTrigger className="w-full h-10 rounded-xl text-xs bg-white border-border/60 hover:bg-slate-50">
+                    <SelectValue placeholder="Filter Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {planTypeTabs.map(tab => (
+                      <SelectItem key={tab.key} value={tab.key} className="text-xs">
+                        {tab.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Plan Select */}
+              <div className="shrink-0 w-[160px] min-w-[140px]">
+                <Select
+                  value={selectedPlanFilter}
+                  onValueChange={val => { setSelectedPlanFilter(val); setPage(1); }}
+                >
+                  <SelectTrigger className="w-full h-10 rounded-xl text-xs bg-white border-border/60 hover:bg-slate-50">
+                    <SelectValue placeholder="Filter by Plan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all" className="text-xs font-bold text-primary">All Plans</SelectItem>
+                    {availablePlanOptions.map(opt => (
+                      <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
           {employeesLoading ? (
             <Loading type="spinner" text="Loading members…" className="py-28 bg-muted/20 rounded-2xl border border-dashed border-border" />
           ) : (
             <>
               {/* Desktop Table View */}
-              <div className="hidden lg:flex lg:flex-col lg:flex-1 lg:min-h-0">
+              <div className="hidden lg:block">
                 <DataTable
-                  className="flex-1 min-h-0"
                   columns={columns}
                   data={displayMembers}
                   rowKey={e => e.id}
@@ -699,7 +797,7 @@ export function EmployeeManagement({
                   </div>
                 ) : (
                   <>
-                    <div className="grid grid-cols-1 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {displayMembers.map((e) => (
                         <MemberCard
                            key={e.id}
@@ -753,7 +851,6 @@ export function EmployeeManagement({
               </div>
             </>
           )}
-          </div>
         </>
       ) : (
         <EmployeeImportTab
@@ -811,7 +908,7 @@ export function EmployeeManagement({
               await updateStatusMutation.mutateAsync({ id: statusToggleEmp.id, status: statusToggleEmp.isActive ? 'INACTIVE' : 'ACTIVE' });
               refetch();
               setStatusToggleEmp(null);
-            } catch { /* the mutation surfaces its own error toast */ }
+            } catch {}
           }}
           onCancel={() => setStatusToggleEmp(null)}
         />
@@ -828,7 +925,7 @@ export function EmployeeManagement({
               await updateStatusMutation.mutateAsync({ id: statusToggleDep.id, status: isDepActive ? 'INACTIVE' : 'ACTIVE' });
               refetch();
               setStatusToggleDep(null);
-            } catch { /* the mutation surfaces its own error toast */ }
+            } catch {}
           }}
           onCancel={() => setStatusToggleDep(null)}
         />
@@ -845,7 +942,7 @@ export function EmployeeManagement({
             {(!selectedEmp.dependents || selectedEmp.dependents.length === 0) ? (
               <p className="text-sm text-muted-foreground py-4 text-center">No family members enrolled.</p>
             ) : (
-              selectedEmp.dependents.map((dep: ApiAny) => {
+              selectedEmp.dependents.map((dep: any) => {
                 const isDepActive = dep.status === 'ACTIVE' || (dep.status === undefined && dep.isActive !== false);
                 const isDepExpired = dep.status === 'EXPIRED';
                 const isDepCancelled = dep.status === 'CANCELLED';
@@ -854,17 +951,25 @@ export function EmployeeManagement({
                 return (
                   <div
                     key={dep.id}
-                    className="p-3 bg-white rounded-2xl border border-border/60 space-y-2 shadow-sm"
+                    className="p-3.5 bg-white rounded-2xl border border-border/60 space-y-2.5 shadow-sm"
                   >
                     <div className="flex items-center justify-between">
                       <div className="min-w-0">
                         <span className="font-bold text-sm text-foreground truncate block">{dep.name}</span>
-                        <span className="inline-block text-[10px] font-bold text-violet-700 bg-violet-50 border border-violet-200 px-2 py-0.5 rounded-full mt-1 uppercase tracking-wide">
-                          {dep.relationship_type || dep.relationship}
-                        </span>
+                        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                          <span className="inline-block text-[10px] font-bold text-violet-700 bg-violet-50 border border-violet-200 px-2 py-0.5 rounded-full uppercase tracking-wide">
+                            {dep.relationship_type || dep.relationship}
+                          </span>
+                          {(() => {
+                            const depPlan = plans.find(p => p.id === dep.corporatePlanId);
+                            if (depPlan) return <PlanBadge name={depPlan.name} code={depPlan.code} color={depPlan.color} />;
+                            if (dep.corporatePlanName) return <span className="text-[10px] font-semibold text-muted-foreground">{dep.corporatePlanName}</span>;
+                            return null;
+                          })()}
+                        </div>
                       </div>
 
-                      <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
                         <Button
                           onClick={async (ev) => {
                             ev.stopPropagation();
@@ -890,7 +995,7 @@ export function EmployeeManagement({
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between text-xs text-muted-foreground border-t border-slate-100/50 pt-2">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground border-t border-slate-100/50 pt-2.5">
                       <span className="flex items-center gap-1.5">
                         <Phone className="w-3.5 h-3.5 opacity-60" />
                         <span>{dep.phone ? formatPhoneWithCountryCode(dep.phone, dep.country_code || dep.countryCode) : '—'}</span>
@@ -976,6 +1081,32 @@ export function EmployeeManagement({
         <RecordRefundModal
           employee={recordRefundEmp}
           onClose={() => setRecordRefundEmp(null)}
+        />
+      )}
+
+      {showLinkModal && (
+        <LinkFamilyModal
+          members={apiMembers.filter(e => linkSelectedIds.has(e.id))}
+          onClose={() => setShowLinkModal(false)}
+          onLinked={() => {
+            setShowLinkModal(false);
+            exitLinkMode();
+            refetch();
+          }}
+        />
+      )}
+
+      {showExitLinkConfirm && (
+        <ConfirmModal
+          title="Discard Selection?"
+          message={`You have ${linkSelectedIds.size} member${linkSelectedIds.size > 1 ? 's' : ''} selected for linking. Leaving now will discard this selection.`}
+          confirmLabel="Discard"
+          variant="danger"
+          onConfirm={() => {
+            setShowExitLinkConfirm(false);
+            exitLinkMode();
+          }}
+          onCancel={() => setShowExitLinkConfirm(false)}
         />
       )}
     </div>

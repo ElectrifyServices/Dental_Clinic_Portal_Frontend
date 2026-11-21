@@ -1,11 +1,11 @@
-import type { ApiAny } from "../../../types/api";
 import { Label } from "@/components/ui/Label";
 import React from "react";
-import { ClipboardCheck, PenTool, Image as ImageIcon, AlertTriangle, Camera, Upload } from "lucide-react";
+import { ClipboardCheck, FileText, CheckCircle, ShieldCheck, PenTool, Image as ImageIcon, AlertTriangle, Camera, Upload, X } from "lucide-react";
 import { SignaturePad } from "../../Consent/SignaturePad";
 import { calculateAge } from "./utils";
 import { Input } from "@/components/ui/Input";
 import { Card, CardContent } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 import { getFileUrl } from "../../../services/apiClient";
 
 const getSignatureSize = (dataUrl: string) => {
@@ -23,8 +23,8 @@ const getSignatureSize = (dataUrl: string) => {
 };
 
 interface Step3Props {
-  formData: ApiAny;
-  setFormData: React.Dispatch<React.SetStateAction<ApiAny>>;
+  formData: any;
+  setFormData: React.Dispatch<React.SetStateAction<any>>;
   handleChange: (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
@@ -47,21 +47,21 @@ export const Step3Consent: React.FC<Step3Props> = ({
   const isPdf = typeof consentUrl === "string" && (consentUrl.toLowerCase().includes(".pdf") || consentUrl.startsWith("data:application/pdf"));
 
   return (
-    <div className="space-y-3">
-      <div className="text-center mb-1">
-        <h3 className="text-base font-bold text-foreground leading-none">
-          Patient Consent &amp; Declaration
+    <div className="space-y-4">
+      <div className="text-center mb-3">
+        <h3 className="text-xl font-bold text-foreground">
+          Patient Consent & Declaration
         </h3>
-        <p className="text-[10px] text-primary/60 mt-1 uppercase font-bold tracking-widest">
+        <p className="text-sm text-muted-foreground">
           Please review and confirm the following statements
         </p>
       </div>
 
       <Card className="border border-border bg-card shadow-sm rounded-2xl">
-        <CardContent className="p-3 space-y-3">
-
+        <CardContent className="p-4 space-y-4">
+          
           {/* Consent Form Section */}
-          <div className="border border-border rounded-xl p-3 bg-card shadow-sm">
+          <div className="border border-border rounded-xl p-3.5 bg-card shadow-sm">
             <h4 className="text-sm font-bold text-primary uppercase tracking-widest mb-2 flex items-center gap-2">
               <Camera className="w-4 h-4 text-primary" />
               Offline Patient Registration Form
@@ -126,7 +126,7 @@ export const Step3Consent: React.FC<Step3Props> = ({
           </div>
 
           {/* Signature Section */}
-          <div className="border border-border rounded-xl p-3 bg-card shadow-sm">
+          <div className="border border-border rounded-xl p-3.5 bg-card shadow-sm">
             {!isMinor ? (
               <div>
                 <h4 className="text-sm font-bold text-foreground mb-2 flex items-center gap-2">
@@ -136,7 +136,7 @@ export const Step3Consent: React.FC<Step3Props> = ({
                 <div className="p-0">
                   <SignaturePad
                     onSave={(dataUrl) =>
-                      setFormData((prev: ApiAny) => ({
+                      setFormData((prev: any) => ({
                         ...prev,
                         patientSignature: dataUrl,
                       }))
@@ -154,7 +154,7 @@ export const Step3Consent: React.FC<Step3Props> = ({
             ) : (
               <div className="space-y-4 animate-in fade-in slide-in-from-top-4">
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-3">
-                  <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
+                  <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
                   <div>
                     <p className="text-sm font-bold text-amber-900">
                       Guardian Authorization
@@ -187,7 +187,7 @@ export const Step3Consent: React.FC<Step3Props> = ({
                   <div className="p-0">
                     <SignaturePad
                       onSave={(dataUrl) =>
-                        setFormData((prev: ApiAny) => ({
+                        setFormData((prev: any) => ({
                           ...prev,
                           guardianSignature: dataUrl,
                         }))

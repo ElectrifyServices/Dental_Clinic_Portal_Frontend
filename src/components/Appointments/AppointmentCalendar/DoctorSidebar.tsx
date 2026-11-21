@@ -1,7 +1,16 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { InitialsAvatar } from "@/components/ui/InitialsAvatar";
+
+const DoctorPhoto: React.FC<{ name: string; src?: string }> = ({ name, src }) => {
+  const [failed, setFailed] = useState(false);
+  if (!src || failed) return <InitialsAvatar name={name} />;
+  return (
+    <img src={src} alt={name} className="w-full h-full object-cover" onError={() => setFailed(true)} />
+  );
+};
 import { Search, Stethoscope, Calendar as CalendarIcon } from "lucide-react";
 import { Input } from "@/components/ui/Input";
-import { Button, Pagination, SearchInput } from "@/components/ui";
+import { Button, Pagination } from "@/components/ui";
 
 interface Doctor {
   id: string;
@@ -40,10 +49,10 @@ export const DoctorSidebar: React.FC<DoctorSidebarProps> = ({
 }) => {
   useEffect(() => {
     // Auto-select if there is only one doctor in the entire list and no doctor is currently selected
-    if (totalItems === 1 && doctors.length === 1 && selectedDoctorId === null) {
+    if (doctors.length === 1 && selectedDoctorId === null) {
       setSelectedDoctorId(doctors[0].id);
     }
-  }, [totalItems, doctors, selectedDoctorId, setSelectedDoctorId]);
+  }, [doctors, selectedDoctorId, setSelectedDoctorId]);
 
   return (
     <div className="xl:col-span-3 bg-card rounded-2xl border border-border shadow-xs flex flex-col overflow-hidden h-[360px] sm:h-[400px] xl:h-full">
@@ -52,15 +61,18 @@ export const DoctorSidebar: React.FC<DoctorSidebarProps> = ({
           <Stethoscope className="w-3.5 h-3.5 text-primary" />
           Select Specialist
         </h3>
-        <SearchInput
-          placeholder="Search experts..."
-          value={searchTerm}
-          onChange={setSearchTerm}
-          className="[&>input]:bg-card [&>input]:rounded-xl [&>input]:text-xs [&>input]:h-8 [&>input]:sm:h-8.5"
-        />
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/60" />
+          <Input
+            placeholder="Search experts..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-8 bg-card rounded-xl text-xs h-8 sm:h-8.5"
+          />
+        </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto min-h-0 p-2 sm:p-2.5 space-y-1.5 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto p-2 sm:p-2.5 space-y-1.5 custom-scrollbar">
         <Button
           variant="ghost"
           onClick={() => setSelectedDoctorId(null)}
@@ -89,14 +101,7 @@ export const DoctorSidebar: React.FC<DoctorSidebarProps> = ({
                 : "bg-card border-transparent hover:border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted"}`}
           >
             <div className="w-8 h-8 rounded-lg overflow-hidden ring-1 ring-border shrink-0">
-              <img
-                src={doctor.avatar || doctor.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(doctor.name)}&background=random`}
-                alt={doctor.name}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(doctor.name)}&background=random`;
-                }}
-              />
+              <DoctorPhoto name={doctor.name} src={doctor.avatar || doctor.image} />
             </div>
             <div className="min-w-0">
               <p className="text-xs font-bold text-foreground truncate">{doctor.name}</p>
@@ -108,14 +113,13 @@ export const DoctorSidebar: React.FC<DoctorSidebarProps> = ({
 
       <div className="border-t border-border bg-muted/10 shrink-0">
         <Pagination
-          compact
           page={page}
           totalPages={totalPages}
           totalItems={totalItems}
           perPage={perPage}
           onPageChange={onPageChange}
           onPerPageChange={onPerPageChange}
-          className="p-2 text-xs"
+          className="px-2.5 py-1.5 text-xs"
         />
       </div>
     </div>

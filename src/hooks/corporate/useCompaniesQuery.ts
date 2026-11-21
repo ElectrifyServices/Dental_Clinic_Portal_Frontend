@@ -8,7 +8,7 @@ export interface CompanyResponse {
 export function useCompaniesQuery(options?: { enabled?: boolean }) {
   const enabled = options?.enabled ?? true;
 
-  return useApiQuery<CompanyResponse[]>({
+  return useApiQuery<any>({
     queryKey: ["companies"],
     endpoint: "/employee/companies/list",
     method: "get",

@@ -1,7 +1,7 @@
-import type { ApiAny } from "../types/api";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
-import { AlertTriangle, LayoutGrid, ListFilter, UserX } from "lucide-react";
+import { AlertTriangle, LayoutGrid, ListFilter, MessageCircle, UserX } from "lucide-react";
 import { useAppointmentData } from "../hooks/useAppointmentData";
 import { usePatientData } from "../hooks/usePatientData";
 import { useModal } from "../contexts/ModalContext";
@@ -50,8 +50,13 @@ export const AppointmentsPage: React.FC = () => {
     showConfirm,
     setPendingCheckInAppt,
     setSelectedPatientId,
+    setSelectedItemId,
+    setSelectedSessionId,
+    setWhatsappPhone,
+    setWhatsappPatientName,
   } = useModal();
 
+  const navigate = useNavigate();
   const [viewMode, setViewMode] = useState("calendar");
   const [checkingInApptId, setCheckingInApptId] = useState<string | null>(null);
   const [specialistSearch, setSpecialistSearch] = useState("");
@@ -59,11 +64,6 @@ export const AppointmentsPage: React.FC = () => {
 
   const [specialistPage, setSpecialistPage] = useState(1);
   const [specialistLimit, setSpecialistLimit] = useState(5);
-
-  const handleSpecialistLimitChange = (limit: number) => {
-    setSpecialistLimit(limit);
-    setSpecialistPage(1);
-  };
 
   const [noShowApptId, setNoShowApptId] = useState<string | null>(null);
   const [noShowReason, setNoShowReason] = useState("");
@@ -73,7 +73,7 @@ export const AppointmentsPage: React.FC = () => {
       setNoShowApptId(id);
       setNoShowReason("");
     } else if (status === 'cancelled') {
-      const apt = appointments.find((a: ApiAny) => a.id === id) || noShowAppointments?.find((a: ApiAny) => a.id === id);
+      const apt = appointments.find((a: any) => a.id === id) || noShowAppointments?.find((a: any) => a.id === id);
       showConfirm(
         "Cancel Appointment",
         `Are you sure you want to cancel the appointment for ${apt?.patientName || "this patient"}? A cancellation WhatsApp notification will be sent to the patient.`,
@@ -102,7 +102,7 @@ export const AppointmentsPage: React.FC = () => {
       setStartDate(selectedDate);
       setEndDate("");
     }
-  }, [selectedDate, viewMode, setStartDate, setEndDate]);
+  }, [selectedDate, viewMode]);
 
 
 
@@ -113,18 +113,20 @@ export const AppointmentsPage: React.FC = () => {
   };
 
   const listCount = appointments.filter(
-    (a: ApiAny) => a.status !== "no-show" && isMatchingDate(a.date),
+    (a: any) => a.status !== "no-show" && isMatchingDate(a.date),
   ).length;
 
-  const noShowCount = (noShowAppointments || []).filter((a: ApiAny) => isMatchingDate(a.date)).length;
+  const noShowCount = (noShowAppointments || []).filter((a: any) => isMatchingDate(a.date)).length;
   
-  const handleNewAppointment = (date?: Date) => {
+  const calendarCount = appointments.filter((a: any) => isMatchingDate(a.date)).length + noShowCount;
+
+  const handleNewAppointment = (date?: any) => {
     setSelectedAppointment(date ? { date } : null);
     setActiveModal("appointmentForm");
   };
 
   const handleDeleteAppt = (id: string) => {
-    const apt = appointments.find((a: ApiAny) => a.id === id) || noShowAppointments?.find((a: ApiAny) => a.id === id);
+    const apt = appointments.find((a: any) => a.id === id) || noShowAppointments?.find((a: any) => a.id === id);
     confirmDelete(
       "Delete Appointment",
       `Delete appointment for ${apt?.patientName || "this patient"}?`,
@@ -133,14 +135,46 @@ export const AppointmentsPage: React.FC = () => {
   };
 
   const { mutateAsync: checkInAppointment } = useCheckInAppointmentMutation();
+  const { mutateAsync: checkInAfterRegistration } = useCheckInAfterRegistrationMutation();
 
-  const handleCheckInPatient = async (appt: ApiAny) => {
+  // Shared by both check-in handlers below: an appointment created for a
+  // treatment plan session isn't a fresh walk-in, so it should never go
+  // through the patient-verification / consultation-queue flow — it just
+  // needs to be marked CHECKED_IN, then hand off straight to that session
+  // in Treatments.
+  const redirectToTreatmentSession = async (
+    appt: any,
+    responseData: any,
+  ): Promise<boolean> => {
+    if (!responseData?.is_treatment_session) return false;
+
+    const patientId = responseData?.patient_id ?? responseData?.patientId;
+    if (patientId) {
+      try {
+        await checkInAfterRegistration({ id: appt.id, patient_id: patientId });
+      } catch {
+        toast.error("Failed to check in treatment session");
+        return true;
+      }
+    }
+
+    // Open the Session Timeline modal directly via the shared modal context
+    // instead of navigating with query params — ModalRegistry is mounted
+    // globally, so this opens the modal immediately without depending on a
+    // route change to carry the plan/session ids across.
+    setSelectedItemId(responseData.treatment_plan_id);
+    setSelectedSessionId(responseData.treatment_session_id ?? null);
+    setActiveModal("sessionManager");
+    navigate("/treatments");
+    return true;
+  };
+
+  const handleCheckInPatient = async (appt: any) => {
     try {
       const response = await checkInAppointment({ id: appt.id });
       const responseData = response?.data ?? response;
 
-      const apptName = (appt.patientName || (typeof appt.patient === 'object' ? appt.patient?.name : appt.patient) || "").trim().toLowerCase();
-      const apptPhone = (appt.patientPhone || appt.phone || "").trim();
+      if (await redirectToTreatmentSession(appt, responseData)) return;
 
       setPendingCheckInAppt({
         ...appt,
@@ -148,67 +182,52 @@ export const AppointmentsPage: React.FC = () => {
         patientPhone: responseData?.patient_phone || appt.patientPhone,
         country_code: responseData?.patient_country_code || appt.country_code || "+91",
       });
-      
-      const requiresRegistration = responseData?.requires_registration ?? responseData?.requiresRegistration ?? true;
-      let patientId = responseData?.patient_id ?? responseData?.patientId;
 
-      // Defensive check: ensure patientId matches appointment's patient name (avoid picking parent for child with same phone)
-      if (patientId) {
-        const matchingPatient = patients.find((p: ApiAny) => p.id === patientId);
-        if (matchingPatient && apptName && matchingPatient.name.trim().toLowerCase() !== apptName) {
-          const actualPatient = patients.find(
-            (p: ApiAny) =>
-              (p.phone || "").trim() === apptPhone &&
-              (p.name || "").trim().toLowerCase() === apptName,
-          );
-          patientId = actualPatient ? actualPatient.id : null;
-        }
-      }
+      const requiresRegistration = responseData?.requires_registration ?? responseData?.requiresRegistration ?? true;
+      const patientId = responseData?.patient_id ?? responseData?.patientId;
 
       if (!requiresRegistration && patientId) {
         setSelectedPatientId(patientId);
         setActiveModal("patientForm");
         toast.success("Please verify patient details before check-in");
       } else {
+        // Server-side lookup across ALL patients (not just whatever page is
+        // currently loaded in `patients`) — see existing_patient_same_phone
+        // in AppointmentService.checkInPatient.
+        const samePhone = responseData?.existing_patient_same_phone;
+        setPendingCheckInAppt((prev) => ({
+          ...prev,
+          existingPatientSamePhone: samePhone
+            ? { id: samePhone.id, name: samePhone.name }
+            : undefined,
+        }));
         setActiveModal("patientNotFound");
       }
-    } catch {
+    } catch (err) {
       toast.error("Failed to update appointment check-in status");
     }
   };
 
-  const { mutateAsync: checkInAfterRegistration } = useCheckInAfterRegistrationMutation();
-
-  const handleDirectCheckInPatient = async (appt: ApiAny) => {
+  const handleDirectCheckInPatient = async (appt: any) => {
     setCheckingInApptId(appt.id);
     try {
       // First update the appointment status
       const response = await checkInAppointment({ id: appt.id });
-      
+
       const rawName = appt.patientName || (typeof appt.patient === 'object' ? appt.patient?.name : appt.patient) || "";
       const sName = String(rawName).toLowerCase().trim();
       const sPhone = (appt.patientPhone || appt.phone || "").trim();
-      
+
       const responseData = response?.data ?? response;
+
+      if (await redirectToTreatmentSession(appt, responseData)) return;
+
       let patientId = responseData?.patient_id ?? responseData?.patientId ?? appt.patientId ?? appt.patient_id;
       const requiresRegistration = responseData?.requires_registration ?? responseData?.requiresRegistration ?? false;
 
-      // Defensive check: ensure patientId matches appointment's patient name
-      if (patientId) {
-        const matchingPatient = patients.find((p: ApiAny) => p.id === patientId);
-        if (matchingPatient && sName && matchingPatient.name.trim().toLowerCase() !== sName) {
-          const actualPatient = patients.find(
-            (p: ApiAny) =>
-              (p.phone || "").trim() === sPhone &&
-              (p.name || "").trim().toLowerCase() === sName,
-          );
-          patientId = actualPatient ? actualPatient.id : null;
-        }
-      }
-
       if (!patientId && !requiresRegistration) {
         const existing = patients.find(
-          (p: ApiAny) =>
+          (p: any) =>
             (p.phone || "").trim() === sPhone &&
             (p.name || "").toLowerCase().trim() === sName,
         );
@@ -219,7 +238,7 @@ export const AppointmentsPage: React.FC = () => {
 
       if (patientId && !requiresRegistration) {
         // Add to local queue
-        setQueuedPatients((prev: ApiAny[]) => [
+        setQueuedPatients((prev: any[]) => [
           ...prev,
           {
             id: appt.id,
@@ -230,6 +249,12 @@ export const AppointmentsPage: React.FC = () => {
             status: "waiting",
             treatmentType: appt.treatment || appt.type,
             patientConcern: appt.patientConcern || "",
+            // Was missing — PatientConsultation then had no real doctor to
+            // resolve and fell back to the "1" placeholder, so the
+            // Treatment Planning slots query was checking a doctor that
+            // doesn't exist instead of the one this appointment was with.
+            doctorId: appt.doctorId,
+            doctorName: appt.doctorName,
           },
         ]);
         
@@ -239,16 +264,25 @@ export const AppointmentsPage: React.FC = () => {
             id: appt.id,
             patient_id: patientId
           });
-        } catch {
+        } catch (err) {
           toast.error("Failed to add patient to consultation queue");
         }
         
         toast.success("Patient checked in directly");
       } else {
-        setPendingCheckInAppt(appt);
+        // Server-side lookup across ALL patients (not just whatever page is
+        // currently loaded in `patients`) — see existing_patient_same_phone
+        // in AppointmentService.checkInPatient.
+        const samePhone = responseData?.existing_patient_same_phone;
+        setPendingCheckInAppt({
+          ...appt,
+          existingPatientSamePhone: samePhone
+            ? { id: samePhone.id, name: samePhone.name }
+            : undefined,
+        });
         setActiveModal("patientNotFound");
       }
-    } catch {
+    } catch (err) {
       toast.error("Failed to check in patient directly");
     } finally {
       setCheckingInApptId(null);
@@ -256,18 +290,17 @@ export const AppointmentsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-5 sm:space-y-6">
+    <div className="space-y-3">
       <PageHeader
         title="Appointments"
         subtitle="Schedule and manage patient visits"
-        className="pb-2 sm:pb-3 mb-1 sm:mb-2"
       >
-        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-          <div className="flex items-center justify-between gap-1 bg-muted/50 p-1 rounded-xl shrink-0">
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+          <div className="flex items-center justify-between gap-1 bg-muted/50 p-1 rounded-xl sm:rounded-2xl shrink-0">
             <Button
               variant="ghost"
               onClick={() => setViewMode("calendar")}
-              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all ${viewMode === "calendar" ? "bg-card text-primary shadow-xs hover:bg-card/90" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"}`}
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold transition-all ${viewMode === "calendar" ? "bg-card text-primary shadow-sm hover:bg-card/90" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"}`}
             >
               <LayoutGrid className="w-3.5 h-3.5" />
               <span className="truncate">Calendar</span>
@@ -275,7 +308,7 @@ export const AppointmentsPage: React.FC = () => {
             <Button
               variant="ghost"
               onClick={() => setViewMode("list")}
-              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all ${viewMode === "list" ? "bg-card text-primary shadow-xs hover:bg-card/90" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"}`}
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold transition-all ${viewMode === "list" ? "bg-card text-primary shadow-sm hover:bg-card/90" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"}`}
             >
               <ListFilter className="w-3.5 h-3.5" />
               <span className="truncate">List View ({listCount})</span>
@@ -283,7 +316,7 @@ export const AppointmentsPage: React.FC = () => {
             <Button
               variant="ghost"
               onClick={() => setViewMode("no-show")}
-              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all ${viewMode === "no-show" ? "bg-destructive/10 text-destructive shadow-xs hover:bg-destructive/20" : "text-muted-foreground hover:text-destructive hover:bg-destructive/10"}`}
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold transition-all ${viewMode === "no-show" ? "bg-destructive/10 text-destructive shadow-sm hover:bg-destructive/20" : "text-muted-foreground hover:text-destructive hover:bg-destructive/10"}`}
             >
               <AlertTriangle className="w-3.5 h-3.5" />
               <span className="truncate">No Show ({noShowCount})</span>
@@ -307,7 +340,7 @@ export const AppointmentsPage: React.FC = () => {
             specialistPage={specialistPage}
             setSpecialistPage={setSpecialistPage}
             specialistLimit={specialistLimit}
-            setSpecialistLimit={handleSpecialistLimitChange}
+            setSpecialistLimit={setSpecialistLimit}
             totalSpecialists={totalSpecialists}
             totalSpecialistPages={totalSpecialistPages}
             selectedDate={selectedDate}
@@ -317,7 +350,7 @@ export const AppointmentsPage: React.FC = () => {
               date: Date,
               time: string,
             ) => {
-              const doctor = activeDoctors.find((d: ApiAny) => d.id === doctorId);
+              const doctor = activeDoctors.find((d: any) => d.id === doctorId);
               setSelectedAppointment({
                 doctorId,
                 doctorName: doctor?.name,
@@ -326,7 +359,7 @@ export const AppointmentsPage: React.FC = () => {
               });
               setActiveModal("appointmentForm");
             }}
-            onEditAppointment={(apt: ApiAny) => {
+            onEditAppointment={(apt: any) => {
               setSelectedAppointment(apt);
               setActiveModal("appointmentForm");
             }}
@@ -336,9 +369,10 @@ export const AppointmentsPage: React.FC = () => {
         )}
         {(viewMode === "list" || viewMode === "no-show") && (
           <AppointmentList
-            appointments={viewMode === "list" ? appointments.filter((apt: ApiAny) => apt.status !== "no-show") : noShowAppointments}
+            appointments={viewMode === "list" ? appointments.filter((apt: any) => apt.status !== "no-show") : noShowAppointments}
+            isNoShowView={viewMode === "no-show"}
             onEditAppointment={(id: string) => {
-              const apt = appointments.find((a: ApiAny) => a.id === id) || noShowAppointments?.find((a: ApiAny) => a.id === id);
+              const apt = appointments.find((a: any) => a.id === id) || noShowAppointments?.find((a: any) => a.id === id);
               setSelectedAppointment(apt);
               setActiveModal("appointmentForm");
             }}

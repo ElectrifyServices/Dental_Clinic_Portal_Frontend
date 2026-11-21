@@ -1,40 +1,11 @@
 import React from "react";
 
-/** Appointment fields this helper reads; backend naming varies, so all optional. */
-export interface CheckInAppointment {
-  id: string;
-  patientName?: string;
-  patient?: string;
-  patientPhone?: string;
-  phone?: string;
-  time?: string;
-  treatment?: string;
-  type?: string;
-}
-
-/** Patient record fields this helper matches against. */
-export interface CheckInPatient {
-  id: string;
-  name?: string;
-  phone?: string;
-}
-
-export interface QueuedPatient {
-  id: string;
-  patientId: string;
-  patientName?: string;
-  patientPhone?: string;
-  appointmentTime?: string;
-  status: string;
-  treatmentType?: string;
-}
-
 export const processPatientCheckIn = (
-  appointment: CheckInAppointment,
-  patients: CheckInPatient[],
-  setQueuedPatients: React.Dispatch<React.SetStateAction<QueuedPatient[]>>,
+  appointment: any,
+  patients: any[],
+  setQueuedPatients: React.Dispatch<React.SetStateAction<any[]>>,
   handleUpdateAppointmentStatus: (id: string, status: string) => void,
-  setPendingCheckInAppt: React.Dispatch<React.SetStateAction<CheckInAppointment | null>>,
+  setPendingCheckInAppt: React.Dispatch<any>,
   setShowPatientNotFound: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
   console.log(

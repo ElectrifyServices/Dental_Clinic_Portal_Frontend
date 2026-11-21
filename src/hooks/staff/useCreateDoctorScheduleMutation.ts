@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -61,18 +60,9 @@ const ORDERED_DAYS: Array<keyof typeof DAY_KEY_TO_ENUM> = [
  * and slot settings into the POST /doctorSchedule/create/:doctorId payload.
  */
 export function mapScheduleToPayload(
-  workingHours: Record<string, ApiAny>,
+  workingHours: Record<string, any>,
   settings: { duration: number; bufferTime: number }
 ): CreateDoctorSchedulePayload {
-  const isValidTime = (t?: string | null) =>
-    Boolean(t && typeof t === "string" && /^([01]\d|2[0-3]):([0-5]\d)$/.test(t.trim().slice(0, 5)));
-
-  const cleanTime = (t?: string | null): string | undefined => {
-    if (!t || typeof t !== "string") return undefined;
-    const trimmed = t.trim().slice(0, 5);
-    return isValidTime(trimmed) ? trimmed : undefined;
-  };
-
   const day_schedules: DaySchedulePayload[] = ORDERED_DAYS.map((dayKey) => {
     const day = workingHours[dayKey] ?? {};
     const isWorking = Boolean(day.isWorking);
@@ -83,17 +73,12 @@ export function mapScheduleToPayload(
     };
 
     if (isWorking) {
-      const sTime = cleanTime(day.startTime);
-      const eTime = cleanTime(day.endTime);
-      if (sTime) entry.start_time = sTime;
-      if (eTime) entry.end_time = eTime;
-
-      const bStart = cleanTime(day.breakStart);
-      const bEnd = cleanTime(day.breakEnd);
-      // Only include break times if both are valid
-      if (bStart && bEnd) {
-        entry.break_start = bStart;
-        entry.break_end = bEnd;
+      if (day.startTime) entry.start_time = day.startTime;
+      if (day.endTime) entry.end_time = day.endTime;
+      // Only include break times if both are provided
+      if (day.breakStart && day.breakEnd) {
+        entry.break_start = day.breakStart;
+        entry.break_end = day.breakEnd;
       }
     }
 
@@ -112,7 +97,7 @@ export function mapScheduleToPayload(
 export function useCreateDoctorScheduleMutation() {
   const queryClient = useQueryClient();
 
-  return useApiMutation<ApiAny, CreateDoctorScheduleVariables>({
+  return useApiMutation<any, CreateDoctorScheduleVariables>({
     getEndpoint: (variables) =>
       `/doctorSchedule/${variables.doctorId}`,
     method: "post",

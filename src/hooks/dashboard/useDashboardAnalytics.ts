@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 import { getLocalDateString } from "../../utils/dateUtils";
 
@@ -19,7 +18,7 @@ export function getDashboardDateRange(
       startDate = new Date(now.setHours(0, 0, 0, 0));
       endDate = new Date(now.setHours(23, 59, 59, 999));
       break;
-    case "week": {
+    case "week":
       // Assuming Monday start
       const day = now.getDay();
       const diff = now.getDate() - day + (day === 0 ? -6 : 1);
@@ -28,8 +27,6 @@ export function getDashboardDateRange(
       endDate = new Date(startDate);
       endDate.setDate(startDate.getDate() + 6);
       endDate.setHours(23, 59, 59, 999);
-      break;
-    }
       break;
     case "month":
       startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
@@ -69,7 +66,7 @@ export function getDashboardDateRange(
 const DASHBOARD_OPTIONS = {
   refetchOnMount: true,
   staleTime: 0,
-  select: (res: ApiAny) => res?.data ?? res,
+  select: (res: any) => res?.data ?? res,
 } as const;
 
 export const useAppointmentsCount = (
@@ -82,7 +79,7 @@ export const useAppointmentsCount = (
     customStart,
     customEnd,
   );
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["dashboard", "appointments-count", startDate, endDate],
     endpoint: `/dashboard/appointments-count`,
     params: { startDate, endDate },
@@ -100,7 +97,7 @@ export const useRevenue = (
     customStart,
     customEnd,
   );
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["dashboard", "revenue", startDate, endDate],
     endpoint: `/dashboard/revenue`,
     params: { startDate, endDate },
@@ -118,7 +115,7 @@ export const usePatientsCount = (
     customStart,
     customEnd,
   );
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["dashboard", "patients-count", startDate, endDate],
     endpoint: `/dashboard/patients-count`,
     params: { startDate, endDate },
@@ -137,7 +134,7 @@ export const usePendingInvoices = (
     customEnd,
   );
 
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["dashboard", "pending-invoices", startDate, endDate],
     endpoint: `/dashboard/pending-invoices`,
     params: { startDate, endDate },
@@ -155,7 +152,7 @@ export const useLowStockItems = (
     customStart,
     customEnd,
   );
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["dashboard", "low-stock-items", startDate, endDate],
     endpoint: `/dashboard/low-stock-items`,
     params: { startDate, endDate },
@@ -173,7 +170,7 @@ export const useCorporateMembers = (
     customStart,
     customEnd,
   );
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["dashboard", "corporate-members", startDate, endDate],
     endpoint: `/dashboard/corporate-members`,
     params: { startDate, endDate },
@@ -182,7 +179,7 @@ export const useCorporateMembers = (
 };
 
 export const useRevenueTrend = () => {
-  return useApiQuery<ApiAny[]>({
+  return useApiQuery<any[]>({
     queryKey: ["dashboard", "revenue-trend"],
     endpoint: `/dashboard/revenue-trend`,
     options: DASHBOARD_OPTIONS,
@@ -190,7 +187,7 @@ export const useRevenueTrend = () => {
 };
 
 export const useAvgDailyRevenue = (days = 30) => {
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["dashboard", "avg-daily-revenue", days],
     endpoint: `/dashboard/avg-daily-revenue`,
     params: { days },
@@ -199,7 +196,7 @@ export const useAvgDailyRevenue = (days = 30) => {
 };
 
 export const useApptCompletionRate = () => {
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["dashboard", "appt-completion-rate"],
     endpoint: `/dashboard/appt-completion-rate`,
     options: DASHBOARD_OPTIONS,
@@ -207,7 +204,7 @@ export const useApptCompletionRate = () => {
 };
 
 export const usePatientRetention = () => {
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["dashboard", "patient-retention"],
     endpoint: `/dashboard/patient-retention`,
     options: DASHBOARD_OPTIONS,
@@ -215,7 +212,7 @@ export const usePatientRetention = () => {
 };
 
 export const useInvoicesOverdue = () => {
-  return useApiQuery<ApiAny[]>({
+  return useApiQuery<any[]>({
     queryKey: ["dashboard", "invoices-overdue-seven-days"],
     endpoint: `/dashboard/invoices-overdue-seven-days`,
     options: DASHBOARD_OPTIONS,
@@ -223,7 +220,7 @@ export const useInvoicesOverdue = () => {
 };
 
 export const useCriticallyLowStock = () => {
-  return useApiQuery<ApiAny[]>({
+  return useApiQuery<any[]>({
     queryKey: ["dashboard", "critically-low-stock-items"],
     endpoint: `/dashboard/critically-low-stock-items`,
     options: DASHBOARD_OPTIONS,
@@ -231,7 +228,7 @@ export const useCriticallyLowStock = () => {
 };
 
 export const useFollowUpsDue = () => {
-  return useApiQuery<ApiAny[]>({
+  return useApiQuery<any[]>({
     queryKey: ["dashboard", "follow-ups-due-this-week"],
     endpoint: `/dashboard/follow-ups-due-this-week`,
     options: DASHBOARD_OPTIONS,
@@ -239,7 +236,7 @@ export const useFollowUpsDue = () => {
 };
 
 export const useMembershipsExpiring = (days = 15) => {
-  return useApiQuery<ApiAny[]>({
+  return useApiQuery<any[]>({
     queryKey: ["dashboard", "memberships-expiring-soon", days],
     endpoint: `/dashboard/memberships-expiring-soon`,
     params: { days },
@@ -257,7 +254,7 @@ export const useAppointmentStatusBreakdown = (
     customStart,
     customEnd,
   );
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: ["dashboard", "appointment-status-breakdown", startDate, endDate],
     endpoint: `/dashboard/appointment-status-breakdown`,
     params: { startDate, endDate },
@@ -276,7 +273,7 @@ export const useDoctorPerformance = (
   const range = period
     ? getDashboardDateRange(period, customStart, customEnd)
     : undefined;
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: [
       "dashboard",
       "doctor-performance",
@@ -304,7 +301,7 @@ export const useRecentPatients = (
   const range = period
     ? getDashboardDateRange(period, customStart, customEnd)
     : undefined;
-  return useApiQuery<ApiAny>({
+  return useApiQuery<any>({
     queryKey: [
       "dashboard",
       "recent-patients",

@@ -1,13 +1,22 @@
-import type { ApiAny } from "../types/api";
 import type { User } from "../types";
 import type { ThemeData } from "../contexts/ThemeContext";
 import Cookies from "js-cookie";
 
 const THEME_STORAGE_KEY = "dental_theme";
 
+// Flags for the auth cookies. Secure is set only on https, so local http development still works;
+// SameSite=Lax stops the cookies from being sent along with requests started by other sites.
+// (They are still readable by the app's own JavaScript: the API call uses the Authorization header.)
+const authCookieOptions = (): Cookies.CookieAttributes => ({
+  path: "/",
+  secure: typeof window !== "undefined" && window.location.protocol === "https:",
+  sameSite: "lax",
+});
+
 interface Tokens {
   accessToken: string;
-  refreshToken: string;
+  // Absent when the server keeps the refresh token in an HttpOnly cookie (see refreshCookieMode.ts)
+  refreshToken?: string;
   session_id: string;
 }
 
@@ -25,17 +34,21 @@ export const AuthStorage = {
 
     if (remember) {
       // Store in cookies (persistent)
-      Cookies.set("accessToken", data.tokens.accessToken, { path: "/" });
-      Cookies.set("refreshToken", data.tokens.refreshToken, { path: "/" });
+      Cookies.set("accessToken", data.tokens.accessToken, authCookieOptions());
+      if (tokens.refreshToken) {
+        Cookies.set("refreshToken", tokens.refreshToken, authCookieOptions());
+      }
       Cookies.set(
         "user",
         JSON.stringify({ ...user_info, session_id: tokens.session_id }),
-        { path: "/" }
+        authCookieOptions()
       );
     } else {
       // Store in sessionStorage (cleared on tab close)
       sessionStorage.setItem("accessToken", data.tokens.accessToken);
-      sessionStorage.setItem("refreshToken", data.tokens.refreshToken);
+      if (tokens.refreshToken) {
+        sessionStorage.setItem("refreshToken", tokens.refreshToken);
+      }
       sessionStorage.setItem(
         "user",
         JSON.stringify({ ...user_info, session_id: tokens.session_id })
@@ -43,10 +56,10 @@ export const AuthStorage = {
     }
   },
 
-  saveCurrentUser: (user: ApiAny, remember: boolean) => {
+  saveCurrentUser: (user: any, remember: boolean) => {
     if (remember) {
       // Store in cookies (persistent)
-      Cookies.set("current_user", JSON.stringify(user), { path: "/" });
+      Cookies.set("current_user", JSON.stringify(user), authCookieOptions());
     } else {
       // Store in sessionStorage (cleared on tab close)
       sessionStorage.setItem("current_user", JSON.stringify(user));
@@ -60,7 +73,7 @@ export const AuthStorage = {
     try {
       if (userFromCookie) return JSON.parse(userFromCookie);
       if (userFromSession) return JSON.parse(userFromSession);
-    } catch (_error) { /* stored JSON is corrupt - fall through to the null return below */
+    } catch (error) {
     }
 
     return null;
@@ -73,7 +86,7 @@ export const AuthStorage = {
     try {
       if (userFromCookie) return JSON.parse(userFromCookie);
       if (userFromSession) return JSON.parse(userFromSession);
-    } catch (_error) {
+    } catch (error) {
       AuthStorage.clear(); // Clear corrupt data
     }
 
@@ -87,11 +100,19 @@ export const AuthStorage = {
     Cookies.remove("user", { path: "/" });
     Cookies.remove("current_user", { path: "/" });
 
-    // Clear session storage
-    sessionStorage.removeItem("accessToken");
-    sessionStorage.removeItem("refreshToken");
-    sessionStorage.removeItem("user");
-    sessionStorage.removeItem("current_user");
+    // Clear session storage completely
+    try {
+      sessionStorage.clear();
+    } catch {
+      /* ignore */
+    }
+
+    // Clear local storage completely (remove any cached clinical, inventory, plan data)
+    try {
+      localStorage.clear();
+    } catch {
+      /* ignore */
+    }
   },
 
   // ── Theme persistence (login API → localStorage) ────────────────────────
@@ -139,12 +160,23 @@ export const AuthStorage = {
   },
 
   setAccessToken: (accessToken: string) => {
-    Cookies.set("accessToken", accessToken, { path: "/" });
+    Cookies.set("accessToken", accessToken, authCookieOptions());
     sessionStorage.setItem("accessToken", accessToken);
   },
 
+  // Removes the browser-side copy of the refresh token. Used once the server keeps it in its
+  // HttpOnly cookie, and for sessions that started before that, so no script can read it.
+  clearRefreshToken: () => {
+    Cookies.remove("refreshToken", { path: "/" });
+    try {
+      sessionStorage.removeItem("refreshToken");
+    } catch {
+      /* ignore */
+    }
+  },
+
   setRefreshToken: (refreshToken: string) => {
-    Cookies.set("refreshToken", refreshToken, { path: "/" });
+    Cookies.set("refreshToken", refreshToken, authCookieOptions());
     sessionStorage.setItem("refreshToken", refreshToken);
   },
 

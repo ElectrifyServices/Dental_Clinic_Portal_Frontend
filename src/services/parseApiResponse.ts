@@ -1,12 +1,10 @@
-import type { ApiAny } from "../types/api";
-
 export interface ApiStatus {
   statusCode: number;
   statusType: string;
   statusDesc: string;
 }
 
-export interface ApiResponse<T = ApiAny> {
+export interface ApiResponse<T = any> {
   responseStatusList?: { statusList: ApiStatus[] };
   responseObject?: T;
 }

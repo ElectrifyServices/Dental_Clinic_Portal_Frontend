@@ -37,7 +37,7 @@ export const StaffPage: React.FC = () => {
   } = useModal();
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+    <div className="space-y-6">
       <DoctorManagement
         staffMembers={staffMembers}
         search={search}
@@ -48,10 +48,10 @@ export const StaffPage: React.FC = () => {
         onAddDoctor={() => setActiveModal("doctorForm")}
         onEditDoctor={(id: string) => { setSelectedItemId(id); setTimeout(() => setActiveModal("doctorForm"), 0); }}
         onDeleteDoctor={(id: string) => {
-          const s = staffMembers.find((x) => x.id === id);
+          const s = staffMembers.find((x: any) => x.id === id);
           confirmDelete("Delete Staff", `Delete ${s?.name}?`, () => handleDeleteStaff(id));
         }}
-        onUpdateStaff={(staff) => handleUpdateStaffStatus(staff.id, staff.isActive ? "ACTIVE" : "INACTIVE")}
+        onUpdateStaff={(staff: any) => handleUpdateStaffStatus(staff.id, staff.isActive ? "ACTIVE" : "INACTIVE")}
         onManageSchedule={(id: string) => {
           setSelectedItemId(id);
           // Use setTimeout(0) to guarantee selectedItemId state is committed

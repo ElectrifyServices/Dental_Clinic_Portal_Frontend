@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { CorporatePlan, PlanBenefitType } from '../../types';
 import { mapProcedureLabelToKey } from '../../constants/consent.constants';
 
@@ -32,7 +31,7 @@ const mapBackendBenefitType = (backendType: string): PlanBenefitType => {
   return typeMap[backendType] || "custom";
 };
 
-export function mapBackendPlanToFrontend(plan: ApiAny): CorporatePlan {
+export function mapBackendPlanToFrontend(plan: any): CorporatePlan {
   return {
     id: plan.id,
     name: plan.plan_name,
@@ -48,12 +47,12 @@ export function mapBackendPlanToFrontend(plan: ApiAny): CorporatePlan {
     createdAt: plan.created_at || new Date().toISOString(),
     createdBy: plan.created_by || "Super Admin",
     color: mapHexToColor(plan.theme_color),
-    planCategory: (plan.plan_type?.toLowerCase() === 'company' ? 'corporate' : plan.plan_type?.toLowerCase() === 'individual' ? 'individual' : plan.plan_category?.toLowerCase() || 'corporate') as ApiAny,
+    planCategory: (plan.plan_type?.toLowerCase() === 'company' ? 'corporate' : plan.plan_type?.toLowerCase() === 'individual' ? 'individual' : plan.plan_category?.toLowerCase() || 'corporate') as any,
     planType: plan.plan_type || (plan.plan_type?.toLowerCase() === 'company' ? 'COMPANY' : plan.plan_type?.toLowerCase() === 'individual' ? 'INDIVIDUAL' : 'COMPANY'),
-    planTier: plan.plan_tier?.toLowerCase() as ApiAny,
+    planTier: plan.plan_tier?.toLowerCase() as any,
     annualFee: plan.annual_fee ? Number(plan.annual_fee) : undefined,
     maxDependents: plan.family_coverage_limit ?? plan.max_dependents ?? 0,
-    benefits: (plan.benefits || []).map((b: ApiAny) => {
+    benefits: (plan.benefits || []).map((b: any) => {
       let customTreatmentText = "";
       const standardKeys = [
         'consultation', 'follow-up', 'xray-review', 'cleaning', 'emergency',
@@ -61,14 +60,23 @@ export function mapBackendPlanToFrontend(plan: ApiAny): CorporatePlan {
         'full-mouth-rehab', 'veneers-cosmetic', 'child-dentistry', 'crown',
         'denture', 'toothache', 'swelling-infection', 'broken-tooth', 'trauma-injury'
       ];
-      const treatmentTypes = (b.clinical_procedures || []).map((proc: string) => {
-        const key = mapProcedureLabelToKey(proc);
-        if (!standardKeys.includes(key)) {
-          customTreatmentText = proc;
-          return 'other';
-        }
-        return key;
-      });
+      const treatmentTypes = (b.clinical_procedures || [])
+        .filter((proc: string) => {
+          const lower = proc?.toLowerCase();
+          if (lower === "teeth whitening") return false;
+          // Teeth cleaning is always hardcoded in for this benefit type on
+          // the backend, so don't show it as a separately-selected chip.
+          if (b.type === "COMPLIMENTARY_SESSION" && lower === "teeth cleaning") return false;
+          return true;
+        })
+        .map((proc: string) => {
+          const key = mapProcedureLabelToKey(proc);
+          if (!standardKeys.includes(key)) {
+            customTreatmentText = proc;
+            return 'other';
+          }
+          return key;
+        });
 
       return {
         id: b.id,

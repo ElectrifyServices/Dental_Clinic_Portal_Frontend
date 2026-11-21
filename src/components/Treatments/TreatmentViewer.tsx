@@ -1,11 +1,28 @@
-import type { ApiAny } from "../../types/api";
-import { MessageSquareText, Stethoscope, User, Calendar, FileText, Pill, IndianRupee, Clock, Activity, CheckCircle2, Clock as ClockIcon, CalendarDays, Edit2, ExternalLink, Paperclip, ShieldCheck } from "lucide-react";
+import {
+  MessageSquareText,
+  Download,
+  Stethoscope,
+  User,
+  Calendar,
+  FileText,
+  Camera,
+  Pill,
+  IndianRupee,
+  Clock,
+  Activity,
+  CheckCircle2,
+  Clock as ClockIcon,
+  CalendarDays,
+  Edit2,
+  ExternalLink,
+  Paperclip,
+  ShieldCheck,
+  Percent,
+} from "lucide-react";
 import { useState } from "react";
 import { Modal, Button, ContentCard, Badge, Loading } from "@/components/ui";
 import { useTreatmentPlanQuery } from "@/hooks/treatment/useTreatmentPlanQuery";
 import { ConsultationFeedback } from "./ConsultationFeedback";
-import { formatFileSize, formatFileExtension } from "../../utils/treatmentPlanUtils";
-import { formatDisplayDate } from "../../utils/dateUtils";
 
 interface TreatmentViewerProps {
   treatmentId: string; // Changed from treatment: any to treatmentId
@@ -19,9 +36,9 @@ interface TreatmentViewerProps {
 export function TreatmentViewer({
   treatmentId,
   onClose,
-  onEditTreatment: _onEditTreatment,
-  onMarkCompleted: _onMarkCompleted,
-  onStartTreatment: _onStartTreatment,
+  onEditTreatment,
+  onMarkCompleted,
+  onStartTreatment,
   onManageSessions,
 }: TreatmentViewerProps) {
   const [showConsultationFeedback, setShowConsultationFeedback] = useState(false);
@@ -69,7 +86,7 @@ export function TreatmentViewer({
   }
 
   if (!treatment) return null;
-  const _handleDownload = () => {
+  const handleDownload = () => {
     const printContent = `
       <html>
         <head>
@@ -115,7 +132,7 @@ export function TreatmentViewer({
                 return hasFm ? `<span title="Full Mouth" style="cursor:help; font-weight:bold; color:#059669;">${display}</span>` : display;
               })()}</p>
               <p><strong>Doctor:</strong> ${treatment.doctor?.name || treatment.doctorName}</p>
-              <p><strong>Date:</strong> ${formatDisplayDate(treatment.treatment_date)}</p>
+              <p><strong>Date:</strong> ${new Date(treatment.treatment_date).toLocaleDateString()}</p>
               <p><strong>Status:</strong> ${treatment.status}</p>
             </div>
           </div>
@@ -131,13 +148,13 @@ export function TreatmentViewer({
             <h3>Treatment Sessions</h3>
             ${treatment.sessions
           .map(
-            (session: ApiAny) => `
+            (session: any) => `
               <div class="session-card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                   <h4 style="margin: 0;">Session ${session.visit_number}</h4>
                   <span class="session-status status-${session.status?.toLowerCase()}">${session.status}</span>
                 </div>
-                <p><strong>Date:</strong> ${formatDisplayDate(session.visit_date)}</p>
+                <p><strong>Date:</strong> ${new Date(session.visit_date).toLocaleDateString()}</p>
                 <p><strong>Duration:</strong> ${session.duration_min} mins</p>
                 <p><strong>Fee:</strong> ₹${parseInt(session.session_fee).toLocaleString()}</p>
                 ${session.work_done
@@ -166,7 +183,7 @@ export function TreatmentViewer({
             <div class="prescription-grid">
               ${(treatment.prescriptions || [])
         .map(
-          (p: ApiAny) => {
+          (p: any) => {
             const printMedName = p.medicine?.name || p.medicine_name || p.medicineName || "Medicine";
             return `
                 <div class="med-card">
@@ -185,7 +202,7 @@ export function TreatmentViewer({
           </div>
 
           <div class="footer">
-            <p>Confidential medical document. Generated on ${formatDisplayDate(new Date())}</p>
+            <p>Confidential medical document. Generated on ${new Date().toLocaleDateString()}</p>
           </div>
         </body>
       </html>
@@ -200,7 +217,7 @@ export function TreatmentViewer({
   };
 
   const getSessionStatusBadge = (status: string) => {
-    const variants: Record<string, ApiAny> = {
+    const variants: Record<string, any> = {
       SCHEDULED: "amber",
       IN_PROGRESS: "blue",
       COMPLETED: "green",
@@ -222,18 +239,25 @@ export function TreatmentViewer({
     }
   };
 
+  const formatFileSize = (bytes?: number) => {
+    if (!bytes || bytes <= 0) return "";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
   const statusVariant = (
     treatment.status === "COMPLETED"
       ? "green"
       : treatment.status === "IN_PROGRESS"
         ? "blue"
         : "amber"
-  ) as ApiAny;
+  ) as any;
 
   // Calculate session progress
   const totalSessions = treatment.sessions?.length || 0;
   const completedSessions =
-    treatment.sessions?.filter((s: ApiAny) => s.status === "COMPLETED").length || 0;
+    treatment.sessions?.filter((s: any) => s.status === "COMPLETED").length || 0;
   const sessionProgress =
     totalSessions > 0 ? (completedSessions / totalSessions) * 100 : 0;
 
@@ -277,15 +301,15 @@ export function TreatmentViewer({
         </div>
       }
     >
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-start">
+      <div className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
           <ContentCard
             title="Patient Overview"
             icon={<User className="w-5 h-5" />}
             className="bg-primary/5 border-primary/10"
           >
-            <div className="space-y-2">
-              <div className="flex justify-between items-center border-b border-primary/5 pb-1.5">
+            <div className="space-y-4">
+              <div className="flex justify-between items-center border-b border-primary/5 pb-2">
                 <span className="text-[10px] font-black text-primary/60 uppercase tracking-widest">
                   Name
                 </span>
@@ -293,7 +317,7 @@ export function TreatmentViewer({
                   {treatment.patient?.name}
                 </span>
               </div>
-              <div className="flex justify-between items-center border-b border-primary/5 pb-1.5">
+              <div className="flex justify-between items-center border-b border-primary/5 pb-2">
                 <span className="text-[10px] font-black text-primary/60 uppercase tracking-widest">
                   Phone
                 </span>
@@ -301,7 +325,7 @@ export function TreatmentViewer({
                   {treatment.patient?.phone || "—"}
                 </span>
               </div>
-              <div className="flex justify-between items-center border-b border-primary/5 pb-1.5">
+              <div className="flex justify-between items-center border-b border-primary/5 pb-2">
                 <span className="text-[10px] font-black text-primary/60 uppercase tracking-widest">
                   Tooth
                 </span>
@@ -314,7 +338,7 @@ export function TreatmentViewer({
                   Doctor
                 </span>
                 <span className="text-sm font-black text-foreground">
-                  {treatment.doctor?.name || treatment.doctor?.staff?.name || treatment.doctorName || (treatment.doctor as ApiAny)?.personal_profile?.staff?.name || "—"}
+                  {treatment.doctor?.name || treatment.doctor?.staff?.name || treatment.doctorName || (treatment.doctor as any)?.personal_profile?.staff?.name || "—"}
                 </span>
               </div>
             </div>
@@ -325,22 +349,29 @@ export function TreatmentViewer({
             icon={<Calendar className="w-5 h-5" />}
             className="bg-emerald-50/50 border-emerald-100"
           >
-            <div className="space-y-2">
-              <div className="flex justify-between items-center border-b border-emerald-100/50 pb-1.5">
+            <div className="space-y-4">
+              <div className="flex justify-between items-center border-b border-emerald-100/50 pb-2">
                 <span className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest">
                   Treatment Date
                 </span>
                 <span className="text-sm font-black text-foreground">
-                  {formatDisplayDate(treatment.treatment_date)}
+                  {new Date(treatment.treatment_date).toLocaleDateString("en-IN", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  })}
                 </span>
               </div>
-              <div className="flex justify-between items-center border-b border-emerald-100/50 pb-1.5">
+              <div className="flex justify-between items-center border-b border-emerald-100/50 pb-2">
                 <span className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest">
                   Next Visit
                 </span>
                 <span className="text-sm font-black text-foreground">
                   {treatment.next_appointment
-                    ? formatDisplayDate(treatment.next_appointment)
+                    ? new Date(treatment.next_appointment).toLocaleDateString(
+                      "en-IN",
+                      { day: "2-digit", month: "short", year: "numeric" }
+                    )
                     : "N/A"}
                 </span>
               </div>
@@ -384,8 +415,8 @@ export function TreatmentViewer({
                 icon={<IndianRupee className="w-5 h-5" />}
                 className="bg-indigo-50/50 border-indigo-100"
               >
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center border-b border-indigo-100/50 pb-1.5">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center border-b border-indigo-100/50 pb-2">
                     <span className="text-[10px] font-black text-indigo-600/60 uppercase tracking-widest">
                       Estimated Cost
                     </span>
@@ -394,7 +425,7 @@ export function TreatmentViewer({
                     </span>
                   </div>
                   {discountVal > 0 && (
-                    <div className="flex justify-between items-center border-b border-indigo-100/50 pb-1.5">
+                    <div className="flex justify-between items-center border-b border-indigo-100/50 pb-2">
                       <span className="text-[10px] font-black text-indigo-600/60 uppercase tracking-widest">
                         Discount ({discountVal}%)
                       </span>
@@ -405,7 +436,7 @@ export function TreatmentViewer({
                   )}
                   {membershipBenefits && (
                     <>
-                      <div className="flex justify-between items-center border-b border-indigo-100/50 pb-1.5">
+                      <div className="flex justify-between items-center border-b border-indigo-100/50 pb-2">
                         <span className="text-[10px] font-black text-indigo-600/60 uppercase tracking-widest">
                           Membership
                         </span>
@@ -414,7 +445,7 @@ export function TreatmentViewer({
                         </Badge>
                       </div>
                       {membershipDiscount > 0 && (
-                        <div className="flex justify-between items-center border-b border-indigo-100/50 pb-1.5">
+                        <div className="flex justify-between items-center border-b border-indigo-100/50 pb-2">
                           <span className="text-[10px] font-black text-indigo-600/60 uppercase tracking-widest">
                             Member Savings
                           </span>
@@ -425,7 +456,7 @@ export function TreatmentViewer({
                       )}
                     </>
                   )}
-                  <div className="flex justify-between items-center border-b border-indigo-100/50 pb-1.5">
+                  <div className="flex justify-between items-center border-b border-indigo-100/50 pb-2">
                     <span className="text-[10px] font-black text-indigo-600/60 uppercase tracking-widest">
                       Final Cost
                     </span>
@@ -433,7 +464,7 @@ export function TreatmentViewer({
                       ₹{finalCost.toLocaleString()}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center border-b border-indigo-100/50 pb-1.5">
+                  <div className="flex justify-between items-center border-b border-indigo-100/50 pb-2">
                     <span className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest">
                       Total Paid Amount
                     </span>
@@ -461,9 +492,9 @@ export function TreatmentViewer({
             icon={<ShieldCheck className="w-5 h-5 text-indigo-600" />}
             className="bg-indigo-50/20 border-indigo-100"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">Plan Details</p>
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Plan Details</p>
                 <div className="bg-card p-3 rounded-xl border border-indigo-100/50 flex justify-between items-center">
                   <div>
                     <h4 className="text-sm font-bold text-indigo-900">{treatment.membership_benefits.plan_name}</h4>
@@ -475,12 +506,12 @@ export function TreatmentViewer({
                 </div>
               </div>
               <div>
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">Benefit Summary</p>
-                <div className="space-y-1.5">
-                  {(treatment.membership_benefits.benefits || []).map((benefit: ApiAny, idx: number) => {
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Benefit Summary</p>
+                <div className="space-y-2">
+                  {(treatment.membership_benefits.benefits || []).map((benefit: any, idx: number) => {
                     const isFlatDiscount = benefit.type === "FLAT_DISCOUNT";
                     return (
-                      <div key={idx} className="flex items-start justify-between p-2 bg-card rounded-xl border border-indigo-50/80 text-xs">
+                      <div key={idx} className="flex items-start justify-between p-2.5 bg-card rounded-xl border border-indigo-50/80 text-xs">
                         <div className="flex-1 pr-4">
                           <span className="font-bold text-foreground">{benefit.benifit_label}</span>
                           {!isFlatDiscount && benefit.allocationCount != null && (
@@ -506,7 +537,7 @@ export function TreatmentViewer({
               </div>
             </div>
             {treatment.reason && (
-              <div className="mt-3 p-3 bg-indigo-50/70 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/50 rounded-xl text-xs font-semibold text-indigo-700 dark:text-indigo-300 leading-relaxed">
+              <div className="mt-4 p-3 bg-indigo-50/70 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/50 rounded-xl text-xs font-semibold text-indigo-700 dark:text-indigo-300 leading-relaxed">
                 <p className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-1">Reason for Complimentary Treatment</p>
                 {treatment.reason}
               </div>
@@ -516,7 +547,7 @@ export function TreatmentViewer({
 
         {/* Sessions Section */}
         {treatment.sessions?.length > 0 && (
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div className="flex items-center justify-between px-2">
               <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2">
                 <Activity className="w-4 h-4 text-blue-500" /> 
@@ -535,13 +566,13 @@ export function TreatmentViewer({
                 </div>
               )}
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {treatment.sessions
                 .sort(
-                  (a: ApiAny, b: ApiAny) =>
+                  (a: any, b: any) =>
                     (a.visit_number || 0) - (b.visit_number || 0)
                 )
-                .map((session: ApiAny) => (
+                .map((session: any) => (
                   <ContentCard
                     key={session.id}
                     className={`border-l-4 hover:shadow-md transition-all ${session.status === "COMPLETED"
@@ -553,8 +584,8 @@ export function TreatmentViewer({
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <div className="flex items-center gap-2.5 mb-2">
-                          <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-sm font-black text-primary">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-black text-primary">
                             {session.visit_number}
                           </div>
                           <div className="flex-1">
@@ -567,7 +598,7 @@ export function TreatmentViewer({
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 ml-2 sm:ml-9">
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 ml-11">
                           <div className="flex items-center gap-2">
                             <CalendarDays className="w-3.5 h-3.5 text-muted-foreground" />
                             <div>
@@ -575,9 +606,14 @@ export function TreatmentViewer({
                                 Date
                               </p>
                               <p className="text-xs font-semibold">
-                                {session.visit_date
-                                  ? formatDisplayDate(session.visit_date)
-                                  : "Not Scheduled"}
+                                {session.visit_date ? new Date(session.visit_date).toLocaleDateString(
+                                  "en-IN",
+                                  {
+                                    day: "2-digit",
+                                    month: "2-digit",
+                                    year: "numeric",
+                                  }
+                                ) : "Not Scheduled"}
                               </p>
                             </div>
                           </div>
@@ -620,7 +656,7 @@ export function TreatmentViewer({
                           session.paid_amount ||
                           session.payment_method ||
                           session.attachments?.length > 0) && (
-                          <div className="mt-3 ml-2 sm:ml-9 p-2.5 bg-muted/30 rounded-lg border border-border/50">
+                          <div className="mt-4 ml-11 p-3 bg-muted/30 rounded-lg border border-border/50">
                             {session.work_done && (
                               <div className="mb-2">
                                 <p className="text-[9px] font-black uppercase text-muted-foreground mb-1">
@@ -646,7 +682,7 @@ export function TreatmentViewer({
                               </div>
                             )}
                             {(session.paid_amount != null || session.payment_method) && (
-                              <div className="mb-2 flex gap-3 border-t border-border/50 pt-2 mt-2">
+                              <div className="mb-2 flex gap-4 border-t border-border/50 pt-2 mt-2">
                                 {session.paid_amount != null && Number(session.paid_amount) > 0 && (
                                   <div>
                                     <p className="text-[9px] font-black uppercase text-muted-foreground mb-1">
@@ -670,21 +706,17 @@ export function TreatmentViewer({
                               </div>
                             )}
                             {session.attachments?.length > 0 && (
-                              <div className={session.work_done || session.session_findings || session.next_session_plan ? "mt-2 pt-2 border-t border-border/50" : ""}>
+                              <div className={session.work_done || session.session_findings || session.next_session_plan ? "mt-3 pt-3 border-t border-border/50" : ""}>
                                 <p className="text-[9px] font-black uppercase text-muted-foreground mb-2 flex items-center gap-1.5">
-                                  <Paperclip className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                                  <span>Attachments</span>
-                                  <span className="text-[9px] font-bold text-muted-foreground/80">
-                                    ({session.attachments.length})
-                                  </span>
+                                  <Paperclip className="w-3.5 h-3.5 text-emerald-600" />
+                                  Attachments
                                 </p>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2">
-                                  {session.attachments.map((attachment: ApiAny) => {
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                  {session.attachments.map((attachment: any) => {
                                     const fileSize = formatFileSize(Number(attachment.file_size));
-                                    const fileExt = formatFileExtension(attachment);
-                                    const fileMeta = [fileSize, fileExt]
+                                    const fileMeta = [fileSize, attachment.file_type || attachment.file_extension]
                                       .filter(Boolean)
-                                      .join(" • ");
+                                      .join(" | ");
 
                                     return (
                                       <a
@@ -692,23 +724,22 @@ export function TreatmentViewer({
                                         href={attachment.file_url}
                                         target="_blank"
                                         rel="noreferrer"
-                                        title={attachment.file_name || "Attachment"}
-                                        className="group flex items-center gap-2.5 rounded-lg border border-border/70 bg-background px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 min-w-0 w-full overflow-hidden"
+                                        className="flex items-center gap-3 rounded-lg border border-border/70 bg-background px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-primary/40 hover:bg-primary/5"
                                       >
                                         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
                                           <FileText className="w-4 h-4" />
                                         </span>
-                                        <span className="min-w-0 flex-1 overflow-hidden">
-                                          <span className="block truncate text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
+                                        <span className="min-w-0 flex-1">
+                                          <span className="block truncate">
                                             {attachment.file_name || "Attachment"}
                                           </span>
                                           {fileMeta && (
-                                            <span className="block truncate text-[10px] font-bold text-muted-foreground">
+                                            <span className="block text-[10px] font-bold text-muted-foreground">
                                               {fileMeta}
                                             </span>
                                           )}
                                         </span>
-                                        <ExternalLink className="w-3.5 h-3.5 shrink-0 text-muted-foreground group-hover:text-primary transition-colors" />
+                                        <ExternalLink className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
                                       </a>
                                     );
                                   })}
@@ -740,19 +771,19 @@ export function TreatmentViewer({
           icon={<FileText className="w-5 h-5 text-primary" />}
           className="border-border/50"
         >
-          <div className="bg-muted/30 rounded-2xl p-3 border border-border/50 text-foreground font-medium text-sm leading-relaxed whitespace-pre-wrap">
+          <div className="bg-muted/30 rounded-2xl p-6 border border-border/50 text-foreground font-medium text-sm leading-relaxed whitespace-pre-wrap">
             {treatment.clinical_notes ||
               "No detailed clinical notes provided for this treatment plan."}
           </div>
         </ContentCard>
 
         {treatment.prescriptions?.length > 0 && (
-          <div className="space-y-3">
+          <div className="space-y-4">
             <h3 className="px-2 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2">
               <Pill className="w-4 h-4 text-emerald-500" /> Prescribed Medications
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {treatment.prescriptions.map((p: ApiAny) => {
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {treatment.prescriptions.map((p: any) => {
                 const medName = p.medicine?.name || p.medicine_name || p.medicineName || "Medicine";
                 const dosageText = p.dosage ? `Dosage: ${p.dosage}` : undefined;
                 return (
@@ -763,11 +794,11 @@ export function TreatmentViewer({
                     className="bg-emerald-50/20 border-emerald-100/50 hover:border-emerald-200 transition-colors"
                   >
                     {p.medicine?.description && (
-                      <p className="text-xs text-muted-foreground -mt-1 mb-2 italic">
+                      <p className="text-xs text-muted-foreground -mt-1 mb-3 italic">
                         {p.medicine.description}
                       </p>
                     )}
-                    <div className="grid grid-cols-2 gap-3 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                    <div className="grid grid-cols-2 gap-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                       <div className="flex items-center gap-2">
                         <Clock className="w-3 h-3 text-emerald-400" /> {p.timing}
                       </div>
@@ -783,7 +814,7 @@ export function TreatmentViewer({
                       </div>
                     </div>
                     {p.instructions && (
-                      <div className="mt-2 pt-2 border-t border-emerald-100/50">
+                      <div className="mt-3 pt-3 border-t border-emerald-100/50">
                         <p className="text-xs text-muted-foreground">
                           <span className="font-bold">Instructions:</span> {p.instructions}
                         </p>

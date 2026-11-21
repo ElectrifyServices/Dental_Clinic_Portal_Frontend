@@ -1,4 +1,3 @@
-import type { ApiAny, ApiRecord } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 
 export interface CreatePlanBenefitVariables {
@@ -37,8 +36,8 @@ export interface CreateCorporatePlanResponse {
   valid_till: string;
   max_member: number;
   theme_color: string;
-  benefits: ApiRecord[];
-  [key: string]: ApiAny;
+  benefits: any[];
+  [key: string]: any;
 }
 
 import { useQueryClient } from "@tanstack/react-query";

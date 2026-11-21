@@ -1,4 +1,3 @@
-import type { ApiAny } from "../../types/api";
 import { useState } from 'react';
 import { removeDependent, notifyDependentChange } from './dependentStorage';
 
@@ -12,8 +11,7 @@ export function useRemoveDependentMutation() {
     try {
       removeDependent(id);
       notifyDependentChange();
-    } catch (caught) {
-      const err = caught as ApiAny;
+    } catch (err: any) {
       setError(err);
       throw err;
     } finally {
