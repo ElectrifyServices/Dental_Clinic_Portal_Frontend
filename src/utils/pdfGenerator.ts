@@ -5,6 +5,14 @@ import { formatPhoneWithCountryCode } from "./phoneUtils";
 
 export type PDFReportType = "FULL" | "CLINICAL" | "TREATMENT" | "PRESCRIPTION" | "XRAY";
 
+// A deleted/orphaned medicine resolves to no name anywhere, but its raw
+// medicine_id can still be threaded through as a fallback "medicine" string
+// by some callers. Never print that id as if it were the medicine's name.
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function isLikelyId(value: string): boolean {
+  return UUID_PATTERN.test(value.trim());
+}
+
 // ---------------------------------------------------------------------------
 // Brand tokens — read dynamically from login API (stored in localStorage).
 // All defaults below are the original hardcoded fallbacks so the PDF looks
@@ -1452,7 +1460,7 @@ ${isBlankMode
             (p: any, i: number) => `
 <tr style="border-bottom:1px solid #eef0f1; ${i % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
 <td style="padding:0; vertical-align:middle;">${makeCellContent(`${i + 1}`, "left", `font-size:12px; color:#93999e;`)}</td>
-<td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.medicine?.name || p.medicine?.medicine_name || p.medicine_name || p.medicineName || (typeof p.medicine === "string" ? p.medicine : "") || "N/A"}`, "left", `font-size:12px; font-weight:400; color:${T.INK};`)}</td>
+<td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.medicine?.name || p.medicine?.medicine_name || p.medicine_name || p.medicineName || (typeof p.medicine === "string" && !isLikelyId(p.medicine) ? p.medicine : "") || "N/A"}`, "left", `font-size:12px; font-weight:400; color:${T.INK};`)}</td>
 <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.dosage || "N/A"} (${p.timing || "N/A"})`, "left", `font-size:12px; color:${T.INK};`)}</td>
 <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.frequency || "N/A"}`, "left", `font-size:12px; color:${T.INK};`)}</td>
 <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.duration ? `${p.duration} ${p.durationUnit || p.duration_type || "Days"}` : "N/A"}`, "left", `font-size:12px; color:${T.INK};`)}</td>

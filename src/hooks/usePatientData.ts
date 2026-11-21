@@ -22,7 +22,16 @@ export function usePatientData(params?: { enabled?: boolean }) {
   const [patientStatus, setPatientStatus] = useState('all');
   const [patientCategory, setPatientCategory] = useState('all');
   const [patientPage, setPatientPage] = useState(1);
-  const [patientLimit, setPatientLimit] = useState(10);
+  const [patientLimit, setPatientLimitState] = useState(10);
+
+  // Changing the page size while on a later page can request an
+  // out-of-range offset (e.g. page 2 at limit 100 = records 101-200) that no
+  // longer exists, returning an empty list. Reset to page 1 whenever the
+  // limit changes, same as the filter/search reset below.
+  const setPatientLimit = useCallback((newLimit: number) => {
+    setPatientLimitState(newLimit);
+    setPatientPage(1);
+  }, []);
 
   const apiFilters = useMemo(() => {
     const filters: Record<string, string[]> = {};
